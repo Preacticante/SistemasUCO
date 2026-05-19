@@ -4,47 +4,28 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Vacaciones | {{ $empleado->nombre_completo }}</title>
-    <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f3f4f6; margin: 0; }
-        .navbar { background-color: #1f2937; color: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; }
-        .navbar a { color: #f87171; text-decoration: none; font-weight: bold; }
-        .container { max-width: 1100px; margin: 30px auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-        h1 { color: #374151; font-size: 24px; border-bottom: 2px solid #e5e7eb; padding-bottom: 10px; margin-bottom: 20px; }
-        .grid { display: grid; gap: 16px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
-        .card { background: #f9fafb; padding: 18px; border-radius: 8px; border: 1px solid #e5e7eb; }
-        .card strong { display:block; margin-bottom: 8px; color:#374151; }
-        .status { margin-bottom: 20px; padding: 12px 16px; border-radius: 8px; }
-        .success { background:#d1fae5; color:#065f46; }
-        .error { background:#fee2e2; color:#991b1b; }
-        form { background: #ffffff; padding: 18px; border-radius: 8px; border: 1px solid #e5e7eb; }
-        label { display:block; margin-bottom: 8px; font-weight:600; color:#374151; }
-        select,input { width:100%; padding:10px 12px; margin-bottom:12px; border-radius:6px; border:1px solid #d1d5db; }
-        button { background-color:#2563eb; color:white; border:none; padding:10px 16px; border-radius:6px; cursor:pointer; }
-        button:hover { background-color:#1d4ed8; }
-        .btn-secondary { background:#6b7280; }
-        table { width:100%; border-collapse: collapse; margin-top: 16px; }
-        th, td { text-align:left; padding:12px; border-bottom:1px solid #e5e7eb; }
-        th { background:#f3f4f6; color:#374151; }
-        .actions { margin-top: 20px; display:flex; justify-content: space-between; gap:12px; flex-wrap: wrap; }
-    </style>
+    
 </head>
 <body>
-    <div class="navbar">
-        <div>Control de Descansos UPQ</div>
-        <div>
-            Hola, {{ session('nombre') }} | <a href="{{ route('logout') }}">Cerrar Sesión</a>
-        </div>
-    </div>
+    <main class="page-shell">
+        <section class="topbar">
+            <div>
+                <div class="topbar-title">
+                    <span class="page-label">Vacaciones</span>
+                    <h1>{{ $empleado->nombre_completo }}</h1>
+                </div>
+                <p>Administra registros y consulta el consumo de vacaciones de manera clara y moderna.</p>
+            </div>
 
-    <div class="container">
-        <div class="actions">
-            <h1>Vacaciones de {{ $empleado->nombre_completo }}</h1>
-            <a class="btn-secondary" href="{{ route('panel') }}">Volver al Panel</a>
-        </div>
+            <a href="{{ route('panel') }}" class="button-link">
+                <span class="button-icon">⟵</span>
+                Volver al inicio
+            </a>
+        </section>
 
         @if ($errors->any())
             <div class="status error">
-                <ul style="margin:0; padding-left:18px;">
+                <ul style="margin: 0; padding-left: 1.2rem;">
                     @foreach ($errors->all() as $error)
                         <li>{{ $error }}</li>
                     @endforeach
@@ -56,61 +37,81 @@
             <div class="status success">{{ session('success') }}</div>
         @endif
 
-        <div class="grid">
-            <div class="card">
+        <section class="summary-grid">
+            <article class="card">
                 <strong>Información del empleado</strong>
-                <p><strong>Fecha de ingreso:</strong> {{ $empleado->fecha_ingreso }}</p>
-                <p><strong>Años trabajados:</strong> {{ $antiguedadAnios }}</p>
-                <p><strong>Días de derecho este año:</strong> {{ $diasDerecho }}</p>
-            </div>
-            <div class="card">
-                <strong>Estado de vacaciones</strong>
-                <p><strong>Días tomados:</strong> {{ $diasTomados }}</p>
-                <p><strong>Días restantes:</strong> <span id="dias-restantes">{{ $diasRestantes }}</span></p>
-                <p><strong>Año:</strong> {{ $anioActual }}</p>
-            </div>
-        </div>
-
-        <div style="margin-top: 30px; display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
-            <form action="{{ route('empleados.vacaciones.guardar', $empleado->id) }}" method="POST">
-                @csrf
-                <h2>Registrar días de vacaciones</h2>
-                <label for="fecha_inicio">Fecha de inicio</label>
-                <input type="date" id="fecha_inicio" name="fecha_inicio" value="{{ old('fecha_inicio') }}" />
-
-                <label for="fecha_fin">Fecha de fin</label>
-                <input type="date" id="fecha_fin" name="fecha_fin" value="{{ old('fecha_fin') }}" />
-
-                <p style="margin-top: 0; color: #4b5563;">Selecciona el rango de vacaciones. Se calcularán los días automáticamente.</p>
-                <p><strong>Días seleccionados:</strong> <span id="dias-seleccionados">0</span></p>
-                <p><strong>Proyección de días restantes:</strong> <span id="preview-restantes">{{ max(0, $diasRestantes - 1) }}</span></p>
-                <button type="submit">Guardar registro</button>
-            </form>
-
-            <div class="card">
-                <h2>Consumo mensual</h2>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Mes</th>
-                            <th>Días tomados</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach ($meses as $numero => $nombre)
-                        <tr>
-                            <td>{{ $nombre }}</td>
-                            <td>{{ $registroPorMes[$numero] }}</td>
-                        </tr>
-                        @endforeach
-                    </tbody>
-                </table>
-                <div class="actions" style="margin-top: 18px; justify-content:flex-start;">
-                    <a href="{{ route('empleados.vacaciones.pdf', $empleado->id) }}" class="btn-secondary" style="background:#10b981; color:white; padding:10px 14px; text-decoration:none;">Generar reporte PDF</a>
+                <div class="meta-row">
+                    <span class="meta-pill">Ingreso: {{ $empleado->fecha_ingreso }}</span>
+                    <span class="meta-pill">Antigüedad: {{ $antiguedadAnios }} años</span>
+                    <span class="meta-pill">Derecho anual: {{ $diasDerecho }} días</span>
                 </div>
-            </div>
-        </div>
-    </div>
+            </article>
+
+            <article class="card">
+                <strong>Estado actual</strong>
+                <div class="meta-row">
+                    <span class="meta-pill">Tomados: {{ $diasTomados }}</span>
+                    <span class="meta-pill">Restantes: {{ $diasRestantes }}</span>
+                    <span class="meta-pill">Año: {{ $anioActual }}</span>
+                </div>
+            </article>
+        </section>
+
+        <section class="card-columns">
+            <article class="card">
+                <h2>Registrar vacaciones</h2>
+                <form action="{{ route('empleados.vacaciones.guardar', $empleado->id) }}" method="POST">
+                    @csrf
+                    <div class="form-group">
+                        <label for="fecha_inicio">Fecha de inicio</label>
+                        <input type="date" id="fecha_inicio" name="fecha_inicio" value="{{ old('fecha_inicio') }}" />
+                    </div>
+
+                    <div class="form-group">
+                        <label for="fecha_fin">Fecha de fin</label>
+                        <input type="date" id="fecha_fin" name="fecha_fin" value="{{ old('fecha_fin') }}" />
+                    </div>
+
+                    <div class="form-group" style="margin-bottom: 0.6rem; color: #57627d; font-size: 0.95rem;">
+                        Ajusta el rango y revisa la proyección antes de guardar.
+                    </div>
+
+                    <div class="meta-row" style="margin-bottom: 1.25rem;">
+                        <span class="meta-pill">Días seleccionados: <strong id="dias-seleccionados">0</strong></span>
+                        <span class="meta-pill">Restantes estimados: <strong id="preview-restantes">{{ max(0, $diasRestantes - 1) }}</strong></span>
+                    </div>
+
+                    <button type="submit" class="button-primary">Guardar registro</button>
+                </form>
+            </article>
+
+            <article class="card">
+                <h2>Consumo mensual</h2>
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Mes</th>
+                                <th>Días tomados</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach ($meses as $numero => $nombre)
+                                <tr>
+                                    <td>{{ $nombre }}</td>
+                                    <td>{{ $registroPorMes[$numero] }}</td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+
+                <div style="margin-top: 1.5rem;">
+                    <a href="{{ route('empleados.vacaciones.pdf', $empleado->id) }}" class="button-secondary" style="width: auto;">Generar reporte PDF</a>
+                </div>
+            </article>
+        </section>
+    </main>
 
     <script>
         const diasRestantes = {{ $diasRestantes }};
@@ -142,8 +143,295 @@
         });
 
         fechaFin.addEventListener('change', calcularDias);
-
         calcularDias();
     </script>
 </body>
 </html>
+<style>
+        :root {
+            font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            color: #1f324f;
+            background-color: #eef4fb;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            background: radial-gradient(circle at top left, rgba(106, 134, 255, 0.18), transparent 32%),
+                        radial-gradient(circle at bottom right, rgba(59, 98, 245, 0.12), transparent 30%),
+                        linear-gradient(180deg, #edf4ff 0%, #e5efff 45%, #f3f7ff 100%);
+            color: #1f324f;
+        }
+
+        .button-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 2.5rem;
+            height: 2.5rem;
+            margin-right: 0.75rem;
+            border-radius: 999px;
+            background: rgba(59, 98, 245, 0.16);
+            color: #3c62f5;
+            font-size: 1.25rem;
+            font-weight: 700;
+            box-shadow: 0 10px 24px rgba(59, 98, 245, 0.12);
+        }
+
+        .page-shell {
+            width: min(1200px, calc(100% - 2rem));
+            margin: 0 auto 2rem;
+            padding: 2rem 0;
+        }
+
+        .topbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            padding: 1.1rem 1.4rem;
+            border-radius: 24px;
+            background: rgba(255,255,255,0.82);
+            box-shadow: 0 24px 60px rgba(31, 50, 79, 0.08);
+            backdrop-filter: blur(10px);
+        }
+
+        .topbar-title {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: baseline;
+            gap: 0.75rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .page-label {
+            display: inline-flex;
+            padding: 0.45rem 0.85rem;
+            border-radius: 999px;
+            text-transform: uppercase;
+            letter-spacing: 0.18em;
+            font-size: 0.78rem;
+            color: #3c62f5;
+            background: rgba(59, 98, 245, 0.12);
+        }
+
+        .topbar h1 {
+            margin: 0;
+            font-size: 2rem;
+            color: #1f324f;
+            letter-spacing: -0.03em;
+            line-height: 1.05;
+        }
+
+        .topbar p {
+            margin: 0.35rem 0 0;
+            color: #57627d;
+            font-size: 0.95rem;
+        }
+
+        .button-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 2rem;
+            height: 2rem;
+            margin-right: 0.6rem;
+            border-radius: 999px;
+            background: rgba(59, 98, 245, 0.12);
+            color: #3c62f5;
+            font-size: 1rem;
+        }
+
+        .button-link,
+        .button-primary,
+        .button-secondary {
+            border: none;
+            border-radius: 14px;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+            font-weight: 600;
+        }
+
+        .button-link {
+            padding: 0.9rem 1.3rem;
+            color: #3c62f5;
+            background: rgba(59, 98, 245, 0.1);
+        }
+
+        .button-link:hover {
+            transform: translateY(-1px);
+            background: rgba(59, 98, 245, 0.16);
+        }
+
+        .button-primary {
+            width: 100%;
+            padding: 1rem 1.1rem;
+            background: linear-gradient(135deg, #5567ff 0%, #2744d5 100%);
+            color: #ffffff;
+        }
+
+        .button-primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 16px 30px rgba(58, 87, 151, 0.18);
+        }
+
+        .button-secondary {
+            background: #f8fbff;
+            color: #1f324f;
+            border: 1px solid rgba(31, 50, 79, 0.08);
+            padding: 0.9rem 1.2rem;
+        }
+
+        .button-secondary:hover {
+            background: #eef4fb;
+        }
+
+        .summary-grid {
+            display: grid;
+            gap: 1rem;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            margin-bottom: 1.5rem;
+        }
+
+        .card {
+            background: #ffffff;
+            border-radius: 24px;
+            padding: 1.6rem;
+            box-shadow: 0 18px 40px rgba(31, 50, 79, 0.06);
+            border: 1px solid rgba(31, 50, 79, 0.05);
+        }
+
+        .card h2,
+        .card strong {
+            margin: 0 0 0.9rem;
+            color: #1f324f;
+            font-size: 1.05rem;
+        }
+
+        .card p,
+        .card li {
+            margin: 0.75rem 0;
+            color: #55627d;
+            line-height: 1.65;
+        }
+
+        .card-columns {
+            display: grid;
+            gap: 1.5rem;
+            grid-template-columns: 1.4fr 1fr;
+            margin-top: 1rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.25rem;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #1f324f;
+            font-size: 0.95rem;
+        }
+
+        input[type="date"],
+        select,
+        textarea {
+            width: 100%;
+            padding: 1rem 1rem;
+            border-radius: 16px;
+            border: 1px solid #d7dee9;
+            background: #fbfdff;
+            color: #20304a;
+            font-size: 0.97rem;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        input:focus,
+        select:focus,
+        textarea:focus {
+            outline: none;
+            border-color: #6a86ff;
+            box-shadow: 0 0 0 4px rgba(106, 134, 255, 0.12);
+        }
+
+        .status {
+            border-radius: 18px;
+            padding: 1rem 1.2rem;
+            margin-bottom: 1.5rem;
+            font-size: 0.98rem;
+            line-height: 1.6;
+        }
+
+        .status.success {
+            background: #e4f8f2;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .status.error {
+            background: #fff1f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .table-wrapper {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 320px;
+        }
+
+        th,
+        td {
+            padding: 1rem 0.75rem;
+            text-align: left;
+            border-bottom: 1px solid #e5e7eb;
+            color: #3f4d67;
+        }
+
+        th {
+            background: #f8fbff;
+            color: #1f324f;
+            letter-spacing: 0.01em;
+            font-weight: 600;
+        }
+
+        .meta-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.75rem 1.5rem;
+            margin-top: 0.75rem;
+        }
+
+        .meta-pill {
+            padding: 0.8rem 1rem;
+            border-radius: 999px;
+            background: #f5f8ff;
+            color: #3f4d67;
+            font-size: 0.95rem;
+        }
+
+        @media (max-width: 860px) {
+            .summary-grid,
+            .card-columns {
+                grid-template-columns: 1fr;
+            }
+
+            .topbar {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+        }
+    </style>
