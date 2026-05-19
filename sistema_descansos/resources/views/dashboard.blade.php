@@ -46,7 +46,7 @@
                     <td>{{ $empleado->nombre_completo }}</td>
                     <td>{{ $empleado->fecha_ingreso }}</td>
                     <td>
-                        <a href="#" class="btn-calcular">Calcular Vacaciones</a>
+                        <a href="{{ route('empleados.vacaciones', $empleado->id) }}" class="btn-calcular">Vacaciones</a>
                     </td>
                 </tr>
                 @endforeach
