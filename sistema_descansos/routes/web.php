@@ -1,16 +1,16 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Str;
-use Illuminate\Support\Carbon;
-use Dompdf\Dompdf;
-use App\Models\Usuario;
 use App\Models\Empleado;
 use App\Models\LeyVacacion;
 use App\Models\RegistroDescanso;
+use App\Models\Usuario;
+use Dompdf\Dompdf;
+use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Str;
 
 // Pantalla del Login
 Route::get('/', function () {
@@ -23,7 +23,8 @@ Route::post('/login', function (Request $request) {
 
     if ($usuario && Hash::check($request->contrasena, $usuario->contrasena)) {
         session(['logeado' => true, 'nombre' => $usuario->nombre_completo]);
-        return redirect()->route('panel'); 
+
+        return redirect()->route('panel');
     } else {
         return back()->withErrors(['error' => 'Correo o contraseña incorrectos']);
     }
@@ -50,7 +51,7 @@ Route::post('/forgot-password', function (Request $request) {
 
         $status = 'Si el correo existe, te hemos enviado un enlace para restablecer tu contraseña.';
         $resetLink = app()->environment('local')
-            ? route('password.reset', $token) . '?email=' . urlencode($usuario->correo)
+            ? route('password.reset', $token).'?email='.urlencode($usuario->correo)
             : null;
 
         return back()->with('status', $status)->with('reset_link', $resetLink);
@@ -104,18 +105,51 @@ Route::post('/reset-password', function (Request $request) {
 
 // Pantalla del Panel Principal Dashboard
 Route::get('/panel', function () {
-    if (!session('logeado')) {
+    if (! session('logeado')) {
         return redirect()->route('login');
     }
 
-    // Traemos a todos los empleados de la base de datos
+    $anioActual = Carbon::now()->year;
     $empleados = Empleado::all();
-    
-    return view('dashboard', compact('empleados'));
+
+    $empleadosResumen = $empleados->map(function ($empleado) use ($anioActual) {
+        $antiguedadAnios = Carbon::parse($empleado->fecha_ingreso)->diffInYears(Carbon::now());
+        $ley = LeyVacacion::where('anios_antiguedad', '<=', $antiguedadAnios)
+            ->orderBy('anios_antiguedad', 'desc')
+            ->first();
+        $diasDerecho = $ley?->dias_derecho ?? 0;
+        $diasTomados = RegistroDescanso::where('empleado_id', $empleado->id)
+            ->where('anio_calendario', $anioActual)
+            ->sum('dias_tomados');
+
+        return (object) [
+            'empleado' => $empleado,
+            'antiguedadAnios' => $antiguedadAnios,
+            'diasDerecho' => $diasDerecho,
+            'diasTomados' => $diasTomados,
+            'diasRestantes' => max(0, $diasDerecho - $diasTomados),
+        ];
+    });
+
+    $totalEmpleados = $empleadosResumen->count();
+    $totalDiasDerecho = $empleadosResumen->sum('diasDerecho');
+    $totalDiasTomados = $empleadosResumen->sum('diasTomados');
+    $totalDiasRestantes = $empleadosResumen->sum('diasRestantes');
+    $empleadosConMenosDias = $empleadosResumen->sortBy('diasRestantes')->take(5);
+
+    return view('dashboard', compact(
+        'empleados',
+        'anioActual',
+        'totalEmpleados',
+        'totalDiasDerecho',
+        'totalDiasTomados',
+        'totalDiasRestantes',
+        'empleadosConMenosDias'
+    ));
 })->name('panel');
 
 Route::get('/empleados/{empleado}/vacaciones', function (Empleado $empleado) {
-    if (!session('logeado')) {
+    if (! session('logeado')) {
         return redirect()->route('login');
     }
 
@@ -158,7 +192,7 @@ Route::get('/empleados/{empleado}/vacaciones', function (Empleado $empleado) {
 })->name('empleados.vacaciones');
 
 Route::post('/empleados/{empleado}/vacaciones', function (Request $request, Empleado $empleado) {
-    if (!session('logeado')) {
+    if (! session('logeado')) {
         return redirect()->route('login');
     }
 
@@ -178,7 +212,7 @@ Route::post('/empleados/{empleado}/vacaciones', function (Request $request, Empl
     $fin = Carbon::parse($request->fecha_fin);
 
     if ($inicio->year !== $anioActual || $fin->year !== $anioActual) {
-        return back()->withErrors(['fecha_inicio' => "Las fechas deben estar dentro del año {$anioActual}." ])->withInput();
+        return back()->withErrors(['fecha_inicio' => "Las fechas deben estar dentro del año {$anioActual}."])->withInput();
     }
 
     $registroPorMes = RegistroDescanso::where('empleado_id', $empleado->id)
@@ -188,7 +222,7 @@ Route::post('/empleados/{empleado}/vacaciones', function (Request $request, Empl
     $diasNuevos = $inicio->diffInDays($fin) + 1;
 
     if ($diasTomadosActuales + $diasNuevos > $diasDerecho) {
-        return back()->withErrors(['fecha_inicio' => "No puedes registrar más de {$diasDerecho} días en el año {$anioActual}." ])->withInput();
+        return back()->withErrors(['fecha_inicio' => "No puedes registrar más de {$diasDerecho} días en el año {$anioActual}."])->withInput();
     }
 
     $diasPorMes = [];
@@ -212,7 +246,7 @@ Route::post('/empleados/{empleado}/vacaciones', function (Request $request, Empl
 })->name('empleados.vacaciones.guardar');
 
 Route::get('/empleados/{empleado}/vacaciones/pdf', function (Empleado $empleado) {
-    if (!session('logeado')) {
+    if (! session('logeado')) {
         return redirect()->route('login');
     }
 
@@ -247,7 +281,7 @@ Route::get('/empleados/{empleado}/vacaciones/pdf', function (Empleado $empleado)
         'meses'
     ))->render();
 
-    $dompdf = new Dompdf();
+    $dompdf = new Dompdf;
     $dompdf->loadHtml($html);
     $dompdf->setPaper('A4', 'portrait');
     $dompdf->render();
@@ -261,5 +295,6 @@ Route::get('/empleados/{empleado}/vacaciones/pdf', function (Empleado $empleado)
 // Cerrar Sesión
 Route::get('/logout', function () {
     session()->forget(['logeado', 'nombre']);
+
     return redirect()->route('login');
 })->name('logout');
