@@ -14,7 +14,7 @@ use Illuminate\Support\Str;
 
 // Pantalla del Login
 Route::get('/', function () {
-    return view('login');
+    return view('screens.auth.login');
 })->name('login');
 
 // Procesar el Login
@@ -32,7 +32,7 @@ Route::post('/login', function (Request $request) {
 
 // Formulario de olvido de contraseña
 Route::get('/forgot-password', function () {
-    return view('auth.forgot-password');
+    return view('screens.auth.forgot-password');
 })->name('password.request');
 
 Route::post('/forgot-password', function (Request $request) {
@@ -73,7 +73,7 @@ Route::get('/reset-password/{token}', function (Request $request, $token) {
         return redirect()->route('password.request')->withErrors(['token' => 'El enlace de restablecimiento no es válido o ha expirado.']);
     }
 
-    return view('auth.reset-password', ['token' => $token, 'email' => $email]);
+    return view('screens.auth.reset-password', ['token' => $token, 'email' => $email]);
 })->name('password.reset');
 
 Route::post('/reset-password', function (Request $request) {
@@ -137,7 +137,7 @@ Route::get('/panel', function () {
     $totalDiasRestantes = $empleadosResumen->sum('diasRestantes');
     $empleadosConMenosDias = $empleadosResumen->sortBy('diasRestantes')->take(5);
 
-    return view('dashboard', compact(
+    return view('screens.dashboard', compact(
         'empleados',
         'anioActual',
         'totalEmpleados',

@@ -1,10 +1,9 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Olvidé mi contraseña</title>
-    <style>
+@extends('screens.layout')
+
+@section('title', 'Restablecer contraseña')
+
+@push('styles')
+<style>
         :root {
             font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
             color: #1f324f;
@@ -40,23 +39,25 @@
 
         .card p {
             margin: 0.5rem 0 1.8rem;
-            color: #747780;
+            color: #5f6f8c;
             line-height: 1.6;
         }
 
-        .alert {
+        .alert,
+        .error-list {
             margin-bottom: 1.25rem;
-            padding: 1rem 1.2rem;
             border-radius: 16px;
+            padding: 1rem 1.2rem;
+            font-size: 0.95rem;
+        }
+
+        .alert {
             background: #f0f7ff;
             color: #1a3a70;
             border: 1px solid #dce8ff;
         }
 
         .error-list {
-            margin: 0 0 1rem;
-            padding: 0.8rem 1rem;
-            border-radius: 14px;
             background: #ffe8e8;
             color: #853535;
             border: 1px solid #f2c6c6;
@@ -90,7 +91,7 @@
             border: none;
             border-radius: 14px;
             padding: 1rem;
-            background: linear-gradient(120deg, #5567ff 0%, #2744d5 100%);
+            background: linear-gradient(135deg, #5567ff 0%, #2744d5 100%);
             color: #fff;
             font-size: 1rem;
             font-weight: 600;
@@ -99,8 +100,8 @@
         }
 
         button:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 24px 26px rgba(58, 87, 151, 0.18);
+            transform: translateY(-1px);
+            box-shadow: 0 14px 26px rgba(58, 87, 151, 0.18);
         }
 
         .footer-link {
@@ -113,19 +114,13 @@
             color: #3c62f5;
             text-decoration: none;
         }
-
-        .manual-link {
-            margin-top: 1rem;
-            word-break: break-all;
-            font-size: 0.95rem;
-            color: #e5e7ee;
-        }
     </style>
-</head>
-<body>
+@endpush
+
+@section('content')
     <div class="card">
-        <h1>¿Olvidaste tu contraseña?</h1>
-        <p>Escribe tu correo institucional y te enviaremos un enlace para restablecerla.</p>
+        <h1>Restablecer contraseña</h1>
+        <p>Elige una nueva contraseña para tu cuenta.</p>
 
         @if(session('status'))
             <div class="alert">{{ session('status') }}</div>
@@ -141,20 +136,20 @@
             </div>
         @endif
 
-        <form action="{{ route('password.email') }}" method="POST">
+        <form action="{{ route('password.update') }}" method="POST">
             @csrf
-            <label for="correo">Correo electrónico</label>
-            <input id="correo" type="email" name="correo" value="{{ old('correo') }}" required placeholder="admin@preparatoria.edu">
-            <button type="submit">Enviar enlace</button>
+            <input type="hidden" name="token" value="{{ $token }}">
+            <input type="hidden" name="correo" value="{{ $email }}">
+
+            <label for="contrasena">Nueva contraseña</label>
+            <input id="contrasena" type="password" name="contrasena" required placeholder="********">
+
+            <label for="contrasena_confirmation">Confirmar contraseña</label>
+            <input id="contrasena_confirmation" type="password" name="contrasena_confirmation" required placeholder="********">
+
+            <button type="submit">Guardar nueva contraseña</button>
         </form>
 
-        @if(session('reset_link'))
-            <div class="manual-link">
-                Link de prueba: <a href="{{ session('reset_link') }}">{{ session('reset_link') }}</a>
-            </div>
-        @endif
-
-        <p class="footer-link">¿Ya recuerdas tu contraseña? <a href="{{ route('login') }}">Inicia sesión</a></p>
+        <p class="footer-link">¿Recordaste tu contraseña? <a href="{{ route('login') }}">Volver al inicio</a></p>
     </div>
-</body>
-</html>
+@endsection
