@@ -4,6 +4,7 @@ use App\Models\Empleado;
 use App\Models\LeyVacacion;
 use App\Models\RegistroDescanso;
 use App\Models\Usuario;
+use App\Models\Puesto;
 use Dompdf\Dompdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
@@ -270,6 +271,9 @@ Route::get('/empleados/{empleado}/vacaciones/pdf', function (Empleado $empleado)
         9 => 'Septiembre', 10 => 'Octubre', 11 => 'Noviembre', 12 => 'Diciembre',
     ];
 
+    $puesto = $empleado->puesto_id ? Puesto::find($empleado->puesto_id) : null;
+    $fecha = Carbon::now();
+
     $html = view('empleados.pdf', compact(
         'empleado',
         'anioActual',
@@ -278,7 +282,9 @@ Route::get('/empleados/{empleado}/vacaciones/pdf', function (Empleado $empleado)
         'diasTomados',
         'diasRestantes',
         'registros',
-        'meses'
+        'meses',
+        'puesto',
+        'fecha'
     ))->render();
 
     $dompdf = new Dompdf;
