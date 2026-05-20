@@ -107,7 +107,7 @@
                 </div>
 
                 <div style="margin-top: 1.5rem;">
-                    <a href="{{ route('empleados.vacaciones.pdf', $empleado->id) }}" class="button-secondary" style="width: auto;">Generar reporte PDF</a>
+                    <a href="{{ route('empleados.vacaciones.pdf', $empleado->id) }}" class="button-secondary" style="width: auto;">porte PDF</a>
                 </div>
             </article>
         </section>
