@@ -16,19 +16,22 @@
             color: #000;
             line-height: 1.3;
             background-color: #fff;
+            margin: 0;
+            padding: 0;
         }
 
         .container {
             width: 100%;
             max-width: 800px;
             margin: 0 auto;
-            padding: 20px 30px;
+            padding: 15px 20px;
+            text-align: center;
         }
 
         .header-table {
-            width: 100%;
+            width: 95%;
             border-collapse: collapse;
-            margin-bottom: 15px;
+            margin: 0 auto 12px auto;
         }
 
         .header-table td {
@@ -74,20 +77,21 @@
 
         .intro-text {
             font-size: 10.5px;
-            margin: 20px 0 15px 0;
-            text-align: left;
+            margin: 15px 0 12px 0;
+            text-align: justify;
+            display: block;
         }
 
         .info-table {
-            width: 100%;
+            width: 95%;
             border-collapse: collapse;
-            margin-bottom: 15px;
+            margin: 0 auto 12px auto;
         }
 
         .info-table td {
             border: 1px solid #000;
-            padding: 6px 8px;
-            font-size: 11px;
+            padding: 5px 6px;
+            font-size: 10.5px;
         }
 
         .info-table td.label {
@@ -100,16 +104,16 @@
         }
 
         .balances-table {
-            width: 100%;
+            width: 95%;
             border-collapse: collapse;
-            margin-top: 10px;
-            margin-bottom: 20px;
+            margin: 8px auto 15px auto;
         }
 
         .balances-table td {
             border: none;
-            padding: 4px 0;
+            padding: 3px 0;
             vertical-align: middle;
+            font-size: 10.5px;
         }
 
         .cell-inline-border {
@@ -121,22 +125,23 @@
 
         .vacation-section-title {
             font-weight: bold;
-            margin-bottom: 8px;
-            font-size: 11px;
+            margin-bottom: 6px;
+            font-size: 10.5px;
+            text-align: center;
         }
 
         .vacation-table {
-            width: 100%;
+            width: 95%;
             border-collapse: collapse;
-            margin-bottom: 20px;
+            margin: 8px auto 15px auto;
         }
 
         .vacation-table th, 
         .vacation-table td {
             border: 1px solid #000;
-            padding: 5px 2px;
+            padding: 4px 2px;
             text-align: center;
-            font-size: 11px;
+            font-size: 10px;
         }
 
         .vacation-table th {
@@ -146,32 +151,34 @@
 
         .observations-title {
             font-weight: bold;
-            margin-bottom: 4px;
-            font-size: 11px;
+            margin-bottom: 3px;
+            font-size: 10.5px;
+            text-align: center;
         }
 
         .observations-box {
-            width: 100%;
+            width: 95%;
             border: 1px solid #000;
-            height: 55px;
-            margin-bottom: 15px;
+            height: 50px;
+            margin: 8px auto 12px auto;
         }
 
         .disclaimer {
-            font-size: 10px;
-            margin-bottom: 50px;
+            font-size: 9px;
+            margin-bottom: 35px;
+            text-align: justify;
         }
 
         .signatures-container {
             width: 100%;
-            margin-top: 40px;
+            margin-top: 25px;
         }
 
         .signatures-row {
             display: table;
-            width: 100%;
+            width: 95%;
             table-layout: fixed;
-            margin-bottom: 40px;
+            margin: 0 auto 25px auto;
         }
 
         .signature-col {
@@ -188,20 +195,21 @@
 
         .signature-line {
             border-top: 1px solid #000;
-            padding-top: 5px;
+            padding-top: 3px;
             font-weight: bold;
-            font-size: 11px;
+            font-size: 10px;
         }
 
         .signature-details {
-            font-size: 10.5px;
-            margin-top: 2px;
+            font-size: 9.5px;
+            margin-top: 1px;
         }
 
         .vobo-row {
             display: table;
-            width: 100%;
+            width: 95%;
             table-layout: fixed;
+            margin: 0 auto;
         }
 
         .vobo-col {
@@ -287,19 +295,35 @@
             </tr>
         </thead>
         <tbody>
-            <tr>
-                <td>{{ $anioActual }}</td>
-                <td style="font-weight: bold;">{{ $diasTomados }}</td>
-                <td>--</td>
-                <td>--</td>
-                <td>--</td>
-                <td>--</td>
-                <td>--</td>
-                <td>--</td>
-                <td>--</td>
-                <td>--</td>
-                <td>--</td>
-            </tr>
+            @forelse($periodosVacacionales as $periodo)
+                <tr>
+                    <td>{{ $anioActual }}</td>
+                    <td style="font-weight: bold;">{{ \Carbon\Carbon::parse($periodo->fecha_inicio)->diffInDays(\Carbon\Carbon::parse($periodo->fecha_fin)) + 1 }}</td>
+                    <td>{{ \Carbon\Carbon::parse($periodo->fecha_inicio)->format('d') }}</td>
+                    <td>{{ \Carbon\Carbon::parse($periodo->fecha_inicio)->format('m') }}</td>
+                    <td>{{ \Carbon\Carbon::parse($periodo->fecha_inicio)->format('Y') }}</td>
+                    <td>{{ \Carbon\Carbon::parse($periodo->fecha_fin)->format('d') }}</td>
+                    <td>{{ \Carbon\Carbon::parse($periodo->fecha_fin)->format('m') }}</td>
+                    <td>{{ \Carbon\Carbon::parse($periodo->fecha_fin)->format('Y') }}</td>
+                    <td>{{ \Carbon\Carbon::parse($periodo->fecha_regreso)->format('d') }}</td>
+                    <td>{{ \Carbon\Carbon::parse($periodo->fecha_regreso)->format('m') }}</td>
+                    <td>{{ \Carbon\Carbon::parse($periodo->fecha_regreso)->format('Y') }}</td>
+                </tr>
+            @empty
+                <tr>
+                    <td>{{ $anioActual }}</td>
+                    <td style="font-weight: bold;">{{ $diasTomados }}</td>
+                    <td>--</td>
+                    <td>--</td>
+                    <td>--</td>
+                    <td>--</td>
+                    <td>--</td>
+                    <td>--</td>
+                    <td>--</td>
+                    <td>--</td>
+                    <td>--</td>
+                </tr>
+            @endforelse
         </tbody>
     </table>
 

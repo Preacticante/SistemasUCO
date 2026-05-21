@@ -3,6 +3,7 @@
 use App\Models\Empleado;
 use App\Models\LeyVacacion;
 use App\Models\RegistroDescanso;
+use App\Models\PeriodoVacacional;
 use App\Models\Usuario;
 use App\Models\Puesto;
 use Dompdf\Dompdf;
@@ -243,6 +244,19 @@ Route::post('/empleados/{empleado}/vacaciones', function (Request $request, Empl
         $registro->save();
     }
 
+    // Guardar en la tabla periodos_vacacionales
+    $diasPeriodo = $inicio->diffInDays($fin) + 1;
+    $fechaRegreso = $fin->copy()->addDay()->toDateString();
+
+    PeriodoVacacional::create([
+        'empleado_id' => $empleado->id,
+        'anio_calendario' => $anioActual,
+        'fecha_inicio' => $request->fecha_inicio,
+        'fecha_fin' => $request->fecha_fin,
+        'fecha_regreso' => $fechaRegreso,
+        'dias' => $diasPeriodo,
+    ]);
+
     return back()->with('success', 'Registro de días de vacaciones actualizado correctamente.');
 })->name('empleados.vacaciones.guardar');
 
@@ -265,6 +279,11 @@ Route::get('/empleados/{empleado}/vacaciones/pdf', function (Empleado $empleado)
     $diasTomados = $registros->sum('dias_tomados');
     $diasRestantes = max(0, $diasDerecho - $diasTomados);
 
+    // Obtener periodos vacacionales de la base de datos
+    $periodosVacacionales = PeriodoVacacional::where('empleado_id', $empleado->id)
+        ->orderBy('fecha_inicio')
+        ->get();
+
     $meses = [
         1 => 'Enero', 2 => 'Febrero', 3 => 'Marzo', 4 => 'Abril',
         5 => 'Mayo', 6 => 'Junio', 7 => 'Julio', 8 => 'Agosto',
@@ -282,6 +301,7 @@ Route::get('/empleados/{empleado}/vacaciones/pdf', function (Empleado $empleado)
         'diasTomados',
         'diasRestantes',
         'registros',
+        'periodosVacacionales',
         'meses',
         'puesto',
         'fecha'
