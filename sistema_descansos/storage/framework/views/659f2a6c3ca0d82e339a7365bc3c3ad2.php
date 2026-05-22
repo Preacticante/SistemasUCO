@@ -1,24 +1,24 @@
-﻿@extends('screens.layout')
+﻿
  <div class="login-box">
         <h2>Centro de control</h2>
         <p>Inicia sesión con tu correo institucional para acceder al panel de gestión.</p>
 
-        @if(session('status'))
-            <div class="alert">{{ session('status') }}</div>
-        @endif
+        <?php if(session('status')): ?>
+            <div class="alert"><?php echo e(session('status')); ?></div>
+        <?php endif; ?>
 
-        @if($errors->any())
+        <?php if($errors->any()): ?>
             <div class="error-list">
                 <ul style="margin: 0; padding-left: 1.25rem;">
-                    @foreach($errors->all() as $error)
-                        <li>{{ $error }}</li>
-                    @endforeach
+                    <?php $__currentLoopData = $errors->all(); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $error): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                        <li><?php echo e($error); ?></li>
+                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                 </ul>
             </div>
-        @endif
+        <?php endif; ?>
 
-        <form action="{{ route('login.post') }}" method="POST">
-            @csrf
+        <form action="<?php echo e(route('login.post')); ?>" method="POST">
+            <?php echo csrf_field(); ?>
             <div class="form-group">
                 <label for="correo">Correo Electrónico</label>
                 <input id="correo" type="email" name="correo" required placeholder="admin@preparatoria.edu">
@@ -30,11 +30,11 @@
             <button type="submit">Entrar</button>
         </form>
 
-        <p class="help-text"><a href="{{ route('password.request') }}">Olvidé mi contraseña</a></p>
+        <p class="help-text"><a href="<?php echo e(route('password.request')); ?>">Olvidé mi contraseña</a></p>
     </div>
-@section('title', 'Acceso | Control de Descansos')
+<?php $__env->startSection('title', 'Acceso | Control de Descansos'); ?>
 
-@push('styles')
+<?php $__env->startPush('styles'); ?>
 <style>
         :root {
             font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
@@ -154,8 +154,9 @@
             text-decoration: none;
         }
     </style>
-@endpush
+<?php $__env->stopPush(); ?>
 
-@section('content')
+<?php $__env->startSection('content'); ?>
    
-@endsection
+<?php $__env->stopSection(); ?>
+<?php echo $__env->make('layouts.app', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH C:\Users\becario.tie\Documents\GitHub\SistemasUCO\sistema_descansos\resources\views/auth/login.blade.php ENDPATH**/ ?>
