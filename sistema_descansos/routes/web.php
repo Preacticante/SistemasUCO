@@ -1,7 +1,5 @@
 <?php
 
-<?php
-
 use App\Models\Empleado;
 use App\Models\LeyVacacion;
 use App\Models\RegistroDescanso;
