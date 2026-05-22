@@ -228,9 +228,9 @@
         <tr>
             <td class="logo-area" style="text-align: left;">
                 
-                <
+                
         <?php
-            $path = public_path('img/uco_logo.png');
+            $path = public_path('img/logo_uco.png');
             $type = pathinfo($path, PATHINFO_EXTENSION);
             $data = file_get_contents($path);
             $base64 = 'data:image/' . $type . ';base64,' . base64_encode($data);
@@ -238,7 +238,7 @@
 
 <img src="<?php echo e($base64); ?>" 
      alt="UCO PREPA CONTEMPORÁNEA"
-     style="height: 55px; margin-bottom: 2px;">
+     style="height: 100px; margin-bottom: 2px;">
 
 
             </td>
