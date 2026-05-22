@@ -1,4 +1,4 @@
-@extends('screens.layout')
+@extends('layouts.app')
 
 @section('title', 'Olvidé mi contraseña')
 
@@ -141,18 +141,13 @@
             </div>
         @endif
 
+
         <form action="{{ route('password.email') }}" method="POST">
             @csrf
             <label for="correo">Correo electrónico</label>
             <input id="correo" type="email" name="correo" value="{{ old('correo') }}" required placeholder="admin@preparatoria.edu">
             <button type="submit">Enviar enlace</button>
         </form>
-
-        @if(session('reset_link'))
-            <div class="manual-link">
-                Link de prueba: <a href="{{ session('reset_link') }}">{{ session('reset_link') }}</a>
-            </div>
-        @endif
 
         <p class="footer-link">¿Ya recuerdas tu contraseña? <a href="{{ route('login') }}">Inicia sesión</a></p>
     </div>

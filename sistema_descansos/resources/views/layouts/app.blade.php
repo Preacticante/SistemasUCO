@@ -3,11 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>@yield('title', config('app.name', 'Sistema'))</title>
+    <title>@yield('title', 'Sistema de Descansos')</title>
     @stack('styles')
 </head>
-<body class="@yield('body-class', '')">
+<body>
     @yield('content')
-    @stack('scripts')
 </body>
 </html>

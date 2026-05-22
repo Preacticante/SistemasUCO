@@ -1,152 +1,38 @@
 <?php
 
-use App\Models\Empleado;
-use App\Models\LeyVacacion;
-use App\Models\RegistroDescanso;
-use App\Models\Usuario;
-use Dompdf\Dompdf;
-use Illuminate\Http\Request;
-use Illuminate\Support\Carbon;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Route;
-use Illuminate\Support\Str;
+use App\Http\Controllers\Auth\LoginController;
+use App\Http\Controllers\Auth\ForgotPasswordController;
+use App\Http\Controllers\Auth\ResetPasswordController;
+use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\SettingsController;
+use App\Http\Controllers\EmpleadoController;
 
-// Pantalla del Login
-Route::get('/', function () {
-    return view('screens.auth.login');
-})->name('login');
+// Login
+Route::get('/', [LoginController::class, 'showLoginForm'])->name('login');
+Route::post('/login', [LoginController::class, 'login'])->name('login.post');
+Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
 
-// Procesar el Login
-Route::post('/login', function (Request $request) {
-    $usuario = Usuario::where('correo', $request->correo)->first();
+// Recuperar y restablecer contraseña
+Route::get('/forgot-password', [ForgotPasswordController::class, 'showLinkRequestForm'])->name('password.request');
+Route::post('/forgot-password', [ForgotPasswordController::class, 'sendResetLinkEmail'])->name('password.email');
+Route::get('/reset-password/{token}', [ResetPasswordController::class, 'showResetForm'])->name('password.reset');
+Route::post('/reset-password', [ResetPasswordController::class, 'reset'])->name('password.update');
 
-    if ($usuario && Hash::check($request->contrasena, $usuario->contrasena)) {
-        session(['logeado' => true, 'nombre' => $usuario->nombre_completo]);
+// Dashboard
+Route::get('/panel', [DashboardController::class, 'index'])->name('panel');
 
-        return redirect()->route('panel');
-    } else {
-        return back()->withErrors(['error' => 'Correo o contraseña incorrectos']);
-    }
-})->name('login.post');
+// Perfil
+Route::get('/perfil', [ProfileController::class, 'show'])->name('perfil.show');
+Route::post('/perfil', [ProfileController::class, 'update'])->name('perfil.update');
 
-// Formulario de olvido de contraseña
-Route::get('/forgot-password', function () {
-    return view('screens.auth.forgot-password');
-})->name('password.request');
+// Ajustes
+Route::get('/ajustes', [SettingsController::class, 'index'])->name('ajustes.index');
+Route::post('/ajustes', [SettingsController::class, 'update'])->name('ajustes.update');
 
-Route::post('/forgot-password', function (Request $request) {
-    $request->validate([
-        'correo' => 'required|email',
-    ]);
-
-    $usuario = Usuario::where('correo', $request->correo)->first();
-
-    if ($usuario) {
-        $token = Str::random(64);
-        DB::table('password_reset_tokens')->updateOrInsert(
-            ['email' => $usuario->correo],
-            ['token' => Hash::make($token), 'created_at' => now()]
-        );
-
-        $status = 'Si el correo existe, te hemos enviado un enlace para restablecer tu contraseña.';
-        $resetLink = app()->environment('local')
-            ? route('password.reset', $token).'?email='.urlencode($usuario->correo)
-            : null;
-
-        return back()->with('status', $status)->with('reset_link', $resetLink);
-    }
-
-    return back()->with('status', 'Si el correo existe, te hemos enviado un enlace para restablecer tu contraseña.');
-})->name('password.email');
-
-Route::get('/reset-password/{token}', function (Request $request, $token) {
-    $email = $request->query('email');
-
-    if (! $email) {
-        return redirect()->route('password.request')->withErrors(['correo' => 'Necesitamos tu correo para validar el enlace.']);
-    }
-
-    $record = DB::table('password_reset_tokens')->where('email', $email)->first();
-
-    if (! $record || ! Hash::check($token, $record->token) || Carbon::parse($record->created_at)->lt(now()->subMinutes(config('auth.passwords.users.expire')))) {
-        return redirect()->route('password.request')->withErrors(['token' => 'El enlace de restablecimiento no es válido o ha expirado.']);
-    }
-
-    return view('screens.auth.reset-password', ['token' => $token, 'email' => $email]);
-})->name('password.reset');
-
-Route::post('/reset-password', function (Request $request) {
-    $request->validate([
-        'correo' => 'required|email',
-        'token' => 'required|string',
-        'contrasena' => 'required|string|min:8|confirmed',
-    ]);
-
-    $record = DB::table('password_reset_tokens')->where('email', $request->correo)->first();
-
-    if (! $record || ! Hash::check($request->token, $record->token) || Carbon::parse($record->created_at)->lt(now()->subMinutes(config('auth.passwords.users.expire')))) {
-        return back()->withErrors(['token' => 'El enlace de restablecimiento no es válido o ha expirado.']);
-    }
-
-    $usuario = Usuario::where('correo', $request->correo)->first();
-
-    if (! $usuario) {
-        return back()->withErrors(['correo' => 'No se encontró el correo.']);
-    }
-
-    $usuario->contrasena = Hash::make($request->contrasena);
-    $usuario->save();
-
-    DB::table('password_reset_tokens')->where('email', $request->correo)->delete();
-
-    return redirect()->route('login')->with('status', 'Contraseña actualizada con éxito. Ahora puedes iniciar sesión.');
-})->name('password.update');
-
-// Pantalla del Panel Principal Dashboard
-Route::get('/panel', function () {
-    if (! session('logeado')) {
-        return redirect()->route('login');
-    }
-
-    $anioActual = Carbon::now()->year;
-    $empleados = Empleado::all();
-
-    $empleadosResumen = $empleados->map(function ($empleado) use ($anioActual) {
-        $antiguedadAnios = Carbon::parse($empleado->fecha_ingreso)->diffInYears(Carbon::now());
-        $ley = LeyVacacion::where('anios_antiguedad', '<=', $antiguedadAnios)
-            ->orderBy('anios_antiguedad', 'desc')
-            ->first();
-        $diasDerecho = $ley?->dias_derecho ?? 0;
-        $diasTomados = RegistroDescanso::where('empleado_id', $empleado->id)
-            ->where('anio_calendario', $anioActual)
-            ->sum('dias_tomados');
-
-        return (object) [
-            'empleado' => $empleado,
-            'antiguedadAnios' => $antiguedadAnios,
-            'diasDerecho' => $diasDerecho,
-            'diasTomados' => $diasTomados,
-            'diasRestantes' => max(0, $diasDerecho - $diasTomados),
-        ];
-    });
-
-    $totalEmpleados = $empleadosResumen->count();
-    $totalDiasDerecho = $empleadosResumen->sum('diasDerecho');
-    $totalDiasTomados = $empleadosResumen->sum('diasTomados');
-    $totalDiasRestantes = $empleadosResumen->sum('diasRestantes');
-    $empleadosConMenosDias = $empleadosResumen->sortBy('diasRestantes')->take(5);
-
-    return view('screens.dashboard', compact(
-        'empleados',
-        'anioActual',
-        'totalEmpleados',
-        'totalDiasDerecho',
-        'totalDiasTomados',
-        'totalDiasRestantes',
-        'empleadosConMenosDias'
-    ));
-})->name('panel');
+// Empleados (CRUD básico)
+Route::resource('empleados', EmpleadoController::class);
 
 Route::get('/empleados/{empleado}/vacaciones', function (Empleado $empleado) {
     if (! session('logeado')) {

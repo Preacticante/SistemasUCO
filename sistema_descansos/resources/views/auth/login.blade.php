@@ -1,4 +1,4 @@
-﻿@extends('screens.layout')
+﻿@extends('layouts.app')
  <div class="login-box">
         <h2>Centro de control</h2>
         <p>Inicia sesión con tu correo institucional para acceder al panel de gestión.</p>

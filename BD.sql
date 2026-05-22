@@ -11,7 +11,7 @@ CREATE TABLE usuario(
 CREATE TABLE puestos(
     id INT AUTO_INCREMENT PRIMARY KEY,
     nombre VARCHAR(100) NOT NULL UNIQUE
-);sys_config
+);
 
 INSERT INTO puestos (nombre) VALUES 
 ('Intendente'),                 -- ID 1

@@ -1,4 +1,4 @@
-@extends('screens.layout')
+@extends('layouts.app')
 
 @section('title', 'Restablecer contraseña')
 
