@@ -226,10 +226,21 @@
 
     <table class="header-table">
         <tr>
-            <td class="logo-area">
-                <div class="logo-main">UCO</div>
-                <div class="logo-sub">PREPA CONTEMPORÁNEA</div>
-                <div class="logo-slogan">Hazlo y actúa sólo para continuar</div>
+            <td class="logo-area" style="text-align: left;">
+                
+                <
+        @php
+            $path = public_path('img/uco_logo.png');
+            $type = pathinfo($path, PATHINFO_EXTENSION);
+            $data = file_get_contents($path);
+            $base64 = 'data:image/' . $type . ';base64,' . base64_encode($data);
+        @endphp
+
+<img src="{{ $base64 }}" 
+     alt="UCO PREPA CONTEMPORÁNEA"
+     style="height: 55px; margin-bottom: 2px;">
+
+
             </td>
             <td class="title-area">
                 CONSTANCIA DE PERIODO VACACIONAL
