@@ -44,6 +44,17 @@ CREATE TABLE ley_vacaciones(
     dias_derecho INT
 );
 
+CREATE TABLE periodos_vacacionales(
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    empleado_id INT,
+    fecha_inicio DATE NOT NULL,
+    fecha_fin DATE NOT NULL,
+    fecha_regreso DATE,
+    dias INT DEFAULT 0,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (empleado_id) REFERENCES empleados(id) ON DELETE CASCADE
+);
+
 INSERT INTO ley_vacaciones (anios_antiguedad, dias_derecho) VALUES 
 (1, 12), (2, 14), (3, 16), (4, 18), (5, 20),
 (6, 22), (7, 22), (8, 22), (9, 22), (10, 22),

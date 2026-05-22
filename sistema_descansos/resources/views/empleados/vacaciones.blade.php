@@ -14,11 +14,11 @@
                     <span class="page-label">Vacaciones</span>
                     <h1>{{ $empleado->nombre_completo }}</h1>
                 </div>
-                <p>Administra registros y consulta el consumo de vacaciones de manera clara y moderna.</p>
+                <p>Administra registros y consulta el consumo de vacaciones de manera clara.</p>
             </div>
 
             <a href="{{ route('panel') }}" class="button-link">
-                <span class="button-icon">⟵</span>
+                <span class="button-icon"></span>
                 Volver al inicio
             </a>
         </section>
@@ -107,7 +107,7 @@
                 </div>
 
                 <div style="margin-top: 1.5rem;">
-                    <a href="{{ route('empleados.vacaciones.pdf', $empleado->id) }}" class="button-secondary" style="width: auto;">porte PDF</a>
+                    <a href="{{ route('empleados.vacaciones.pdf', $empleado->id) }}" target="_blank" rel="noopener noreferrer" class="button-secondary" style="width: auto;">Reporte PDF</a>
                 </div>
             </article>
         </section>

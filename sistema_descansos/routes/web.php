@@ -1,5 +1,18 @@
 <?php
 
+<?php
+
+use App\Models\Empleado;
+use App\Models\LeyVacacion;
+use App\Models\RegistroDescanso;
+use App\Models\PeriodoVacacional;
+use App\Models\Usuario;
+use App\Models\Puesto;
+use Dompdf\Dompdf;
+use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\ForgotPasswordController;
@@ -108,24 +121,55 @@ Route::post('/empleados/{empleado}/vacaciones', function (Request $request, Empl
     $diasNuevos = $inicio->diffInDays($fin) + 1;
 
     if ($diasTomadosActuales + $diasNuevos > $diasDerecho) {
-        return back()->withErrors(['fecha_inicio' => "No puedes registrar más de {$diasDerecho} días en el año {$anioActual}."])->withInput();
+        return back()->withErrors(['fecha_inicio' => "No puedes registrar aun no cuentas con suficientes días para el año {$anioActual}."])->withInput();
     }
 
+    // Calcular días por mes
     $diasPorMes = [];
     for ($fecha = $inicio->copy(); $fecha->lte($fin); $fecha->addDay()) {
         $mes = $fecha->month;
         $diasPorMes[$mes] = ($diasPorMes[$mes] ?? 0) + 1;
     }
 
-    foreach ($diasPorMes as $mes => $cantidad) {
-        $registro = RegistroDescanso::firstOrNew([
-            'empleado_id' => $empleado->id,
-            'anio_calendario' => $anioActual,
-            'mes' => $mes,
-        ]);
+    // Validación extra: no permitir 0 o negativos
+    $diasPeriodo = $inicio->diffInDays($fin) + 1;
+    if ($diasPeriodo <= 0) {
+        return back()->withErrors(['fecha_inicio' => 'Rango de fechas inválido.'])->withInput();
+    }
 
-        $registro->dias_tomados = ($registro->dias_tomados ?? 0) + $cantidad;
-        $registro->save();
+    // Recalcular restantes por si hace falta
+    $diasRestantes = max(0, $diasDerecho - $diasTomadosActuales);
+    if ($diasPeriodo > $diasRestantes) {
+        return back()->withErrors(['fecha_inicio' => "No tienes suficientes días disponibles (restantes: {$diasRestantes})."])->withInput();
+    }
+
+    // Usar transacción para evitar cambios parciales en caso de error
+    try {
+        DB::transaction(function () use ($diasPorMes, $empleado, $anioActual, $inicio, $fin, $request, $diasPeriodo) {
+            foreach ($diasPorMes as $mes => $cantidad) {
+                $registro = RegistroDescanso::firstOrNew([
+                    'empleado_id' => $empleado->id,
+                    'anio_calendario' => $anioActual,
+                    'mes' => $mes,
+                ]);
+
+                $registro->dias_tomados = ($registro->dias_tomados ?? 0) + $cantidad;
+                $registro->save();
+            }
+
+            $fechaRegreso = $fin->copy()->addDay()->toDateString();
+
+            PeriodoVacacional::create([
+                'empleado_id' => $empleado->id,
+                'anio_calendario' => $anioActual,
+                'fecha_inicio' => $request->fecha_inicio,
+                'fecha_fin' => $request->fecha_fin,
+                'fecha_regreso' => $fechaRegreso,
+                'dias' => $diasPeriodo,
+            ]);
+        });
+    } catch (\Exception $e) {
+        return back()->withErrors(['error' => 'Ocurrió un error al guardar el registro. Intenta de nuevo.'])->withInput();
     }
 
     return back()->with('success', 'Registro de días de vacaciones actualizado correctamente.');
@@ -150,11 +194,19 @@ Route::get('/empleados/{empleado}/vacaciones/pdf', function (Empleado $empleado)
     $diasTomados = $registros->sum('dias_tomados');
     $diasRestantes = max(0, $diasDerecho - $diasTomados);
 
+    // Obtener periodos vacacionales de la base de datos
+    $periodosVacacionales = PeriodoVacacional::where('empleado_id', $empleado->id)
+        ->orderBy('fecha_inicio')
+        ->get();
+
     $meses = [
         1 => 'Enero', 2 => 'Febrero', 3 => 'Marzo', 4 => 'Abril',
         5 => 'Mayo', 6 => 'Junio', 7 => 'Julio', 8 => 'Agosto',
         9 => 'Septiembre', 10 => 'Octubre', 11 => 'Noviembre', 12 => 'Diciembre',
     ];
+
+    $puesto = $empleado->puesto_id ? Puesto::find($empleado->puesto_id) : null;
+    $fecha = Carbon::now();
 
     $html = view('empleados.pdf', compact(
         'empleado',
@@ -164,7 +216,10 @@ Route::get('/empleados/{empleado}/vacaciones/pdf', function (Empleado $empleado)
         'diasTomados',
         'diasRestantes',
         'registros',
-        'meses'
+        'periodosVacacionales',
+        'meses',
+        'puesto',
+        'fecha'
     ))->render();
 
     $dompdf = new Dompdf;
