@@ -6,8 +6,12 @@ use Illuminate\Http\Request;
 class EmpleadoController extends Controller
 {
     public function index() {
-        // lógica para listar empleados
-    }
+    // Jalamos todos los empleados de la base de datos
+    $empleados = \App\Models\Empleado::all();
+    
+    // Retornamos la vista index dentro de la carpeta empleados
+    return view('empleados.index', compact('empleados'));
+}
     public function show($id) {
         // lógica para mostrar un empleado
     }

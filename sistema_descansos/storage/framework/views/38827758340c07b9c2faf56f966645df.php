@@ -1,9 +1,9 @@
-@extends('layouts.app')
 
-@section('title', 'Mi Perfil')
-@section('header', 'Perfil de Administrador')
 
-@push('styles')
+<?php $__env->startSection('title', 'Mi Perfil'); ?>
+<?php $__env->startSection('header', 'Perfil de Administrador'); ?>
+
+<?php $__env->startPush('styles'); ?>
 <style>
     .profile-grid {
         display: grid;
@@ -103,19 +103,19 @@
     .stat-number { font-size: 1.5rem; font-weight: 700; color: #3b82f6; display: block; }
     .stat-label { font-size: 0.75rem; color: #64748b; }
 </style>
-@endpush
+<?php $__env->stopPush(); ?>
 
-@section('content')
+<?php $__env->startSection('content'); ?>
 <div class="profile-grid">
     
     <div class="profile-card">
         <div class="avatar-section">
-            @php
+            <?php
                 $nombre = session('nombre', 'Administrador');
                 $inicial = substr($nombre, 0, 1);
-            @endphp
-            <div class="avatar-circle">{{ $inicial }}</div>
-            <h2 class="user-name">{{ $nombre }}</h2>
+            ?>
+            <div class="avatar-circle"><?php echo e($inicial); ?></div>
+            <h2 class="user-name"><?php echo e($nombre); ?></h2>
             <p class="user-role">Control de Recursos Humanos</p>
         </div>
 
@@ -145,7 +145,7 @@
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px;">
                 <div class="info-group">
                     <div class="info-label">Nombre Completo</div>
-                    <div class="info-value">{{ session('nombre', 'Administrador') }}</div>
+                    <div class="info-value"><?php echo e(session('nombre', 'Administrador')); ?></div>
                 </div>
                 <div class="info-group">
                     <div class="info-label">Correo Electrónico</div>
@@ -188,4 +188,5 @@
     </div>
 
 </div>
-@endsection
+<?php $__env->stopSection(); ?>
+<?php echo $__env->make('layouts.app', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH C:\Users\becario.tie\Documents\GitHub\SistemasUCO\sistema_descansos\resources\views/perfil.blade.php ENDPATH**/ ?>

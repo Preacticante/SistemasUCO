@@ -1,17 +1,18 @@
 <?php
 
+use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Route;
+
+// Modelos
 use App\Models\Empleado;
 use App\Models\LeyVacacion;
 use App\Models\RegistroDescanso;
 use App\Models\PeriodoVacacional;
-use App\Models\Usuario;
 use App\Models\Puesto;
-use Dompdf\Dompdf;
-use Illuminate\Http\Request;
-use Illuminate\Support\Carbon;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Route;
+
+// Controladores
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\ForgotPasswordController;
 use App\Http\Controllers\Auth\ResetPasswordController;
@@ -20,10 +21,16 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\EmpleadoController;
 
-// Login
+// Librerías
+use Dompdf\Dompdf;
+
+/*
+|--------------------------------------------------------------------------
+| RUTAS DE AUTENTICACIÓN
+|--------------------------------------------------------------------------
+*/
 Route::get('/', [LoginController::class, 'showLoginForm'])->name('login');
 Route::post('/login', [LoginController::class, 'login'])->name('login.post');
-Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
 
 // Recuperar y restablecer contraseña
 Route::get('/forgot-password', [ForgotPasswordController::class, 'showLinkRequestForm'])->name('password.request');
@@ -31,27 +38,34 @@ Route::post('/forgot-password', [ForgotPasswordController::class, 'sendResetLink
 Route::get('/reset-password/{token}', [ResetPasswordController::class, 'showResetForm'])->name('password.reset');
 Route::post('/reset-password', [ResetPasswordController::class, 'reset'])->name('password.update');
 
-// -------------------------------------------------------------
-// RUTAS DEL MENÚ PRINCIPAL (SIDEBAR)
-// -------------------------------------------------------------
+// Cerrar Sesión (Unificada por GET para que funcione el botón del menú)
+Route::get('/logout', function () {
+    session()->forget(['logeado', 'nombre']);
+    return redirect()->route('login');
+})->name('logout');
+
+
+/*
+|--------------------------------------------------------------------------
+| RUTAS DEL MENÚ PRINCIPAL (SIDEBAR)
+|--------------------------------------------------------------------------
+*/
 
 // 1. Dashboard
 Route::get('/panel', [DashboardController::class, 'index'])->name('panel');
 
-// 2. Empleados (CRUD básico)
+// 2. Empleados (CRUD y Directorio)
 Route::resource('empleados', EmpleadoController::class);
-// Como usas Route::resource, el listado general de empleados ya tiene el nombre de ruta 'empleados.index'.
-// Agregaremos una ruta "alias" para que empate perfecto con tu botón del menú:
+
+// Alias para el botón del menú (redirige al index del recurso)
 Route::get('/directorio-empleados', function () {
+    if (! session('logeado')) return redirect()->route('login');
     return redirect()->route('empleados.index');
 })->name('empleados');
 
-// 3. Historial de Vacaciones (NUEVA RUTA)
+// 3. Historial de Vacaciones
 Route::get('/historial', function () {
-    // Si no está logeado, lo regresa al login
-    if (! session('logeado')) {
-        return redirect()->route('login');
-    }
+    if (! session('logeado')) return redirect()->route('login');
     return view('historial');
 })->name('historial');
 
@@ -64,14 +78,14 @@ Route::get('/perfil', [ProfileController::class, 'show'])->name('perfil');
 Route::post('/perfil', [ProfileController::class, 'update'])->name('perfil.update');
 
 
-// -------------------------------------------------------------
-// RUTAS DE LOGICA DE VACACIONES (MANTIENES TU CÓDIGO INTACTO)
-// -------------------------------------------------------------
+/*
+|--------------------------------------------------------------------------
+| RUTAS DE LÓGICA DE VACACIONES (INTACTAS)
+|--------------------------------------------------------------------------
+*/
 
 Route::get('/empleados/{empleado}/vacaciones', function (Empleado $empleado) {
-    if (! session('logeado')) {
-        return redirect()->route('login');
-    }
+    if (! session('logeado')) return redirect()->route('login');
 
     $anioActual = Carbon::now()->year;
     $antiguedadAnios = Carbon::parse($empleado->fecha_ingreso)->diffInYears(Carbon::now());
@@ -100,21 +114,13 @@ Route::get('/empleados/{empleado}/vacaciones', function (Empleado $empleado) {
     }
 
     return view('empleados.vacaciones', compact(
-        'empleado',
-        'anioActual',
-        'antiguedadAnios',
-        'diasDerecho',
-        'diasTomados',
-        'diasRestantes',
-        'meses',
-        'registroPorMes'
+        'empleado', 'anioActual', 'antiguedadAnios', 'diasDerecho',
+        'diasTomados', 'diasRestantes', 'meses', 'registroPorMes'
     ));
 })->name('empleados.vacaciones');
 
 Route::post('/empleados/{empleado}/vacaciones', function (Request $request, Empleado $empleado) {
-    if (! session('logeado')) {
-        return redirect()->route('login');
-    }
+    if (! session('logeado')) return redirect()->route('login');
 
     $anioActual = Carbon::now()->year;
     $antiguedadAnios = Carbon::parse($empleado->fecha_ingreso)->diffInYears(Carbon::now());
@@ -142,29 +148,25 @@ Route::post('/empleados/{empleado}/vacaciones', function (Request $request, Empl
     $diasNuevos = $inicio->diffInDays($fin) + 1;
 
     if ($diasTomadosActuales + $diasNuevos > $diasDerecho) {
-        return back()->withErrors(['fecha_inicio' => "No puedes registrar aun no cuentas con suficientes días para el año {$anioActual}."])->withInput();
+        return back()->withErrors(['fecha_inicio' => "No puedes registrar, aún no cuentas con suficientes días para el año {$anioActual}."])->withInput();
     }
 
-    // Calcular días por mes
     $diasPorMes = [];
     for ($fecha = $inicio->copy(); $fecha->lte($fin); $fecha->addDay()) {
         $mes = $fecha->month;
         $diasPorMes[$mes] = ($diasPorMes[$mes] ?? 0) + 1;
     }
 
-    // Validación extra: no permitir 0 o negativos
     $diasPeriodo = $inicio->diffInDays($fin) + 1;
     if ($diasPeriodo <= 0) {
         return back()->withErrors(['fecha_inicio' => 'Rango de fechas inválido.'])->withInput();
     }
 
-    // Recalcular restantes por si hace falta
     $diasRestantes = max(0, $diasDerecho - $diasTomadosActuales);
     if ($diasPeriodo > $diasRestantes) {
         return back()->withErrors(['fecha_inicio' => "No tienes suficientes días disponibles (restantes: {$diasRestantes})."])->withInput();
     }
 
-    // Usar transacción para evitar cambios parciales en caso de error
     try {
         DB::transaction(function () use ($diasPorMes, $empleado, $anioActual, $inicio, $fin, $request, $diasPeriodo) {
             foreach ($diasPorMes as $mes => $cantidad) {
@@ -197,9 +199,7 @@ Route::post('/empleados/{empleado}/vacaciones', function (Request $request, Empl
 })->name('empleados.vacaciones.guardar');
 
 Route::get('/empleados/{empleado}/vacaciones/pdf', function (Empleado $empleado) {
-    if (! session('logeado')) {
-        return redirect()->route('login');
-    }
+    if (! session('logeado')) return redirect()->route('login');
 
     $anioActual = Carbon::now()->year;
     $antiguedadAnios = Carbon::parse($empleado->fecha_ingreso)->diffInYears(Carbon::now());
@@ -215,7 +215,6 @@ Route::get('/empleados/{empleado}/vacaciones/pdf', function (Empleado $empleado)
     $diasTomados = $registros->sum('dias_tomados');
     $diasRestantes = max(0, $diasDerecho - $diasTomados);
 
-    // Obtener periodos vacacionales de la base de datos
     $periodosVacacionales = PeriodoVacacional::where('empleado_id', $empleado->id)
         ->orderBy('fecha_inicio')
         ->get();
@@ -230,17 +229,9 @@ Route::get('/empleados/{empleado}/vacaciones/pdf', function (Empleado $empleado)
     $fecha = Carbon::now();
 
     $html = view('empleados.pdf', compact(
-        'empleado',
-        'anioActual',
-        'antiguedadAnios',
-        'diasDerecho',
-        'diasTomados',
-        'diasRestantes',
-        'registros',
-        'periodosVacacionales',
-        'meses',
-        'puesto',
-        'fecha'
+        'empleado', 'anioActual', 'antiguedadAnios', 'diasDerecho',
+        'diasTomados', 'diasRestantes', 'registros', 'periodosVacacionales',
+        'meses', 'puesto', 'fecha'
     ))->render();
 
     $dompdf = new Dompdf;
@@ -253,9 +244,3 @@ Route::get('/empleados/{empleado}/vacaciones/pdf', function (Empleado $empleado)
         'Content-Disposition' => 'inline; filename="vacaciones_'.str_replace(' ', '_', $empleado->nombre_completo).'_'.$anioActual.'.pdf"',
     ]);
 })->name('empleados.vacaciones.pdf');
-
-// Cerrar Sesión (Ya tenías uno arriba, pero por si acaso dejo este que usa 'logeado')
-Route::get('/logout', function () {
-    session()->forget(['logeado', 'nombre']);
-    return redirect()->route('login');
-})->name('logout');

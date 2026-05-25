@@ -31,8 +31,15 @@
 
     <div class="wrapper">
         <aside class="sidebar">
-            <div class="sidebar-header">
-                SISTEMA UCO
+            <div class="sidebar-header" style="text-align: center; padding: 20px 20px 10px 20px;">
+                
+                <div style="padding: 0; margin-bottom: 15px; display: flex; justify-content: center;">
+                    <img src="{{ asset('img/logo_uco.png') }}" 
+                         alt="Logo UCO" 
+                         style="max-height: 190px; width: auto; mix-blend-mode: screen;">
+                </div>
+                
+                <span style="font-size: 1.1rem; letter-spacing: 1px; font-weight: bold;">SISTEMA UCO</span>
             </div>
             <ul class="sidebar-menu">
                 <li>

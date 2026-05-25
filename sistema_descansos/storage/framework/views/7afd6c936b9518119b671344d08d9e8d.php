@@ -1,9 +1,9 @@
-@extends('layouts.app')
 
-@section('title', 'Empleados')
-@section('header', 'Directorio de Personal')
 
-@section('content')
+<?php $__env->startSection('title', 'Empleados'); ?>
+<?php $__env->startSection('header', 'Directorio de Personal'); ?>
+
+<?php $__env->startSection('content'); ?>
 <div style="background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; border-bottom: 2px solid #f3f4f6; padding-bottom: 15px;">
         <h2 style="margin: 0; color: #1e293b;">Control de Empleados</h2>
@@ -22,19 +22,20 @@
             </tr>
         </thead>
         <tbody>
-            @foreach($empleados as $emp)
+            <?php $__currentLoopData = $empleados; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $emp): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
             <tr style="border-bottom: 1px solid #f1f5f9;">
-                <td style="padding: 14px; font-weight: bold; color: #1e293b;">{{ $emp->id }}</td>
-                <td style="padding: 14px; color: #334155;">{{ $emp->nombre_completo }}</td>
-                <td style="padding: 14px; color: #64748b;">{{ \Carbon\Carbon::parse($emp->fecha_ingreso)->format('d/m/Y') }}</td>
+                <td style="padding: 14px; font-weight: bold; color: #1e293b;"><?php echo e($emp->id); ?></td>
+                <td style="padding: 14px; color: #334155;"><?php echo e($emp->nombre_completo); ?></td>
+                <td style="padding: 14px; color: #64748b;"><?php echo e(\Carbon\Carbon::parse($emp->fecha_ingreso)->format('d/m/Y')); ?></td>
                 <td style="padding: 14px; text-align: center;">
-                    <a href="{{ route('empleados.vacaciones', $emp->id) }}" style="background-color: #3b82f6; color: white; text-decoration: none; padding: 6px 14px; border-radius: 4px; font-size: 0.9rem; font-weight: 500; margin-right: 5px;">
+                    <a href="<?php echo e(route('empleados.vacaciones', $emp->id)); ?>" style="background-color: #3b82f6; color: white; text-decoration: none; padding: 6px 14px; border-radius: 4px; font-size: 0.9rem; font-weight: 500; margin-right: 5px;">
                         <i class="fa-solid fa-calendar"></i> Vacaciones
                     </a>
                 </td>
             </tr>
-            @endforeach
+            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
         </tbody>
     </table>
 </div>
-@endsection
+<?php $__env->stopSection(); ?>
+<?php echo $__env->make('layouts.app', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH C:\Users\becario.tie\Documents\GitHub\SistemasUCO\sistema_descansos\resources\views/empleados/index.blade.php ENDPATH**/ ?>

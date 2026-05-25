@@ -1,27 +1,73 @@
-﻿@extends('layouts.app')
- <div class="login-box">
-     <td class="logo-area" style="text-align: left;">
-                
-                
+﻿<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Acceso | Control de Descansos UCO</title>
+    <style>
+        :root {
+            font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            color: #1f324f;
+        }
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            /* El color de fondo oscuro de tu pantalla */
+            background-color: #2b394b; 
+        }
+        .login-box {
+            background: white;
+            padding: 40px;
+            border-radius: 16px;
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+        }
+        .logo-img { height: 180px; margin-bottom: 0px; }
+        h2 { margin: 0 0 10px; font-size: 1.5rem; font-weight: bold; }
+        .subtitle { color: #64748b; font-size: 0.9rem; margin-bottom: 25px; line-height: 1.4; }
+        .form-group { margin-bottom: 20px; text-align: left; }
+        .form-group label { display: block; font-size: 0.9rem; font-weight: 600; margin-bottom: 8px; }
+        .form-group input {
+            width: 100%; padding: 12px; border: 1px solid #d1d5db;
+            border-radius: 8px; font-size: 1rem; outline: none; transition: 0.2s;
+        }
+        .form-group input:focus { border-color: #3b82f6; }
+        button[type="submit"] {
+            width: 100%; padding: 12px; background-color: #3b82f6; color: white;
+            border: none; border-radius: 20px; font-size: 1rem; font-weight: 600;
+            cursor: pointer; margin-top: 10px; transition: 0.2s;
+        }
+        button[type="submit"]:hover { background-color: #2563eb; }
+        .help-text { margin-top: 20px; font-size: 0.85rem; }
+        .help-text a { color: #3b82f6; text-decoration: none; }
+        .help-text a:hover { text-decoration: underline; }
+        .error-list {
+            background-color: #fee2e2; color: #ef4444; padding: 10px;
+            border-radius: 8px; margin-bottom: 20px; font-size: 0.85rem; text-align: left;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="login-box">
         @php
             $path = public_path('img/logo_uco.png');
             $type = pathinfo($path, PATHINFO_EXTENSION);
-            $data = file_get_contents($path);
-            $base64 = 'data:image/' . $type . ';base64,' . base64_encode($data);
+            if(file_exists($path)){
+                $data = file_get_contents($path);
+                $base64 = 'data:image/' . $type . ';base64,' . base64_encode($data);
+                echo '<img src="'.$base64.'" alt="UCO PREPA CONTEMPORÁNEA" class="logo-img">';
+            }
         @endphp
 
-<img src="{{ $base64 }}" 
-     alt="UCO PREPA CONTEMPORÁNEA"
-     style="height: 100px; margin-bottom: 2px;">
-
-
-            </td>
         <h2>Centro de control</h2>
-        <p>Inicia sesión con tu correo institucional para acceder al panel de gestión.</p>
-
-        @if(session('status'))
-            <div class="alert">{{ session('status') }}</div>
-        @endif
+        <p class="subtitle">Inicia sesión con tu correo institucional para acceder al panel de gestión.</p>
 
         @if($errors->any())
             <div class="error-list">
@@ -48,137 +94,6 @@
 
         <p class="help-text"><a href="{{ route('password.request') }}">Olvidé mi contraseña</a></p>
     </div>
-@section('title', 'Acceso | Control de Descansos')
 
-@push('styles')
-<style>
-        :root {
-            font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-            color: #1f324f;
-            background-color: #eef4fb;
-        }
-
-        * {
-            box-sizing: border-box;
-        }
-
-        body {
-            margin: 0;
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: radial-gradient(circle at top, #6a86ff 0%, #3a5797 35%, #1d2a4c 100%);
-            color: #1f324f;
-        }
-
-        .login-box {
-            width: min(480px, calc(100% - 2rem));
-            background: #ffffff;
-            border-radius: 28px;
-            padding: 2rem;
-            box-shadow: 0 32px 90px rgba(7, 28, 74, 0.18);
-        }
-
-        .login-box h2 {
-            margin: 0 0 0.95rem;
-            font-size: 1.9rem;
-            color: #000000;
-            text-align: center;
-        }
-
-        .login-box p {
-            margin: 0 0 1.75rem;
-            color: #000000;
-            line-height: 1.6;
-            text-align: center;
-        }
-
-        .alert {
-            margin-bottom: 1rem;
-            padding: 1rem 1.25rem;
-            border-radius: 16px;
-            background: #f0f7ff;
-            color: #1a3a70;
-            border: 1px solid #dce8ff;
-        }
-
-        .error-list {
-            margin-bottom: 1.25rem;
-            padding: 0.9rem 1.1rem;
-            border-radius: 14px;
-            background: #ffe8e8;
-            color: #853535;
-            border: 1px solid #f2c6c6;
-        }
-
-        .form-group {
-            margin-bottom: 1.4rem;
-        }
-
-        label {
-            display: block;
-            margin-bottom: 0.55rem;
-            color: #000000;
-            font-size: 0.95rem;
-        }
-
-        input {
-            width: 100%;
-            padding: 0.95rem 1rem;
-            font-size: 1rem;
-            border: 1px solid #d7dee9;
-            border-radius: 14px;
-            background: #f8fbff;
-            color: #20304a;
-            transition: border-color 0.2s ease, box-shadow 0.2s ease;
-        }
-
-        input:focus {
-            outline: none;
-            border-color: #6a86ff;
-            box-shadow: 0 0 0 4px rgba(106, 134, 255, 0.12);
-        }
-
-        button {
-            width: 100%;
-            padding: 1rem;
-            border: none;
-            border-radius: 24px;
-            background: linear-gradient(135deg, #5567ff 0%, #2744d5 100%);
-            color: #ffffff;
-            font-size: 1rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: transform 0.5s ease, box-shadow 0.5s ease;
-        }
-
-        button:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 16px 30px rgba(58, 87, 151, 0.18);
-        }
-
-        .help-text {
-            margin-top: 1rem;
-            font-size: 0.95rem;
-            color: #627693;
-            text-align: center;
-        }
-
-        .help-text a {
-            color: #3c62f5;
-            text-decoration: none;
-        }
-         .td {
-            margin-top: 1rem;
-            font-size: 0.95rem;
-            color: #627693;
-            text-align: center;
-            
-        }
-    </style>
-@endpush
-
-@section('content')
-   
-@endsection
+</body>
+</html>

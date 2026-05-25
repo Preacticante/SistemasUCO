@@ -6,8 +6,8 @@ use Illuminate\Http\Request;
 class ProfileController extends Controller
 {
     public function show() {
-        // lógica para mostrar perfil
-    }
+    return view('perfil');
+}
     public function update(Request $request) {
         // lógica para actualizar perfil
     }
