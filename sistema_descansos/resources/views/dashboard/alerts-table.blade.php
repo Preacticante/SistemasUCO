@@ -12,7 +12,7 @@
         <tbody>
             @foreach($empleadosConMenosDias as $item)
                 <tr>
-                    <td>{{ $item->empleado->nombre_completo }}</td>
+                    <td>{{ $item->empleado->nombre }} {{ $item->empleado->apellido_paterno }} {{ $item->empleado->apellido_materno }}</td>
                     <td>{{ $item->diasRestantes }}</td>
                     <td>{{ $item->diasTomados }}</td>
                     <td><a href="{{ route('empleados.vacaciones', $item->empleado->id) }}" class="btn-calcular">Ver</a></td>

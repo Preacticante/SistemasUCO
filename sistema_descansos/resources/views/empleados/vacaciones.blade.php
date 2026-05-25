@@ -5,7 +5,7 @@
     
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Vacaciones | {{ $empleado->nombre_completo }}</title>
+    <title>Vacaciones | {{ $empleado->nombre }} {{ $empleado->apellido_paterno }} {{ $empleado->apellido_materno }}</title>
     
 </head>
 <body>
@@ -31,7 +31,7 @@
             <div>
                 <div class="topbar-title">
                     <span class="page-label">Vacaciones</span>
-                    <h1>{{ $empleado->nombre_completo }}</h1>
+                    <h1>{{ $empleado->nombre }} {{ $empleado->apellido_paterno }} {{ $empleado->apellido_materno }}</h1>
                 </div>
                 <p>Administra registros y consulta el consumo de vacaciones de manera clara.</p>
             </div>

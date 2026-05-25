@@ -259,7 +259,7 @@
     <table class="info-table">
         <tr>
             <td class="label">Nombre:</td>
-            <td class="value">{{ $empleado->nombre_completo }}</td>
+            <td class="value">{{ $empleado->nombre }} {{ $empleado->apellido_paterno }} {{ $empleado->apellido_materno }}</td>
         </tr>
         <tr>
             <td class="label">Puesto:</td>
