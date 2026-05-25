@@ -31,19 +31,42 @@ Route::post('/forgot-password', [ForgotPasswordController::class, 'sendResetLink
 Route::get('/reset-password/{token}', [ResetPasswordController::class, 'showResetForm'])->name('password.reset');
 Route::post('/reset-password', [ResetPasswordController::class, 'reset'])->name('password.update');
 
-// Dashboard
+// -------------------------------------------------------------
+// RUTAS DEL MENÚ PRINCIPAL (SIDEBAR)
+// -------------------------------------------------------------
+
+// 1. Dashboard
 Route::get('/panel', [DashboardController::class, 'index'])->name('panel');
 
-// Perfil
-Route::get('/perfil', [ProfileController::class, 'show'])->name('perfil.show');
+// 2. Empleados (CRUD básico)
+Route::resource('empleados', EmpleadoController::class);
+// Como usas Route::resource, el listado general de empleados ya tiene el nombre de ruta 'empleados.index'.
+// Agregaremos una ruta "alias" para que empate perfecto con tu botón del menú:
+Route::get('/directorio-empleados', function () {
+    return redirect()->route('empleados.index');
+})->name('empleados');
+
+// 3. Historial de Vacaciones (NUEVA RUTA)
+Route::get('/historial', function () {
+    // Si no está logeado, lo regresa al login
+    if (! session('logeado')) {
+        return redirect()->route('login');
+    }
+    return view('historial');
+})->name('historial');
+
+// 4. Configuración / Ajustes
+Route::get('/configuracion', [SettingsController::class, 'index'])->name('configuracion');
+Route::post('/configuracion', [SettingsController::class, 'update'])->name('configuracion.update');
+
+// 5. Mi Perfil
+Route::get('/perfil', [ProfileController::class, 'show'])->name('perfil');
 Route::post('/perfil', [ProfileController::class, 'update'])->name('perfil.update');
 
-// Ajustes
-Route::get('/ajustes', [SettingsController::class, 'index'])->name('ajustes.index');
-Route::post('/ajustes', [SettingsController::class, 'update'])->name('ajustes.update');
 
-// Empleados (CRUD básico)
-Route::resource('empleados', EmpleadoController::class);
+// -------------------------------------------------------------
+// RUTAS DE LOGICA DE VACACIONES (MANTIENES TU CÓDIGO INTACTO)
+// -------------------------------------------------------------
 
 Route::get('/empleados/{empleado}/vacaciones', function (Empleado $empleado) {
     if (! session('logeado')) {
@@ -231,9 +254,8 @@ Route::get('/empleados/{empleado}/vacaciones/pdf', function (Empleado $empleado)
     ]);
 })->name('empleados.vacaciones.pdf');
 
-// Cerrar Sesión
+// Cerrar Sesión (Ya tenías uno arriba, pero por si acaso dejo este que usa 'logeado')
 Route::get('/logout', function () {
     session()->forget(['logeado', 'nombre']);
-
     return redirect()->route('login');
 })->name('logout');

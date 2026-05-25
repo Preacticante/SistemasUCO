@@ -4,7 +4,7 @@
             <th>ID</th>
             <th>Nombre Completo</th>
             <th>Fecha de Ingreso</th>
-            <th>Acción</th>
+            <th>Vacaciones</th>
         </tr>
     </thead>
     <tbody>

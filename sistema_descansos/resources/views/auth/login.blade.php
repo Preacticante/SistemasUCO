@@ -1,5 +1,21 @@
 ﻿@extends('layouts.app')
  <div class="login-box">
+     <td class="logo-area" style="text-align: left;">
+                
+                
+        @php
+            $path = public_path('img/logo_uco.png');
+            $type = pathinfo($path, PATHINFO_EXTENSION);
+            $data = file_get_contents($path);
+            $base64 = 'data:image/' . $type . ';base64,' . base64_encode($data);
+        @endphp
+
+<img src="{{ $base64 }}" 
+     alt="UCO PREPA CONTEMPORÁNEA"
+     style="height: 100px; margin-bottom: 2px;">
+
+
+            </td>
         <h2>Centro de control</h2>
         <p>Inicia sesión con tu correo institucional para acceder al panel de gestión.</p>
 
@@ -152,6 +168,13 @@
         .help-text a {
             color: #3c62f5;
             text-decoration: none;
+        }
+         .td {
+            margin-top: 1rem;
+            font-size: 0.95rem;
+            color: #627693;
+            text-align: center;
+            
         }
     </style>
 @endpush

@@ -14,7 +14,7 @@
             box-sizing: border-box;
         }
 
-        body {
+        body {ñ
             margin: 0;
             min-height: 100vh;
             display: flex;

@@ -1,28 +1,26 @@
 @extends('layouts.app')
 
-@section('title', 'Panel Principal')
+@section('title', 'Inicio')
+@section('header', 'Dashboard General')
 
 @push('styles')
     @include('dashboard.styles')
 @endpush
 
 @section('content')
-    @include('dashboard.navbar')
-
     @php
-            $path = public_path('img/logo_uco.png');
-            $type = pathinfo($path, PATHINFO_EXTENSION);
-            $data = file_get_contents($path);
-            $base64 = 'data:image/' . $type . ';base64,' . base64_encode($data);
-        @endphp
-
-<div style="position: absolute; left: 50px; top: 75px; z-index: 10;">
-        <img src="{{ $base64 }}" 
-             alt="UCO PREPA CONTEMPORÁNEA"
-             style="height: 150px;"> </div>
+        $path = public_path('img/logo_uco.png');
+        $type = pathinfo($path, PATHINFO_EXTENSION);
+        $data = file_get_contents($path);
+        $base64 = 'data:image/' . $type . ';base64,' . base64_encode($data);
+    @endphp
 
     <div class="container">
-        <h1>Panel Principal</h1>
+        <div style="margin-bottom: 30px;">
+            <img src="{{ $base64 }}" 
+                 alt="UCO PREPA CONTEMPORÁNEA"
+                 style="height: 120px;"> 
+        </div>
 
         @include('dashboard.stat-cards')
         @include('dashboard.alerts-table')

@@ -6,7 +6,7 @@
     }
 
     .navbar { 
-        background-color: #1f2937; 
+        background-color: #000000; 
         color: white; 
         padding: 15px 20px; 
         display: flex; 
@@ -23,7 +23,7 @@
         background: white; 
         padding: 20px; 
         border-radius: 8px; 
-        box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        box-shadow: 0 4px 6px rgba(147, 207, 7, 0.1); }
 
     h1 { 
         color: #374151; 
