@@ -56,11 +56,11 @@
         width: 100%; 
         border-collapse: collapse; 
         margin-top: 12px; }
-
+s
     .alert-table th, .alert-table td { 
         text-align: left; 
         padding: 10px; 
-        border-bottom: 1px solid #e5e7eb; }
+        border-bottom: 1px solid #b5b9c2; }
 
     .alert-table th { 
         background: #f3f4f6; 
@@ -72,7 +72,7 @@
         margin-top: 50px;
         background: white; 
         border-radius: 8px; 
-        border: 1px solid #3fbe3f; }
+        border: 1px solid #22cc22; }
 
     th, td { 
         text-align: left; 
