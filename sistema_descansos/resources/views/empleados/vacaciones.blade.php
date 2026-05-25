@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
+
+    
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Vacaciones | {{ $empleado->nombre_completo }}</title>
@@ -8,6 +10,23 @@
 </head>
 <body>
     <main class="page-shell">
+
+    @php
+            $path = public_path('img/logo_uco.png');
+            $base64 = '';
+            if (file_exists($path)) {
+                $type = pathinfo($path, PATHINFO_EXTENSION);
+                $data = file_get_contents($path);
+                $base64 = 'data:image/' . $type . ';base64,' . base64_encode($data);
+            }
+        @endphp
+
+        @if($base64)
+            <div class="logo-outer-container">
+                <img src="{{ $base64 }}" alt="Logo UCO" class="logo-outside">
+            </div>
+        @endif
+        
         <section class="topbar">
             <div>
                 <div class="topbar-title">
@@ -432,6 +451,32 @@
             .topbar {
                 flex-direction: column;
                 align-items: flex-start;
+            }
+        }
+       /* Contenedor del logo para controlar su alineación */
+        .logo-outer-container {
+            width: 100%;
+            display: flex;
+            justify-content: flex-start; /* Lo alinea a la izquierda */
+            padding-left: 1.4rem;        /* Misma alineación interna que tiene tu topbar */
+            margin-bottom: 1rem;         /* Espacio entre el logo y la barra blanca */
+        }
+
+        /* Tamaño del logo en pantallas grandes */
+        .logo-outside {
+            height: 150px;
+            width: auto;
+            object-fit: contain;
+        }
+
+        /* Ajuste si se minimiza o se ve en celular */
+        @media (max-width: 860px) {
+            .logo-outer-container {
+                justify-content: center; /* En pantallas chicas se centra para que luzca mejor */
+                padding-left: 0;
+            }
+            .logo-outside {
+                height: 70px; /* Se encoge un poco para no saturar */
             }
         }
     </style>
