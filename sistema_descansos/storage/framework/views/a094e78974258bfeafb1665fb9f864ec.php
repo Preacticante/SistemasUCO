@@ -1,5 +1,3 @@
-
-
 <?php $__env->startSection('title', 'Historial'); ?>
 <?php $__env->startSection('header', 'Historial de Vacaciones'); ?>
 

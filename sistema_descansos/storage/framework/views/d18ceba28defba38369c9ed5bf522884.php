@@ -259,7 +259,7 @@
     <table class="info-table">
         <tr>
             <td class="label">Nombre:</td>
-            <td class="value"><?php echo e($empleado->nombre_completo); ?></td>
+            <td class="value"><?php echo e($empleado->nombre); ?> <?php echo e($empleado->apellido_paterno); ?> <?php echo e($empleado->apellido_materno); ?></td>
         </tr>
         <tr>
             <td class="label">Puesto:</td>

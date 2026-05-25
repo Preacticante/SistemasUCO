@@ -11,7 +11,7 @@
         @foreach($empleados as $empleado)
         <tr>
             <td>{{ $empleado->id }}</td>
-            <td>{{ $empleado->nombre_completo }}</td>
+            <td>{{ $empleado->nombre }} {{ $empleado->apellido_paterno }} {{ $empleado->apellido_materno }}</td>
             <td>{{ $empleado->fecha_ingreso }}</td>
             <td>
                 <a href="{{ route('empleados.vacaciones', $empleado->id) }}" class="btn-calcular">Vacaciones</a>

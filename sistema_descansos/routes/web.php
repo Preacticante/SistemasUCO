@@ -52,7 +52,12 @@ Route::get('/historial', function () {
     if (! session('logeado')) {
         return redirect()->route('login');
     }
-    return view('historial');
+
+    $periodosVacacionales = PeriodoVacacional::with('empleado')
+        ->orderBy('fecha_inicio', 'desc')
+        ->get();
+
+    return view('historial', compact('periodosVacacionales'));
 })->name('historial');
 
 // 4. Configuración / Ajustes

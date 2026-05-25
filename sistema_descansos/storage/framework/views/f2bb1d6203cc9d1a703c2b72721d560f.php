@@ -12,7 +12,7 @@
         <tbody>
             <?php $__currentLoopData = $empleadosConMenosDias; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $item): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                 <tr>
-                    <td><?php echo e($item->empleado->nombre_completo); ?></td>
+                    <td><?php echo e($item->empleado->nombre); ?> <?php echo e($item->empleado->apellido_paterno); ?> <?php echo e($item->empleado->apellido_materno); ?></td>
                     <td><?php echo e($item->diasRestantes); ?></td>
                     <td><?php echo e($item->diasTomados); ?></td>
                     <td><a href="<?php echo e(route('empleados.vacaciones', $item->empleado->id)); ?>" class="btn-calcular">Ver</a></td>

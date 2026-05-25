@@ -9,5 +9,5 @@ class Empleado extends Model
     protected $table = 'empleados';
     public $timestamps = false;
     
-    protected $fillable = ['nombre_completo', 'fecha_ingreso', 'puesto_id'];
+    protected $fillable = ['nombre','apellido_paterno', 'apellido_materno', 'fecha_ingreso', 'puesto_id'];
 }
