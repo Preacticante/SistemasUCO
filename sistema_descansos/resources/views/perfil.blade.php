@@ -20,7 +20,7 @@
         height: fit-content;
     }
 
-    /* Estilos del Avatar */
+    /* Estilos del Avatar (Dorado UCO) */
     .avatar-section {
         text-align: center;
         margin-bottom: 25px;
@@ -31,7 +31,7 @@
     .avatar-circle {
         width: 120px;
         height: 120px;
-        background-color: #3b82f6;
+        background-color: #AA7F31; /* DORADO INSTITUCIONAL */
         color: white;
         font-size: 3rem;
         font-weight: bold;
@@ -40,7 +40,7 @@
         justify-content: center;
         border-radius: 50%;
         margin: 0 auto 15px;
-        box-shadow: 0 4px 10px rgba(59, 130, 246, 0.3);
+        box-shadow: 0 4px 10px rgba(170, 127, 49, 0.3); /* Sombra dorada */
     }
 
     .user-name { font-size: 1.4rem; color: #1e293b; margin: 0; font-weight: 700; }
@@ -61,9 +61,9 @@
         font-weight: 700;
     }
 
-    .section-title i { color: #3b82f6; }
+    .section-title i { color: #340C51; /* MORADO INSTITUCIONAL */ }
 
-    /* Botones */
+    /* Botones (Verde UCO) */
     .btn-profile {
         width: 100%;
         padding: 12px;
@@ -78,8 +78,8 @@
         gap: 10px;
     }
 
-    .btn-primary { background-color: #3b82f6; color: white; }
-    .btn-primary:hover { background-color: #2563eb; }
+    .btn-primary { background-color: #124416; color: white; } /* VERDE INSTITUCIONAL */
+    .btn-primary:hover { background-color: #0d3310; }
 
     .btn-outline { background-color: white; border: 1px solid #cbd5e1; color: #64748b; margin-top: 10px; }
     .btn-outline:hover { background-color: #f8fafc; color: #1e293b; }
@@ -98,9 +98,15 @@
         border-radius: 10px;
         text-align: center;
         border: 1px solid #f1f5f9;
+        transition: 0.3s;
+    }
+    
+    .stat-box:hover {
+        border-color: #AA7F31; /* DORADO INSTITUCIONAL */
+        box-shadow: 0 4px 6px rgba(170, 127, 49, 0.05);
     }
 
-    .stat-number { font-size: 1.5rem; font-weight: 700; color: #3b82f6; display: block; }
+    .stat-number { font-size: 1.5rem; font-weight: 700; color: #340C51; display: block; } /* MORADO INSTITUCIONAL */
     .stat-label { font-size: 0.75rem; color: #64748b; }
 </style>
 @endpush
@@ -126,8 +132,7 @@
 
         <div class="info-group">
             <div class="info-label">Estado de Cuenta</div>
-            <div class="info-value"><span style="color: #10b981;">● Activa</span></div>
-        </div>
+            <div class="info-value"><span style="color: #124416; font-weight: bold;">● Activa</span></div> </div>
 
         <button class="btn-profile btn-primary">
             <i class="fa-solid fa-key"></i> Cambiar Contraseña

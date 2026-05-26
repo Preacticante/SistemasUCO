@@ -1,4 +1,4 @@
-<?php
+s<?php
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
@@ -25,7 +25,7 @@ use App\Http\Controllers\EmpleadoController;
 use Dompdf\Dompdf;
 
 /*
-|--------------------------------------------------------------------------
+|---------------------------------------------------------------------s-----
 | RUTAS DE AUTENTICACIÓN
 |--------------------------------------------------------------------------
 */
@@ -251,6 +251,6 @@ Route::get('/empleados/{empleado}/vacaciones/pdf', function (Empleado $empleado)
 
     return response($dompdf->output(), 200, [
         'Content-Type' => 'application/pdf',
-        'Content-Disposition' => 'inline; filename="vacaciones_'.str_replace(' ', '_', $empleado->nombre_completo).'_'.$anioActual.'.pdf"',
+        'Content-Disposition' => 'inline; filename="vacaciones_'.str_replace(' ', '_', $empleado->nombre.'_'.$empleado->apellido_paterno.'_'.$empleado->apellido_materno).'_'.$anioActual.'.pdf"',
     ]);
 })->name('empleados.vacaciones.pdf');

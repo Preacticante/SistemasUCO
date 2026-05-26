@@ -1,5 +1,3 @@
-
-
 <?php $__env->startSection('title', 'Mi Perfil'); ?>
 <?php $__env->startSection('header', 'Perfil de Administrador'); ?>
 

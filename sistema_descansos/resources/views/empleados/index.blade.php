@@ -25,7 +25,7 @@
             @foreach($empleados as $emp)
             <tr style="border-bottom: 1px solid #f1f5f9;">
                 <td style="padding: 14px; font-weight: bold; color: #1e293b;">{{ $emp->id }}</td>
-                <td style="padding: 14px; color: #334155;">{{ $emp->nombre_completo }}</td>
+                <td style="padding: 14px; color: #334155;">{{ $emp->nombre }} {{ $emp->apellido_paterno }} {{ $emp->apellido_materno }}</td>
                 <td style="padding: 14px; color: #64748b;">{{ \Carbon\Carbon::parse($emp->fecha_ingreso)->format('d/m/Y') }}</td>
                 <td style="padding: 14px; text-align: center;">
                     <a href="{{ route('empleados.vacaciones', $emp->id) }}" style="background-color: #3b82f6; color: white; text-decoration: none; padding: 6px 14px; border-radius: 4px; font-size: 0.9rem; font-weight: 500; margin-right: 5px;">

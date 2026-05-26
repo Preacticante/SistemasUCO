@@ -1,5 +1,3 @@
-
-
 <?php $__env->startSection('title', 'Empleados'); ?>
 <?php $__env->startSection('header', 'Directorio de Personal'); ?>
 
@@ -25,7 +23,7 @@
             <?php $__currentLoopData = $empleados; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $emp): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
             <tr style="border-bottom: 1px solid #f1f5f9;">
                 <td style="padding: 14px; font-weight: bold; color: #1e293b;"><?php echo e($emp->id); ?></td>
-                <td style="padding: 14px; color: #334155;"><?php echo e($emp->nombre_completo); ?></td>
+                <td style="padding: 14px; color: #334155;"><?php echo e($emp->nombre); ?> <?php echo e($emp->apellido_paterno); ?> <?php echo e($emp->apellido_materno); ?></td>
                 <td style="padding: 14px; color: #64748b;"><?php echo e(\Carbon\Carbon::parse($emp->fecha_ingreso)->format('d/m/Y')); ?></td>
                 <td style="padding: 14px; text-align: center;">
                     <a href="<?php echo e(route('empleados.vacaciones', $emp->id)); ?>" style="background-color: #3b82f6; color: white; text-decoration: none; padding: 6px 14px; border-radius: 4px; font-size: 0.9rem; font-weight: 500; margin-right: 5px;">
