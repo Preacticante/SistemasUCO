@@ -1,4 +1,4 @@
-s<?php
+<?php
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
@@ -25,7 +25,7 @@ use App\Http\Controllers\EmpleadoController;
 use Dompdf\Dompdf;
 
 /*
-|---------------------------------------------------------------------s-----
+|--------------------------------------------------------------------------
 | RUTAS DE AUTENTICACIÓN
 |--------------------------------------------------------------------------
 */

@@ -1,17 +1,15 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-
-    
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Vacaciones | <?php echo e($empleado->nombre); ?> <?php echo e($empleado->apellido_paterno); ?> <?php echo e($empleado->apellido_materno); ?></title>
-    
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
     <main class="page-shell">
 
-    <?php
+        <?php
             $path = public_path('img/logo_uco.png');
             $base64 = '';
             if (file_exists($path)) {
@@ -60,18 +58,18 @@
             <article class="card">
                 <strong>Información del empleado</strong>
                 <div class="meta-row">
-                    <span class="meta-pill">Ingreso: <?php echo e($empleado->fecha_ingreso); ?></span>
-                    <span class="meta-pill">Antigüedad: <?php echo e($antiguedadAnios); ?> años</span>
-                    <span class="meta-pill">Derecho anual: <?php echo e($diasDerecho); ?> días</span>
+                    <span class="meta-pill">Ingreso: <strong><?php echo e($empleado->fecha_ingreso); ?></strong></span>
+                    <span class="meta-pill">Antigüedad: <strong><?php echo e($antiguedadAnios); ?> años</strong></span>
+                    <span class="meta-pill">Derecho anual: <strong><?php echo e($diasDerecho); ?> días</strong></span>
                 </div>
             </article>
 
             <article class="card">
                 <strong>Estado actual</strong>
                 <div class="meta-row">
-                    <span class="meta-pill">Tomados: <?php echo e($diasTomados); ?></span>
-                    <span class="meta-pill">Restantes: <?php echo e($diasRestantes); ?></span>
-                    <span class="meta-pill">Año: <?php echo e($anioActual); ?></span>
+                    <span class="meta-pill">Tomados: <strong style="color: #ef4444;"><?php echo e($diasTomados); ?></strong></span>
+                    <span class="meta-pill">Restantes: <strong style="color: #124416;"><?php echo e($diasRestantes); ?></strong></span>
+                    <span class="meta-pill">Año: <strong><?php echo e($anioActual); ?></strong></span>
                 </div>
             </article>
         </section>
@@ -118,7 +116,7 @@
                             <?php $__currentLoopData = $meses; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $numero => $nombre): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                                 <tr>
                                     <td><?php echo e($nombre); ?></td>
-                                    <td><?php echo e($registroPorMes[$numero]); ?></td>
+                                    <td><strong><?php echo e($registroPorMes[$numero]); ?></strong></td>
                                 </tr>
                             <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                         </tbody>
@@ -150,8 +148,9 @@
             }
 
             const diff = Math.floor((fin - inicio) / (1000 * 60 * 60 * 24)) + 1;
-            diasSeleccionados.textContent = diff;
-            previewRestantes.textContent = Math.max(0, diasRestantes - diff);
+            const diffDays = isNaN(diff) ? 0 : diff;
+            diasSeleccionados.textContent = diffDays;
+            previewRestantes.textContent = Math.max(0, diasRestantes - diffDays);
         }
 
         fechaInicio.addEventListener('change', () => {
@@ -166,318 +165,324 @@
     </script>
 </body>
 </html>
+
 <style>
-        :root {
-            font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-            color: #1f324f;
-            background-color: #eef4fb;
-        }
+    :root {
+        font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        color: #1f324f;
+        background-color: #f1f5f9;
+    }
 
-        * {
-            box-sizing: border-box;
-        }
+    * {
+        box-sizing: border-box;
+    }
 
-        body {
-            margin: 0;
-            min-height: 100vh;
-            background: radial-gradient(circle at top left, rgba(106, 134, 255, 0.18), transparent 32%),
-                        radial-gradient(circle at bottom right, rgba(59, 98, 245, 0.12), transparent 30%),
-                        linear-gradient(180deg, #edf4ff 0%, #e5efff 45%, #f3f7ff 100%);
-            color: #1f324f;
-        }
+    body {
+        margin: 0;
+        min-height: 100vh;
+        background: radial-gradient(circle at top left, rgba(52, 12, 81, 0.08), transparent 35%),
+                    radial-gradient(circle at bottom right, rgba(170, 127, 49, 0.05), transparent 30%),
+                    linear-gradient(180deg, #f1f5f9 0%, #edf2f7 100%);
+        color: #1e293b;
+    }
 
-        .button-icon {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            width: 2.5rem;
-            height: 2.5rem;
-            margin-right: 0.75rem;
-            border-radius: 999px;
-            background: rgba(59, 98, 245, 0.16);
-            color: #3c62f5;
-            font-size: 1.25rem;
-            font-weight: 700;
-            box-shadow: 0 10px 24px rgba(59, 98, 245, 0.12);
-        }
+    .page-shell {
+        width: min(1200px, calc(100% - 2rem));
+        margin: 0 auto 2rem;
+        padding: 2rem 0;
+    }
 
-        .page-shell {
-            width: min(1200px, calc(100% - 2rem));
-            margin: 0 auto 2rem;
-            padding: 2rem 0;
+    /* --- Encabezado Superior (Estilo Redondeado de la marca) --- */
+    .topbar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+        padding: 1.5rem 2rem;
+        border-radius: 20px;
+        background: rgba(255, 255, 255, 0.85);
+        box-shadow: 0 10px 30px rgba(52, 12, 81, 0.03);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.8);
+    }
+
+    .topbar-title {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 1rem;
+        margin-bottom: 0.5rem;
+    }
+
+    /* Label - MORADO INSTITUCIONAL */
+    .page-label {
+        display: inline-flex;
+        padding: 0.45rem 0.95rem;
+        border-radius: 999px;
+        text-transform: uppercase;
+        letter-spacing: 0.15em;
+        font-size: 0.75rem;
+        font-weight: 700;
+        color: white;
+        background: #340C51; 
+    }
+
+    .topbar h1 {
+        margin: 0;
+        font-size: 1.8rem;
+        color: #340C51; /* MORADO INSTITUCIONAL */
+        letter-spacing: -0.02em;
+        font-weight: 700;
+    }
+
+    .topbar p {
+        margin: 0.4rem 0 0;
+        color: #64748b;
+        font-size: 0.95rem;
+    }
+
+    .button-icon {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 2rem;
+        height: 2rem;
+        margin-right: 0.6rem;
+        border-radius: 999px;
+        background: rgba(52, 12, 81, 0.1);
+        color: #340C51;
+        font-size: 1rem;
+    }
+
+    .button-link,
+    .button-primary,
+    .button-secondary {
+        border: none;
+        border-radius: 12px;
+        cursor: pointer;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+        font-weight: 600;
+    }
+
+    /* Botón Volver - Acento Morado */
+    .button-link {
+        padding: 0.8rem 1.4rem;
+        color: #340C51;
+        background: rgba(52, 12, 81, 0.08);
+    }
+
+    .button-link:hover {
+        transform: translateY(-1px);
+        background: #340C51;
+        color: white;
+    }
+
+    /* Botón Guardar - VERDE INSTITUCIONAL */
+    .button-primary {
+        width: 100%;
+        padding: 1rem;
+        background: #124416;
+        color: #ffffff;
+        font-size: 1rem;
+        box-shadow: 0 4px 12px rgba(18, 68, 22, 0.15);
+    }
+
+    .button-primary:hover {
+        transform: translateY(-1px);
+        background-color: #0d3310;
+        box-shadow: 0 6px 15px rgba(18, 68, 22, 0.25);
+    }
+
+    /* Botón Reporte - DORADO INSTITUCIONAL */
+    .button-secondary {
+        background: rgba(170, 127, 49, 0.1);
+        color: #AA7F31;
+        border: 1px solid rgba(170, 127, 49, 0.2);
+        padding: 0.8rem 1.4rem;
+    }
+
+    .button-secondary:hover {
+        background: #AA7F31;
+        color: white;
+    }
+
+    .summary-grid {
+        display: grid;
+        gap: 1.5rem;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        margin-bottom: 1.5rem;
+    }
+
+    /* Tarjetas Modificadas Redondeadas */
+    .card {
+        background: #ffffff;
+        border-radius: 50px;
+        padding: 1.6rem;
+        box-shadow: 0 8px 25px rgba(0,0,0,0.02);
+        border: 1px solid rgba(0, 0, 0, 0.03);
+        position: relative;
+    }
+
+    .card h2,
+    .card strong {
+        display: block;
+        margin: 0 0 1rem;
+        color: #340C51; /* MORADO INSTITUCIONAL */
+        font-size: 1.1rem;
+        font-weight: 700;
+    }
+
+    .card p,
+    .card li {
+        margin: 0.75rem 0;
+        color: #55627d;
+        line-height: 1.65;
+    }
+
+    .card-columns {
+        display: grid;
+        gap: 1.5rem;
+        grid-template-columns: 1.3fr 1fr;
+        margin-top: 1rem;
+    }
+
+    .form-group {
+        margin-bottom: 1.25rem;
+    }
+
+    label {
+        display: block;
+        margin-bottom: 0.5rem;
+        color: #475569;
+        font-size: 0.9rem;
+        font-weight: 500;
+    }
+
+    input[type="date"] {
+        width: 100%;
+        padding: 0.85rem 1rem;
+        border-radius: 12px;
+        border: 1px solid #cbd5e1;
+        background: #f8fafc;
+        color: #1e293b;
+        font-size: 0.95rem;
+        font-family: inherit;
+        transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        outline: none;
+    }
+
+    input[type="date"]:focus {
+        border-color: #AA7F31; /* DORADO INSTITUCIONAL */
+        box-shadow: 0 0 0 3px rgba(170, 127, 49, 0.15);
+    }
+
+    .status {
+        border-radius: 14px;
+        padding: 1rem 1.2rem;
+        margin-bottom: 1.5rem;
+        font-size: 0.98rem;
+        font-weight: 500;
+    }
+
+    .status.success {
+        background: #d1fae5;
+        color: #065f46;
+        border: 1px solid #a7f3d0;
+    }
+
+    .status.error {
+        background: #fee2e2;
+        color: #991b1b;
+        border: 1px solid #fecaca;
+    }
+
+    .table-wrapper {
+        overflow-x: auto;
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        min-width: 280px;
+    }
+
+    th, td {
+        padding: 1rem 0.75rem;
+        text-align: left;
+        border-bottom: 1px solid #f1f5f9;
+        font-size: 0.95rem;
+    }
+
+    th {
+        background: #f8fafc;
+        color: #340C51; /* MORADO INSTITUCIONAL */
+        font-weight: 600;
+    }
+
+    td strong {
+        color: #340C51;
+    }
+
+    .meta-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+        margin-top: 0.75rem;
+    }
+
+    /* Píldoras Informativas */
+    .meta-pill {
+        padding: 0.7rem 1.1rem;
+        border-radius: 50px;
+        background: #f8fafc;
+        color: #475569;
+        font-size: 0.9rem;
+        border: 1px solid #e2e8f0;
+    }
+    
+    .meta-pill strong {
+        color: #340C51;
+        display: inline;
+    }
+
+    .logo-outer-container {
+        width: 100%;
+        display: flex;
+        justify-content: flex-start;
+        padding-left: 0.5rem;
+        margin-bottom: 1rem;
+    }
+
+    .logo-outside {
+        height: 85px;
+        width: auto;
+        object-fit: contain;
+    }
+
+    @media (max-width: 860px) {
+        .summary-grid,
+        .card-columns {
+            grid-template-columns: 1fr;
         }
 
         .topbar {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 1rem;
-            margin-bottom: 1.5rem;
-            padding: 1.1rem 1.4rem;
-            border-radius: 24px;
-            background: rgba(255,255,255,0.82);
-            box-shadow: 0 24px 60px rgba(31, 50, 79, 0.08);
-            backdrop-filter: blur(10px);
+            flex-direction: column;
+            align-items: flex-start;
+            padding: 1.5rem;
         }
 
-        .topbar-title {
-            display: flex;
-            flex-wrap: wrap;
-            align-items: baseline;
-            gap: 0.75rem;
-            margin-bottom: 0.5rem;
-        }
-
-        .page-label {
-            display: inline-flex;
-            padding: 0.45rem 0.85rem;
-            border-radius: 999px;
-            text-transform: uppercase;
-            letter-spacing: 0.18em;
-            font-size: 0.78rem;
-            color: #3c62f5;
-            background: rgba(59, 98, 245, 0.12);
-        }
-
-        .topbar h1 {
-            margin: 0;
-            font-size: 2rem;
-            color: #1f324f;
-            letter-spacing: -0.03em;
-            line-height: 1.05;
-        }
-
-        .topbar p {
-            margin: 0.35rem 0 0;
-            color: #57627d;
-            font-size: 0.95rem;
-        }
-
-        .button-icon {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            width: 2rem;
-            height: 2rem;
-            margin-right: 0.6rem;
-            border-radius: 999px;
-            background: rgba(59, 98, 245, 0.12);
-            color: #3c62f5;
-            font-size: 1rem;
-        }
-
-        .button-link,
-        .button-primary,
-        .button-secondary {
-            border: none;
-            border-radius: 14px;
-            cursor: pointer;
-            text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
-            font-weight: 600;
-        }
-
-        .button-link {
-            padding: 0.9rem 1.3rem;
-            color: #3c62f5;
-            background: rgba(59, 98, 245, 0.1);
-        }
-
-        .button-link:hover {
-            transform: translateY(-1px);
-            background: rgba(59, 98, 245, 0.16);
-        }
-
-        .button-primary {
-            width: 100%;
-            padding: 1rem 1.1rem;
-            background: linear-gradient(135deg, #5567ff 0%, #2744d5 100%);
-            color: #ffffff;
-        }
-
-        .button-primary:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 16px 30px rgba(58, 87, 151, 0.18);
-        }
-
-        .button-secondary {
-            background: #f8fbff;
-            color: #1f324f;
-            border: 1px solid rgba(31, 50, 79, 0.08);
-            padding: 0.9rem 1.2rem;
-        }
-
-        .button-secondary:hover {
-            background: #eef4fb;
-        }
-
-        .summary-grid {
-            display: grid;
-            gap: 1rem;
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-            margin-bottom: 1.5rem;
-        }
-
-        .card {
-            background: #ffffff;
-            border-radius: 24px;
-            padding: 1.6rem;
-            box-shadow: 0 18px 40px rgba(31, 50, 79, 0.06);
-            border: 1px solid rgba(31, 50, 79, 0.05);
-        }
-
-        .card h2,
-        .card strong {
-            margin: 0 0 0.9rem;
-            color: #1f324f;
-            font-size: 1.05rem;
-        }
-
-        .card p,
-        .card li {
-            margin: 0.75rem 0;
-            color: #55627d;
-            line-height: 1.65;
-        }
-
-        .card-columns {
-            display: grid;
-            gap: 1.5rem;
-            grid-template-columns: 1.4fr 1fr;
-            margin-top: 1rem;
-        }
-
-        .form-group {
-            margin-bottom: 1.25rem;
-        }
-
-        label {
-            display: block;
-            margin-bottom: 0.5rem;
-            color: #1f324f;
-            font-size: 0.95rem;
-        }
-
-        input[type="date"],
-        select,
-        textarea {
-            width: 100%;
-            padding: 1rem 1rem;
-            border-radius: 16px;
-            border: 1px solid #d7dee9;
-            background: #fbfdff;
-            color: #20304a;
-            font-size: 0.97rem;
-            transition: border-color 0.2s ease, box-shadow 0.2s ease;
-        }
-
-        input:focus,
-        select:focus,
-        textarea:focus {
-            outline: none;
-            border-color: #6a86ff;
-            box-shadow: 0 0 0 4px rgba(106, 134, 255, 0.12);
-        }
-
-        .status {
-            border-radius: 18px;
-            padding: 1rem 1.2rem;
-            margin-bottom: 1.5rem;
-            font-size: 0.98rem;
-            line-height: 1.6;
-        }
-
-        .status.success {
-            background: #e4f8f2;
-            color: #065f46;
-            border: 1px solid #a7f3d0;
-        }
-
-        .status.error {
-            background: #fff1f2;
-            color: #991b1b;
-            border: 1px solid #fecaca;
-        }
-
-        .table-wrapper {
-            overflow-x: auto;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            min-width: 320px;
-        }
-
-        th,
-        td {
-            padding: 1rem 0.75rem;
-            text-align: left;
-            border-bottom: 1px solid #e5e7eb;
-            color: #3f4d67;
-        }
-
-        th {
-            background: #f8fbff;
-            color: #1f324f;
-            letter-spacing: 0.01em;
-            font-weight: 600;
-        }
-
-        .meta-row {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 0.75rem 1.5rem;
-            margin-top: 0.75rem;
-        }
-
-        .meta-pill {
-            padding: 0.8rem 1rem;
-            border-radius: 999px;
-            background: #f5f8ff;
-            color: #3f4d67;
-            font-size: 0.95rem;
-        }
-
-        @media (max-width: 860px) {
-            .summary-grid,
-            .card-columns {
-                grid-template-columns: 1fr;
-            }
-
-            .topbar {
-                flex-direction: column;
-                align-items: flex-start;
-            }
-        }
-       /* Contenedor del logo para controlar su alineación */
         .logo-outer-container {
-            width: 100%;
-            display: flex;
-            justify-content: flex-start; /* Lo alinea a la izquierda */
-            padding-left: 1.4rem;        /* Misma alineación interna que tiene tu topbar */
-            margin-bottom: 1rem;         /* Espacio entre el logo y la barra blanca */
+            justify-content: center;
+            padding-left: 0;
         }
-
-        /* Tamaño del logo en pantallas grandes */
+        
         .logo-outside {
-            height: 150px;
-            width: auto;
-            object-fit: contain;
+            height: 65px;
         }
-
-        /* Ajuste si se minimiza o se ve en celular */
-        @media (max-width: 860px) {
-            .logo-outer-container {
-                justify-content: center; /* En pantallas chicas se centra para que luzca mejor */
-                padding-left: 0;
-            }
-            .logo-outside {
-                height: 70px; /* Se encoge un poco para no saturar */
-            }
-        }
-    </style>
-<?php /**PATH C:\Users\becario.tie\Documents\GitHub\SistemasUCO\sistema_descansos\resources\views/empleados/vacaciones.blade.php ENDPATH**/ ?>
+    }
+</style><?php /**PATH C:\Users\becario.tie\Documents\GitHub\SistemasUCO\sistema_descansos\resources\views/empleados/vacaciones.blade.php ENDPATH**/ ?>
