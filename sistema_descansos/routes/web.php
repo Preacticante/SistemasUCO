@@ -65,10 +65,7 @@ Route::get('/directorio-empleados', function () {
 
 // 3. Historial de Vacaciones
 Route::get('/historial', function () {
-<<<<<<< HEAD
-    if (! session('logeado')) return redirect()->route('login');
-    return view('historial');
-=======
+
     // Si no está logeado, lo regresa al login
     if (! session('logeado')) {
         return redirect()->route('login');
@@ -79,7 +76,7 @@ Route::get('/historial', function () {
         ->get();
 
     return view('historial', compact('periodosVacacionales'));
->>>>>>> 894825f44ac2875b2c8baac8440661666836c53a
+    
 })->name('historial');
 
 // 4. Configuración / Ajustes
