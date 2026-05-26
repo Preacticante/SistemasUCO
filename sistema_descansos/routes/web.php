@@ -76,7 +76,7 @@ Route::get('/historial', function () {
         ->get();
 
     return view('historial', compact('periodosVacacionales'));
-
+    
 })->name('historial');
 
 // 4. Configuración / Ajustes
