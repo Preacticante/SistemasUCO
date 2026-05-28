@@ -16,22 +16,24 @@
             color: #000;
             line-height: 1.3;
             background-color: #fff;
-            margin: 0;
-            padding: 0;
         }
 
+        /* Cambiamos el contenedor a un porcentaje fijo para asegurar el centrado en PDF */
         .container {
-            width: 100%;
-            max-width: 800px;
+            width: 92%;
             margin: 0 auto;
-            padding: 15px 20px;
+            padding-top: 20px;
             text-align: center;
         }
 
-        .header-table {
-            width: 95%;
+        /* Forzamos a que todas las tablas ocupen exactamente el 100% del contenedor centrado */
+        .header-table, .info-table, .balances-table, .vacation-table {
+            width: 100% !important;
             border-collapse: collapse;
-            margin: 0 auto 12px auto;
+            margin-top: 12px !important;
+            margin-bottom: 12px !important;
+            margin-left: 0 !important;
+            margin-right: 0 !important;
         }
 
         .header-table td {
@@ -46,16 +48,16 @@
         .logo-slogan { font-size: 6px; color: #757575; font-style: italic; }
 
         .title-area {
-            width: 45%;
+            width: 40%;
             text-align: center;
-            font-size: 15px;
+            font-size: 14px;
             font-weight: bold;
             letter-spacing: 0.5px;
             padding-bottom: 5px;
         }
 
         .date-area {
-            width: 25%;
+            width: 30%;
             text-align: right;
             font-size: 10px;
         }
@@ -71,27 +73,23 @@
         .date-format {
             font-size: 8px;
             color: #9e9e9e;
-            padding-right: 30px;
+            padding-right: 25px;
             margin-top: 2px;
         }
 
+        /* Alineamos el bloque de texto con los bordes de las tablas */
         .intro-text {
+            width: 100%;
+            margin: 15px 0;
             font-size: 10.5px;
-            margin: 15px 0 12px 0;
             text-align: justify;
-            display: block;
-        }
-
-        .info-table {
-            width: 95%;
-            border-collapse: collapse;
-            margin: 0 auto 12px auto;
         }
 
         .info-table td {
             border: 1px solid #000;
-            padding: 5px 6px;
+            padding: 6px 8px;
             font-size: 10.5px;
+            text-align: left;
         }
 
         .info-table td.label {
@@ -103,43 +101,32 @@
             width: 85%;
         }
 
-        .balances-table {
-            width: 95%;
-            border-collapse: collapse;
-            margin: 8px auto 15px auto;
-        }
-
         .balances-table td {
             border: none;
-            padding: 3px 0;
+            padding: 5px 0;
             vertical-align: middle;
             font-size: 10.5px;
+            text-align: left;
         }
 
         .cell-inline-border {
             border: 1px solid #000 !important;
-            text-align: center;
+            text-align: center !important;
             font-weight: bold;
-            padding: 4px 10px !important;
+            padding: 4px 8px !important;
         }
 
         .vacation-section-title {
             font-weight: bold;
-            margin-bottom: 6px;
+            margin: 15px auto 5px auto;
             font-size: 10.5px;
             text-align: center;
-        }
-
-        .vacation-table {
-            width: 95%;
-            border-collapse: collapse;
-            margin: 8px auto 15px auto;
         }
 
         .vacation-table th, 
         .vacation-table td {
             border: 1px solid #000;
-            padding: 4px 2px;
+            padding: 5px 2px;
             text-align: center;
             font-size: 10px;
         }
@@ -151,71 +138,71 @@
 
         .observations-title {
             font-weight: bold;
-            margin-bottom: 3px;
+            margin-top: 15px;
             font-size: 10.5px;
             text-align: center;
         }
 
         .observations-box {
-            width: 95%;
+            width: 100%;
             border: 1px solid #000;
-            height: 50px;
-            margin: 8px auto 12px auto;
+            height: 55px;
+            margin: 6px 0 12px 0;
         }
 
         .disclaimer {
+            width: 100%;
+            margin: 0 0 35px 0;
             font-size: 9px;
-            margin-bottom: 35px;
             text-align: justify;
         }
 
         .signatures-container {
             width: 100%;
-            margin-top: 25px;
+            margin-top: 20px;
         }
 
         .signatures-row {
             display: table;
-            width: 95%;
+            width: 100%;
             table-layout: fixed;
-            margin: 0 auto 25px auto;
+            margin: 0 auto 35px auto;
         }
 
         .signature-col {
             display: table-cell;
-            width: 38%;
+            width: 40%;
             text-align: center;
             vertical-align: top;
         }
 
         .signature-space {
-            width: 24%;
+            width: 20%;
             display: table-cell;
         }
 
         .signature-line {
             border-top: 1px solid #000;
-            padding-top: 3px;
+            padding-top: 4px;
             font-weight: bold;
             font-size: 10px;
         }
 
         .signature-details {
             font-size: 9.5px;
-            margin-top: 1px;
+            margin-top: 2px;
         }
 
         .vobo-row {
             display: table;
-            width: 95%;
+            width: 100%;
             table-layout: fixed;
             margin: 0 auto;
         }
 
         .vobo-col {
             display: table-cell;
-            width: 38%;
-            margin: 0 auto;
+            width: 40%;
             text-align: center;
         }
     </style>
@@ -227,20 +214,13 @@
     <table class="header-table">
         <tr>
             <td class="logo-area" style="text-align: left;">
-                
-                
-        <?php
-            $path = public_path('img/logo_uco.png');
-            $type = pathinfo($path, PATHINFO_EXTENSION);
-            $data = file_get_contents($path);
-            $base64 = 'data:image/' . $type . ';base64,' . base64_encode($data);
-        ?>
-
-<img src="<?php echo e($base64); ?>" 
-     alt="UCO PREPA CONTEMPORÁNEA"
-     style="height: 100px; margin-bottom: 2px;">
-
-
+                <?php
+                    $path = public_path('img/logo_uco.png');
+                    $type = pathinfo($path, PATHINFO_EXTENSION);
+                    $data = file_get_contents($path);
+                    $base64 = 'data:image/' . $type . ';base64,' . base64_encode($data);
+                ?>
+                <img src="<?php echo e($base64); ?>" alt="UCO PREPA CONTEMPORÁNEA" style="height: 85px; margin-bottom: 2px;">
             </td>
             <td class="title-area">
                 CONSTANCIA DE PERIODO VACACIONAL
@@ -273,17 +253,18 @@
 
     <table class="balances-table">
         <tr>
-            <td style="width: 22%; font-weight: bold;">Días pendientes por disfrutar:</td>
+            <td style="width: 23%; font-weight: bold;">Días pendientes por disfrutar:</td>
             <td class="cell-inline-border" style="width: 6%;"><?php echo e($diasRestantes); ?></td>
             <td style="width: 25%; padding-left: 8px;">días del Período Vacacional</td>
             <td class="cell-inline-border" style="width: 10%;"><?php echo e($anioActual); ?></td>
-            <td style="width: 12%;"></td>
-            <td style="width: 18%; text-align: right; font-weight: bold;">Días con derecho:</td>
+            <td style="width: 10%;"></td>
+            <td style="width: 19%; text-align: right; font-weight: bold; padding-right: 5px;">Días con derecho:</td>
             <td class="cell-inline-border" style="width: 7%;"><?php echo e($diasDerecho); ?></td>
         </tr>
     </table>
 
     <div class="vacation-section-title">Días a disfrutar:</div>
+    
     <table class="vacation-table">
         <thead>
             <tr>
@@ -338,9 +319,9 @@
         </tbody>
     </table>
 
-    <table class="balances-table" style="margin-bottom: 25px;">
+    <table class="balances-table" style="margin-bottom: 20px !important;">
         <tr>
-            <td style="width: 22%; font-weight: bold;">Días restantes por disfrutar:</td>
+            <td style="width: 23%; font-weight: bold;">Días restantes por disfrutar:</td>
             <td class="cell-inline-border" style="width: 6%;"><?php echo e($diasRestantes); ?></td>
             <td style="width: 25%; padding-left: 8px;">días del Período Vacacional</td>
             <td class="cell-inline-border" style="width: 10%;"><?php echo e($anioActual); ?></td>
@@ -359,7 +340,7 @@
         <div class="signatures-row">
             <div class="signature-col">
                 <div class="signature-line">Acepto de Conformidad</div>
-                <div class="signature-details"><?php echo e($empleado->nombre_completo); ?></div>
+                <div class="signature-details"><?php echo e($empleado->nombre); ?> <?php echo e($empleado->apellido_paterno); ?> <?php echo e($empleado->apellido_materno); ?></div>
                 <div class="signature-details" style="color: #555;"><?php echo e($puesto?->nombre ?? 'Ayudante General'); ?></div>
             </div>
             <div class="signature-space"></div>
@@ -371,18 +352,17 @@
         </div>
         
         <div class="vobo-row">
-            <div class="signature-space" style="width: 31%;"></div>
+            <div class="signature-space" style="width: 30%;"></div>
             <div class="vobo-col">
                 <div class="signature-line">VoBo</div>
                 <div class="signature-details">L.C. Diana Sánchez Espino</div>
                 <div class="signature-details" style="color: #555;">Contralora Corporativa</div>
             </div>
-            <div class="signature-space" style="width: 31%;"></div>
+            <div class="signature-space" style="width: 30%;"></div>
         </div>
     </div>
 
 </div>
 
 </body>
-</html>
-<?php /**PATH C:\Users\becario.tie\Documents\GitHub\SistemasUCO\sistema_descansos\resources\views/empleados/pdf.blade.php ENDPATH**/ ?>
+</html><?php /**PATH C:\Users\becario.tie\Documents\GitHub\SistemasUCO\sistema_descansos\resources\views/empleados/pdf.blade.php ENDPATH**/ ?>
