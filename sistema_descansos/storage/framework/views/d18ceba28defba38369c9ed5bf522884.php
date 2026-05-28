@@ -220,7 +220,7 @@
                     $data = file_get_contents($path);
                     $base64 = 'data:image/' . $type . ';base64,' . base64_encode($data);
                 ?>
-                <img src="<?php echo e($base64); ?>" alt="UCO PREPA CONTEMPORÁNEA" style="height: 85px; margin-bottom: 2px;">
+                <img src="<?php echo e($base64); ?>" alt="UCO PREPA CONTEMPORÁNEA" style="height: 160px; margin-bottom: 2px;">
             </td>
             <td class="title-area">
                 CONSTANCIA DE PERIODO VACACIONAL

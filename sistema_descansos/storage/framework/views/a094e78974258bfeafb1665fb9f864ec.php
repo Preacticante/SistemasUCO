@@ -3,13 +3,13 @@
 
 <?php $__env->startSection('content'); ?>
     <div class="panel-principal-header">
-        <h2>Registro de Descansos</h2>
-        <p>Aquí se muestra la bitácora de los periodos vacacionales registrados en la base de datos.</p>
+        <h2>Panel Principal</h2>
+        <p>Resumen general del estado de vacaciones y alertas de personal activo.</p>
     </div>
 
     <div class="table-card-container">
         <div class="table-card-header">
-            Historial de Vacaciones Registradas
+            Empleados con menos días restantes
         </div>
         <div style="overflow-x: auto;">
             <table class="responsive-table-v2">
@@ -21,7 +21,7 @@
                         <th>FECHA FIN</th>
                         <th>DÍAS TOTALES</th>
                         <th>ESTADO</th>
-                        
+                        <th style="text-align: center;">ACCIÓN</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -30,9 +30,6 @@
                             $empleado = $periodo->empleado;
                             $fechaFin = \Carbon\Carbon::parse($periodo->fecha_fin);
                             $estado = $fechaFin->isPast() ? 'Tomado' : 'Programado';
-                            
-                            // Mapeo de estilos según el estado de tu lógica original
-                            $claseDias = $fechaFin->isPast() ? 'text-muted-days' : 'text-danger-bold';
                         ?>
                         <tr>
                             <td class="text-employee-name">
@@ -50,7 +47,7 @@
                                 <?php echo e($fechaFin->format('d/m/Y')); ?>
 
                             </td>
-                            <td class="<?php echo e($claseDias); ?>">
+                            <td class="<?php echo e($fechaFin->isPast() ? 'text-muted-days' : 'text-danger-bold'); ?>">
                                 <?php echo e($periodo->dias); ?> día<?php echo e($periodo->dias === 1 ? '' : 's'); ?>
 
                             </td>
@@ -60,12 +57,14 @@
 
                                 </span>
                             </td>
-                            
+                            <td style="text-align: center;">
+                                <a href="#" class="btn-action-ver">Ver</a>
+                            </td>
                         </tr>
                     <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
                         <tr>
                             <td colspan="7" style="text-align:center; padding: 25px 0; color: #5e7087;">
-                                No hay registros de vacaciones en la base de datos.
+                                No existen solicitudes de periodos vacacionales en el sistema.
                             </td>
                         </tr>
                     <?php endif; ?>
@@ -75,7 +74,7 @@
     </div>
 
     <style>
-        /* Estilo para la cabecera superior de la página */
+        /* Contenedor de la cabecera superior */
         .panel-principal-header {
             background: white; 
             padding: 24px 30px; 
@@ -109,7 +108,7 @@
 
         /* Envoltorio con bordes redondeados para simular tarjetas corporativas */
         .table-card-container {
-            background: white;
+            background: #ffffff;
             border-radius: 24px;
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
             overflow: hidden;
@@ -161,7 +160,7 @@
             font-weight: 600;
         }
         .text-danger-bold {
-            color: #334155; /* Rojo para vacaciones programadas (resaltado) */
+            color: #ef4444; 
             font-weight: 700;
         }
         .text-muted-days {
