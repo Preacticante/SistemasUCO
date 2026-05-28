@@ -26,7 +26,7 @@
         
         .dashboard-header h1 {
             margin: 0;
-            color: #340C51; /* MORADO INSTITUCIONAL */
+            color: #000000; /* MORADO INSTITUCIONAL */
             font-size: 1.8rem;
             font-weight: 700;
             letter-spacing: 0.5px;

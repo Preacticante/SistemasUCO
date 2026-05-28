@@ -8,6 +8,7 @@
         grid-template-columns: 350px 1fr;
         gap: 25px;
         font-family: 'Inter', sans-serif;
+        
     }
 
     .profile-card {
@@ -16,6 +17,8 @@
         border-radius: 12px;
         box-shadow: 0 2px 10px rgba(0,0,0,0.03);
         height: fit-content;
+                    border-bottom: 4px solid #AA7F31; /* Detalle Dorado UCO */
+
     }
 
     /* Estilos del Avatar (Dorado UCO) */

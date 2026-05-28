@@ -1,9 +1,9 @@
-@extends('layouts.app')
 
-@section('title', 'Configuración')
-@section('header', 'Configuración del Sistema')
 
-@push('styles')
+<?php $__env->startSection('title', 'Configuración'); ?>
+<?php $__env->startSection('header', 'Configuración del Sistema'); ?>
+
+<?php $__env->startPush('styles'); ?>
 <style>
     .config-grid {
         display: grid;
@@ -128,9 +128,9 @@
         background-color: #e2e8f0;
     }
 </style>
-@endpush
+<?php $__env->stopPush(); ?>
 
-@section('content')
+<?php $__env->startSection('content'); ?>
     <div class="config-grid">
         
         <div class="config-card">
@@ -266,4 +266,5 @@
         </div>
 
     </div>
-@endsection
+<?php $__env->stopSection(); ?>
+<?php echo $__env->make('layouts.app', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH /var/www/html/resources/views/configuracion.blade.php ENDPATH**/ ?>

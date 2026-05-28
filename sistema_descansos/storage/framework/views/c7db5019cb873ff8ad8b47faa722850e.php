@@ -171,10 +171,12 @@
         font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
         color: #1f324f;
         background-color: #f1f5f9;
+        
     }
 
     * {
         box-sizing: border-box;
+        
     }
 
     body {
@@ -184,12 +186,14 @@
                     radial-gradient(circle at bottom right, rgba(170, 127, 49, 0.05), transparent 30%),
                     linear-gradient(180deg, #f1f5f9 0%, #edf2f7 100%);
         color: #1e293b;
+        
     }
 
     .page-shell {
         width: min(1200px, calc(100% - 2rem));
         margin: 0 auto 2rem;
         padding: 2rem 0;
+        
     }
 
     /* --- Encabezado Superior (Estilo Redondeado de la marca) --- */
@@ -205,6 +209,8 @@
         box-shadow: 0 10px 30px rgba(52, 12, 81, 0.03);
         backdrop-filter: blur(10px);
         border: 1px solid rgba(255, 255, 255, 0.8);
+                    border-bottom: 4px solid #AA7F31; /* Detalle Dorado UCO */
+
     }
 
     .topbar-title {
@@ -213,6 +219,7 @@
         align-items: center;
         gap: 1rem;
         margin-bottom: 0.5rem;
+        
     }
 
     /* Label - MORADO INSTITUCIONAL */
@@ -226,6 +233,7 @@
         font-weight: 700;
         color: white;
         background: #340C51; 
+        
     }
 
     .topbar h1 {
@@ -240,6 +248,7 @@
         margin: 0.4rem 0 0;
         color: #64748b;
         font-size: 0.95rem;
+        
     }
 
     .button-icon {
@@ -296,6 +305,7 @@
         transform: translateY(-1px);
         background-color: #0d3310;
         box-shadow: 0 6px 15px rgba(18, 68, 22, 0.25);
+        
     }
 
     /* Botón Reporte - DORADO INSTITUCIONAL */

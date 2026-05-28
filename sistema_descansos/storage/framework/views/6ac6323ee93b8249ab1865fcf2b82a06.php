@@ -1,3 +1,5 @@
+
+
 <?php $__env->startSection('title', 'Configuración'); ?>
 <?php $__env->startSection('header', 'Configuración del Sistema'); ?>
 
@@ -8,6 +10,7 @@
         grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
         gap: 25px;
         font-family: 'Inter', sans-serif;
+        
     }
     
     .config-card {
@@ -15,6 +18,8 @@
         padding: 25px;
         border-radius: 12px;
         box-shadow: 0 2px 10px rgba(0,0,0,0.03);
+                    border-bottom: 4px solid #AA7F31; /* Detalle Dorado UCO */
+
     }
 
     .config-card h3 {
@@ -27,6 +32,7 @@
         gap: 10px;
         border-bottom: 1px solid #f1f5f9;
         padding-bottom: 15px;
+
     }
 
     .config-card h3 i {

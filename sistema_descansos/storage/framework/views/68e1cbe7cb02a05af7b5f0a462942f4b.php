@@ -1,9 +1,7 @@
-@extends('layouts.app')
+<?php $__env->startSection('title', 'Inicio'); ?>
+<?php $__env->startSection('header', 'UCO • Control de Personal'); ?>
 
-@section('title', 'Inicio')
-@section('header', 'UCO • Control de Personal')
-
-@push('styles')
+<?php $__env->startPush('styles'); ?>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         .dashboard-container {
@@ -174,9 +172,9 @@
             .table-uco-header { padding: 15px 20px; }
         }
     </style>
-@endpush
+<?php $__env->stopPush(); ?>
 
-@section('content')
+<?php $__env->startSection('content'); ?>
 <div class="dashboard-container">
     
     <div class="dashboard-header">
@@ -191,7 +189,7 @@
             </div>
             <div class="uco-stat-info">
                 <span class="uco-stat-label">Total empleados</span>
-                <strong class="uco-stat-number">{{ $totalEmpleados ?? 17 }}</strong>
+                <strong class="uco-stat-number"><?php echo e($totalEmpleados ?? 17); ?></strong>
             </div>
         </div>
 
@@ -201,7 +199,7 @@
             </div>
             <div class="uco-stat-info">
                 <span class="uco-stat-label">Días derecho</span>
-                <strong class="uco-stat-number">{{ $totalDiasDerecho ?? 282 }}</strong>
+                <strong class="uco-stat-number"><?php echo e($totalDiasDerecho ?? 282); ?></strong>
             </div>
         </div>
 
@@ -211,7 +209,7 @@
             </div>
             <div class="uco-stat-info">
                 <span class="uco-stat-label">Tomados este año</span>
-                <strong class="uco-stat-number" style="color: #ef4444;">{{ $diasTomadosEsteAnio ?? 0 }}</strong>
+                <strong class="uco-stat-number" style="color: #ef4444;"><?php echo e($diasTomadosEsteAnio ?? 0); ?></strong>
             </div>
         </div>
 
@@ -221,7 +219,7 @@
             </div>
             <div class="uco-stat-info">
                 <span class="uco-stat-label">Restantes totales</span>
-                <strong class="uco-stat-number" style="color: #124416;">{{ $diasRestantesTotales ?? 282 }}</strong>
+                <strong class="uco-stat-number" style="color: #124416;"><?php echo e($diasRestantesTotales ?? 282); ?></strong>
             </div>
         </div>
     </div>
@@ -242,22 +240,24 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @foreach($empleadosConMenosDias as $item)
+                    <?php $__currentLoopData = $empleadosConMenosDias; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $item): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                         <tr>
                             <td style="font-weight: 500; color: #1e293b;">
-                                {{ $item->empleado->nombre }} {{ $item->empleado->apellido_paterno }} {{ $item->empleado->apellido_materno }}
+                                <?php echo e($item->empleado->nombre); ?> <?php echo e($item->empleado->apellido_paterno); ?> <?php echo e($item->empleado->apellido_materno); ?>
+
                             </td>
-                            <td style="font-weight: 700; color: #ef4444;">{{ $item->diasRestantes }} días</td>
-                            <td style="color: #64748b;">{{ $item->diasTomados }} días</td>
+                            <td style="font-weight: 700; color: #ef4444;"><?php echo e($item->diasRestantes); ?> días</td>
+                            <td style="color: #64748b;"><?php echo e($item->diasTomados); ?> días</td>
                             <td style="text-align: center;">
-                                <a href="{{ route('empleados.vacaciones', $item->empleado->id) }}" class="btn-calcular">Ver</a>
+                                <a href="<?php echo e(route('empleados.vacaciones', $item->empleado->id)); ?>" class="btn-calcular">Ver</a>
                             </td>
                         </tr>
-                    @endforeach
+                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                 </tbody>
             </table>
         </div>
     </div>
 
 </div>
-@endsection
+<?php $__env->stopSection(); ?>
+<?php echo $__env->make('layouts.app', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH /var/www/html/resources/views/dashboard.blade.php ENDPATH**/ ?>
