@@ -17,7 +17,7 @@
             align-items: center;
             min-height: 100vh;
             /* El color de fondo oscuro de tu pantalla */
-            background-color: #2b394b; 
+            background-color: #124416; 
         }
         .login-box {
             background: white;
@@ -28,7 +28,7 @@
             text-align: center;
             box-shadow: 0 10px 25px rgba(0,0,0,0.2);
         }
-        .logo-img { height: 180px; margin-bottom: 0px; }
+        .logo.png { height: 180px; margin-bottom: 0px; }
         h2 { margin: 0 0 10px; font-size: 1.5rem; font-weight: bold; }
         .subtitle { color: #64748b; font-size: 0.9rem; margin-bottom: 25px; line-height: 1.4; }
         .form-group { margin-bottom: 20px; text-align: left; }
@@ -37,13 +37,13 @@
             width: 100%; padding: 12px; border: 1px solid #d1d5db;
             border-radius: 8px; font-size: 1rem; outline: none; transition: 0.2s;
         }
-        .form-group input:focus { border-color: #3b82f6; }
+        .form-group input:focus { border-color: #340C51; }
         button[type="submit"] {
-            width: 100%; padding: 12px; background-color: #3b82f6; color: white;
+            width: 100%; padding: 12px; background-color: #AA7F31; color: white;
             border: none; border-radius: 20px; font-size: 1rem; font-weight: 600;
             cursor: pointer; margin-top: 10px; transition: 0.2s;
         }
-        button[type="submit"]:hover { background-color: #2563eb; }
+        button[type="submit"]:hover { background-color: #340C51; }
         .help-text { margin-top: 20px; font-size: 0.85rem; }
         .help-text a { color: #3b82f6; text-decoration: none; }
         .help-text a:hover { text-decoration: underline; }
@@ -62,7 +62,7 @@
             if(file_exists($path)){
                 $data = file_get_contents($path);
                 $base64 = 'data:image/' . $type . ';base64,' . base64_encode($data);
-                echo '<img src="'.$base64.'" alt="UCO PREPA CONTEMPORÁNEA" class="logo-img">';
+                echo '<img src="'.$base64.'" alt="UCO PREPA CONTEMPORÁNEA" class="logo.png">';
             }
         @endphp
 

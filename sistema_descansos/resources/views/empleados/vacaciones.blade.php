@@ -34,9 +34,9 @@
                 <p>Administra registros y consulta el consumo de vacaciones de manera clara.</p>
             </div>
 
-            <a href="{{ route('panel') }}" class="button-link">
-                <span class="button-icon"></span>
-                Volver al inicio
+            <a href="{{ route('panel') }}" class="button-link"> 
+                <span class="button-icon"> <-</span>
+               Volver al inicio
             </a>
         </section>
 

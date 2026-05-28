@@ -91,7 +91,7 @@
         }
 
         .uco-stat-number {
-            color: #340C51;
+            color: #124416;
             font-size: 1.7rem;
             font-weight: 700;
             line-height: 1;
@@ -108,7 +108,7 @@
         }
 
         .table-uco-header {
-            background-color: #340C51; /* MORADO INSTITUCIONAL */
+            background-color: #124416; /* MORADO INSTITUCIONAL */
             padding: 20px 40px;
         }
 

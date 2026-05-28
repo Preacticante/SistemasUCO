@@ -26,7 +26,7 @@
         /* --- Menú Lateral (Morado UCO) --- */
         .sidebar {
             width: 260px;
-            background-color: #340C51; /* MORADO INSTITUCIONAL */
+            background-color: #124416; /* MORADO INSTITUCIONAL */
             color: white;
             display: flex;
             flex-direction: column;
@@ -89,7 +89,7 @@
 
         /* --- Barra Superior / Topbar (Morado UCO) --- */
         .topbar {
-            background-color: #340C51; /* MORADO INSTITUCIONAL */
+            background-color: #124416; /* MORADO INSTITUCIONAL */
             padding: 15px 30px;
             display: flex;
             justify-content: space-between;
@@ -148,8 +148,8 @@
         
         <aside class="sidebar">
             <div class="sidebar-header">
-                <div style="padding: 0; margin-bottom: 15px; display: flex; justify-content: center;">
-                    <img src="{{ asset('img/logo_uco.png') }}" alt="Logo UCO" style="max-height: 190px; mix-blend-mode: screen;">
+                <div style="padding: 0; margin-bottom: 45px; display: flex; justify-content: center;">
+                    <img src="{{ asset('img/logo_uco1.png') }}" alt="Logo UCO" style="max-height: 130px; mix-blend-mode: screen;">
                 </div>
                 <span style="font-size: 1.1rem; font-weight: bold; color: white;">SISTEMA UCO</span>
             </div>
