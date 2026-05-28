@@ -74,30 +74,40 @@
         </div>
     </div>
 
-   <style>
+    <style>
         /* Estilo para la cabecera superior de la página */
         .panel-principal-header {
             background: white; 
             padding: 24px 30px; 
-            border-radius: 20px 20px 16px 16px;
-            box-shadow: 0 4px 10px rgba(240, 11, 42, 0.02);
+            border-radius: 24px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.02);
             text-align: center;
             margin-bottom: 25px;
-            border-bottom: 4px solid #a87e3b;
+            position: relative;
+            overflow: hidden;
+        }
+        .panel-principal-header::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background-color: #a87e3b; /* Remate inferior dorado */
         }
         .panel-principal-header h2 {
             margin: 0 0 8px 0;
-            color: #2b0b4d;
+            color: #2b0b4d; /* Tipografía Morada Corporativa */
             font-size: 1.8rem;
             font-weight: 700;
         }
         .panel-principal-header p {
             margin: 0;
-            color: #101111;
-            font-size: 1rem;
+            color: #5e7087;
+            font-size: 0.95rem;
         }
 
-        /* Contenedor principal de la tabla (Tarjeta con bordes redondeados) */
+        /* Envoltorio con bordes redondeados para simular tarjetas corporativas */
         .table-card-container {
             background: white;
             border-radius: 24px;
@@ -107,9 +117,9 @@
             border: 1px solid #f1f5f9;
         }
 
-        /* Cabecera morada de la tabla */
+        /* Banner de encabezado morado en la tabla */
         .table-card-header {
-            background-color: #340C51;
+            background-color: #124416;
             color: white;
             padding: 18px 24px;
             font-size: 1.1rem;
@@ -117,29 +127,25 @@
             letter-spacing: 0.3px;
         }
 
-        /* Estilos generales de la tabla */
+        /* Estructura general de la tabla */
         .responsive-table-v2 {
             width: 100%;
             border-collapse: collapse;
             font-family: system-ui, -apple-system, sans-serif;
             font-size: 0.95rem;
         }
-
-        /* Encabezados de columnas (TH) */
         .responsive-table-v2 thead tr {
             background-color: #ffffff;
             border-bottom: 1px solid #f1f5f9;
         }
         .responsive-table-v2 th {
             padding: 16px 24px;
-            color: #334155;
+            color: #124416; /* Encabezados de columnas color morado */
             text-align: left;
             font-size: 0.85rem;
             font-weight: 700;
             letter-spacing: 0.5px;
         }
-
-        /* Celdas del cuerpo (TD) */
         .responsive-table-v2 td {
             padding: 18px 24px;
             vertical-align: middle;
@@ -149,7 +155,7 @@
             border-bottom: none;
         }
 
-        /* Tipografías de las columnas */
+        /* Estilos aplicados a los textos de las celdas */
         .text-employee-name {
             color: #334155;
             font-weight: 600;
@@ -159,12 +165,27 @@
             font-weight: 700;
         }
         .text-muted-days {
-            color: #334155; /* Gris para vacaciones ya tomadas */
+            color: #8293a6; 
             font-weight: 700;
         }
 
+        /* Botón de acción Ovalado café claro / dorado */
+        .btn-action-ver {
+            display: inline-block;
+            background-color: #a87e3b;
+            color: white;
+            text-decoration: none;
+            padding: 6px 28px;
+            border-radius: 50px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            transition: background-color 0.2s;
+        }
+        .btn-action-ver:hover {
+            background-color: #916b30;
+        }
 
-        /* Tus Badges de estado originales */
+        /* Badges e indicadores visuales de estado */
         .badge {
             padding: 6px 12px;
             border-radius: 50px;
@@ -173,14 +194,13 @@
             display: inline-block;
         }
         .badge-success {
-            background-color: #124416;
-            color: #f8faf8;
+            background-color: #dcfce7;
+            color: #15803d;
         }
         .badge-info {
-            background-color: #AA7F31;
-            color: #fdfcfc;
+            background-color: #e0f2fe;
+            color: #0369a1;
         }
     </style>
 <?php $__env->stopSection(); ?>
-
 <?php echo $__env->make('layouts.app', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH C:\Users\becario.tie\Documents\GitHub\SistemasUCO\sistema_descansos\resources\views/historial.blade.php ENDPATH**/ ?>
