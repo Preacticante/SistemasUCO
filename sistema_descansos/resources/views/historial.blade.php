@@ -4,90 +4,184 @@
 @section('header', 'Historial de Vacaciones')
 
 @section('content')
-    <div style="background: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
-        <h2>Registro de Descansos</h2>
-        <p>Aquí se muestra la bitácora de los periodos vacacionales registrados en la base de datos.</p>
+    <div class="panel-principal-header">
+        <h2>Panel Principal</h2>
+        <p>Resumen general del estado de vacaciones y alertas de personal activo.</p>
     </div>
 
-    <div style="overflow-x: auto; margin-top: 20px;">
-        <table class="responsive-table">
-            <thead>
-                <tr>
-                    <th>Empleado</th>
-                    <th>Tipo</th>
-                    <th>Fecha Inicio</th>
-                    <th>Fecha Fin</th>
-                    <th>Días Totales</th>
-                    <th>Estado</th>
-                </tr>
-            </thead>
-            <tbody>
-                @forelse($periodosVacacionales as $periodo)
-                    @php
-                        $empleado = $periodo->empleado;
-                        $fechaFin = \Carbon\Carbon::parse($periodo->fecha_fin);
-                        $estado = $fechaFin->isPast() ? 'Tomado' : 'Programado';
-                        $badgeClass = $fechaFin->isPast() ? 'badge-success' : 'badge-info';
-                    @endphp
+    <div class="table-card-container">
+        <div class="table-card-header">
+            Empleados con menos días restantes
+        </div>
+        <div style="overflow-x: auto;">
+            <table class="responsive-table-v2">
+                <thead>
                     <tr>
-                        <td>{{ $empleado?->nombre }} {{ $empleado?->apellido_paterno }} {{ $empleado?->apellido_materno }}</td>
-                        <td>Vacaciones</td>
-                        <td>{{ \Carbon\Carbon::parse($periodo->fecha_inicio)->format('d/m/Y') }}</td>
-                        <td>{{ $fechaFin->format('d/m/Y') }}</td>
-                        <td>{{ $periodo->dias }} día{{ $periodo->dias === 1 ? '' : 's' }}</td>
-                        <td><span class="badge {{ $badgeClass }}">{{ $estado }}</span></td>
+                        <th>EMPLEADO</th>
+                        <th>TIPO</th>
+                        <th>FECHA INICIO</th>
+                        <th>FECHA FIN</th>
+                        <th>DÍAS TOTALES</th>
+                        <th>ESTADO</th>
+                        <th style="text-align: center;">ACCIÓN</th>
                     </tr>
-                @empty
-                    <tr>
-                        <td colspan="6" style="text-align:center; padding: 18px 0; color: #475569;">No hay registros de vacaciones en la base de datos.</td>
-                    </tr>
-                @endforelse
-            </tbody>
-        </table>
+                </thead>
+                <tbody>
+                    @forelse($periodosVacacionales as $periodo)
+                        @php
+                            $empleado = $periodo->empleado;
+                            $fechaFin = \Carbon\Carbon::parse($periodo->fecha_fin);
+                            $estado = $fechaFin->isPast() ? 'Tomado' : 'Programado';
+                        @endphp
+                        <tr>
+                            <td class="text-employee-name">
+                                {{ $empleado?->nombre }} {{ $empleado?->apellido_paterno }} {{ $empleado?->apellido_materno }}
+                            </td>
+                            <td style="color: #64748b; font-weight: 500;">
+                                Vacaciones
+                            </td>
+                            <td style="color: #334155;">
+                                {{ \Carbon\Carbon::parse($periodo->fecha_inicio)->format('d/m/Y') }}
+                            </td>
+                            <td style="color: #334155;">
+                                {{ $fechaFin->format('d/m/Y') }}
+                            </td>
+                            <td class="{{ $fechaFin->isPast() ? 'text-muted-days' : 'text-danger-bold' }}">
+                                {{ $periodo->dias }} día{{ $periodo->dias === 1 ? '' : 's' }}
+                            </td>
+                            <td>
+                                <span class="badge {{ $fechaFin->isPast() ? 'badge-success' : 'badge-info' }}">
+                                    {{ $estado }}
+                                </span>
+                            </td>
+                            <td style="text-align: center;">
+                                <a href="#" class="btn-action-ver">Ver</a>
+                            </td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="7" style="text-align:center; padding: 25px 0; color: #5e7087;">
+                                No existen solicitudes de periodos vacacionales en el sistema.
+                            </td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
     </div>
 
     <style>
-        .table-container {
+        /* Contenedor de la cabecera superior */
+        .panel-principal-header {
             background: white; 
-            padding: 30px; 
-            border-radius: 12px; 
-            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-        }
-        .header-section {
+            padding: 24px 30px; 
+            border-radius: 24px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.02);
+            text-align: center;
             margin-bottom: 25px;
+            position: relative;
+            overflow: hidden;
         }
-        .header-section h2 {
-            margin: 0 0 8px 0;
-            color: #1f324f;
-        }
-        .header-section p {
-            margin: 0;
-            color: #64748b;
-        }
-        .responsive-table {
+        .panel-principal-header::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
             width: 100%;
-            border-collapse: collapse;
-            margin-top: 15px;
+            height: 4px;
+            background-color: #a87e3b; /* Remate inferior dorado */
+        }
+        .panel-principal-header h2 {
+            margin: 0 0 8px 0;
+            color: #2b0b4d; /* Tipografía Morada Corporativa */
+            font-size: 1.8rem;
+            font-weight: 700;
+        }
+        .panel-principal-header p {
+            margin: 0;
+            color: #5e7087;
             font-size: 0.95rem;
         }
-        .responsive-table thead tr {
-            background-color: #f8fafc;
-            color: #1e293b;
-            text-align: left;
-            font-weight: 600;
-            border-bottom: 2px solid #e2e8f0;
+
+        /* Envoltorio con bordes redondeados para simular tarjetas corporativas */
+        .table-card-container {
+            background: white;
+            border-radius: 24px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+            overflow: hidden;
+            margin-top: 25px;
+            border: 1px solid #f1f5f9;
         }
-        .responsive-table th, .responsive-table td {
-            padding: 14px 16px;
+
+        /* Banner de encabezado morado en la tabla */
+        .table-card-header {
+            background-color: #2b0b4d;
+            color: white;
+            padding: 18px 24px;
+            font-size: 1.1rem;
+            font-weight: 700;
+            letter-spacing: 0.3px;
         }
-        .responsive-table tbody tr {
+
+        /* Estructura general de la tabla */
+        .responsive-table-v2 {
+            width: 100%;
+            border-collapse: collapse;
+            font-family: system-ui, -apple-system, sans-serif;
+            font-size: 0.95rem;
+        }
+        .responsive-table-v2 thead tr {
+            background-color: #ffffff;
             border-bottom: 1px solid #f1f5f9;
+        }
+        .responsive-table-v2 th {
+            padding: 16px 24px;
+            color: #3b1666; /* Encabezados de columnas color morado */
+            text-align: left;
+            font-size: 0.85rem;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+        }
+        .responsive-table-v2 td {
+            padding: 18px 24px;
+            vertical-align: middle;
+            border-bottom: 1px solid #f8fafc;
+        }
+        .responsive-table-v2 tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        /* Estilos aplicados a los textos de las celdas */
+        .text-employee-name {
+            color: #334155;
+            font-weight: 600;
+        }
+        .text-danger-bold {
+            color: #ef4444; 
+            font-weight: 700;
+        }
+        .text-muted-days {
+            color: #8293a6; 
+            font-weight: 700;
+        }
+
+        /* Botón de acción Ovalado café claro / dorado */
+        .btn-action-ver {
+            display: inline-block;
+            background-color: #a87e3b;
+            color: white;
+            text-decoration: none;
+            padding: 6px 28px;
+            border-radius: 50px;
+            font-size: 0.85rem;
+            font-weight: 600;
             transition: background-color 0.2s;
         }
-        .responsive-table tbody tr:hover {
-            background-color: #f8fafc;
+        .btn-action-ver:hover {
+            background-color: #916b30;
         }
-        /* Estilos para las etiquetas de estado (Badge) */
+
+        /* Badges e indicadores visuales de estado */
         .badge {
             padding: 6px 12px;
             border-radius: 50px;
