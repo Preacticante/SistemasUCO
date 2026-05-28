@@ -108,7 +108,7 @@
 
         /* Envoltorio con bordes redondeados para simular tarjetas corporativas */
         .table-card-container {
-            background: white;
+            background: #ffffff;
             border-radius: 24px;
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
             overflow: hidden;

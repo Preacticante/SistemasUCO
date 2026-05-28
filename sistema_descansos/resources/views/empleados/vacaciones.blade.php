@@ -205,7 +205,7 @@
         margin-bottom: 1.5rem;
         padding: 1.5rem 2rem;
         border-radius: 20px;
-        background: rgba(255, 255, 255, 0.85);
+        background: rgba(18, 68, 22, 0.85);
         box-shadow: 0 10px 30px rgba(52, 12, 81, 0.03);
         backdrop-filter: blur(10px);
         border: 1px solid rgba(255, 255, 255, 0.8);
