@@ -1,6 +1,7 @@
 @extends('layouts.app')
 
 @section('title', 'Historial')
+@section('header', 'Directorio de vacaciones')
 
 
 @section('content')

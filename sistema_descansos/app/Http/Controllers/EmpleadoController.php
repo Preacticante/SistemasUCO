@@ -7,10 +7,13 @@ class EmpleadoController extends Controller
 {
     public function index() {
     // Jalamos todos los empleados de la base de datos
-    $empleados = \App\Models\Empleado::all();
+    $empleados = \App\Models\Empleado::with('puesto')->get();
+
+    $puestos = \App\Models\Puesto::all();
+
+    return view('empleados.index', compact('empleados', 'puestos'));
+
     
-    // Retornamos la vista index dentro de la carpeta empleados
-    return view('empleados.index', compact('empleados'));
 }
     public function show($id) {
         // lógica para mostrar un empleado

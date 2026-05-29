@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Vacaciones | {{ $empleado->nombre }} {{ $empleado->apellido_paterno }} {{ $empleado->apellido_materno }}</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
     <main class="page-shell">
@@ -26,7 +27,7 @@
         @endif
         
         <section class="topbar">
-            <div>
+            <div class="topbar-left">
                 <div class="topbar-title">
                     <span class="page-label">Vacaciones</span>
                     <h1>{{ $empleado->nombre }} {{ $empleado->apellido_paterno }} {{ $empleado->apellido_materno }}</h1>
@@ -35,8 +36,8 @@
             </div>
 
             <a href="{{ route('panel') }}" class="button-link"> 
-                <span class="button-icon"> <-</span>
-               Volver al inicio
+                <i class="fa-solid fa-arrow-left button-icon-svg"></i>
+                Volver al inicio
             </a>
         </section>
 
@@ -51,24 +52,30 @@
         @endif
 
         @if (session('success'))
-            <div class="status success">{{ session('success') }}</div>
+            <div class="status success">
+                <i class="fa-solid fa-circle-check"></i> {{ session('success') }}
+            </div>
         @endif
 
         <section class="summary-grid">
             <article class="card">
-                <strong>Información del empleado</strong>
+                <div class="card-header-title">
+                    <i class="fa-solid fa-user-gear"></i> Información del empleado
+                </div>
                 <div class="meta-row">
                     <span class="meta-pill">Ingreso: <strong>{{ $empleado->fecha_ingreso }}</strong></span>
                     <span class="meta-pill">Antigüedad: <strong>{{ $antiguedadAnios }} años</strong></span>
-                    <span class="meta-pill">Derecho anual: <strong>{{ $diasDerecho }} días</strong></span>
+                    <span class="meta-pill status-derecho">Derecho anual: <strong>{{ $diasDerecho }} días</strong></span>
                 </div>
             </article>
 
             <article class="card">
-                <strong>Estado actual</strong>
+                <div class="card-header-title">
+                    <i class="fa-solid fa-chart-pie"></i> Estado actual
+                </div>
                 <div class="meta-row">
-                    <span class="meta-pill">Tomados: <strong style="color: #ef4444;">{{ $diasTomados }}</strong></span>
-                    <span class="meta-pill">Restantes: <strong style="color: #124416;">{{ $diasRestantes }}</strong></span>
+                    <span class="meta-pill status-tomados">Tomados: <strong>{{ $diasTomados }}</strong></span>
+                    <span class="meta-pill status-restantes">Restantes: <strong>{{ $diasRestantes }}</strong></span>
                     <span class="meta-pill">Año: <strong>{{ $anioActual }}</strong></span>
                 </div>
             </article>
@@ -76,7 +83,7 @@
 
         <section class="card-columns">
             <article class="card">
-                <h2>Registrar vacaciones</h2>
+                <h2><i class="fa-solid fa-calendar-plus" style="color: #124416;"></i> Registrar vacaciones</h2>
                 <form action="{{ route('empleados.vacaciones.guardar', $empleado->id) }}" method="POST">
                     @csrf
                     <div class="form-group">
@@ -89,42 +96,46 @@
                         <input type="date" id="fecha_fin" name="fecha_fin" value="{{ old('fecha_fin') }}" />
                     </div>
 
-                    <div class="form-group" style="margin-bottom: 0.6rem; color: #57627d; font-size: 0.95rem;">
+                    <div class="form-instruction">
                         Ajusta el rango y revisa la proyección antes de guardar.
                     </div>
 
-                    <div class="meta-row" style="margin-bottom: 1.25rem;">
-                        <span class="meta-pill">Días seleccionados: <strong id="dias-seleccionados">0</strong></span>
-                        <span class="meta-pill">Restantes estimados: <strong id="preview-restantes">{{ max(0, $diasRestantes - 1) }}</strong></span>
+                    <div class="meta-row" style="margin-bottom: 1.5rem;">
+                        <span class="meta-pill">Días seleccionados: <strong id="dias-seleccionados" style="color: #340C51;">0</strong></span>
+                        <span class="meta-pill">Restantes estimados: <strong id="preview-restantes" style="color: #124416;">{{ max(0, $diasRestantes) }}</strong></span>
                     </div>
 
-                    <button type="submit" class="button-primary">Guardar registro</button>
+                    <button type="submit" class="button-primary">
+                        <i class="fa-solid fa-floppy-disk"></i> Guardar registro
+                    </button>
                 </form>
             </article>
 
             <article class="card">
-                <h2>Consumo mensual</h2>
+                <h2><i class="fa-solid fa-calendar-days" style="color: #124416;"></i> Consumo mensual</h2>
                 <div class="table-wrapper">
                     <table>
                         <thead>
                             <tr>
                                 <th>Mes</th>
-                                <th>Días tomados</th>
+                                <th style="text-align: center;">Días tomados</th>
                             </tr>
                         </thead>
                         <tbody>
                             @foreach ($meses as $numero => $nombre)
                                 <tr>
-                                    <td>{{ $nombre }}</td>
-                                    <td><strong>{{ $registroPorMes[$numero] }}</strong></td>
+                                    <td class="td-mes">{{ $nombre }}</td>
+                                    <td style="text-align: center;"><strong class="dias-count-table">{{ $registroPorMes[$numero] }}</strong></td>
                                 </tr>
                             @endforeach
                         </tbody>
                     </table>
                 </div>
 
-                <div style="margin-top: 1.5rem;">
-                    <a href="{{ route('empleados.vacaciones.pdf', $empleado->id) }}" target="_blank" rel="noopener noreferrer" class="button-secondary" style="width: auto;">Reporte PDF</a>
+                <div style="margin-top: 1.5rem; display: flex; justify-content: flex-end;">
+                    <a href="{{ route('empleados.vacaciones.pdf', $empleado->id) }}" target="_blank" rel="noopener noreferrer" class="button-secondary">
+                        <i class="fa-solid fa-file-pdf"></i> Reporte PDF
+                    </a>
                 </div>
             </article>
         </section>
@@ -168,296 +179,32 @@
 
 <style>
     :root {
-        font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-        color: #1f324f;
-        background-color: #f1f5f9;
-        
+        --verde-uco: #124416;
+        --dorado-uco: #AA7F31;
+        --morado-uco: #340C51;
+        --bg-body: #f1f5f9;
+        --text-main: #1e293b;
+        --text-muted: #64748b;
     }
 
     * {
         box-sizing: border-box;
-        
     }
 
     body {
         margin: 0;
         min-height: 100vh;
-        background: radial-gradient(circle at top left, rgba(52, 12, 81, 0.08), transparent 35%),
+        font-family: 'Inter', system-ui, -apple-system, sans-serif;
+        background: radial-gradient(circle at top left, rgba(18, 68, 22, 0.05), transparent 35%),
                     radial-gradient(circle at bottom right, rgba(170, 127, 49, 0.05), transparent 30%),
                     linear-gradient(180deg, #f1f5f9 0%, #edf2f7 100%);
-        color: #1e293b;
-        
+        color: var(--text-main);
     }
 
     .page-shell {
-        width: min(1200px, calc(100% - 2rem));
+        width: min(1240px, calc(100% - 2rem));
         margin: 0 auto 2rem;
-        padding: 2rem 0;
-        
-    }
-
-    /* --- Encabezado Superior (Estilo Redondeado de la marca) --- */
-    .topbar {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        gap: 1rem;
-        margin-bottom: 1.5rem;
-        padding: 1.5rem 2rem;
-        border-radius: 20px;
-        background: rgba(18, 68, 22, 0.85);
-        box-shadow: 0 10px 30px rgba(52, 12, 81, 0.03);
-        backdrop-filter: blur(10px);
-        border: 1px solid rgba(255, 255, 255, 0.8);
-                    border-bottom: 4px solid #AA7F31; /* Detalle Dorado UCO */
-
-    }
-
-    .topbar-title {
-        display: flex;
-        flex-wrap: wrap;
-        align-items: center;
-        gap: 1rem;
-        margin-bottom: 0.5rem;
-        
-    }
-
-    /* Label - MORADO INSTITUCIONAL */
-    .page-label {
-        display: inline-flex;
-        padding: 0.45rem 0.95rem;
-        border-radius: 999px;
-        text-transform: uppercase;
-        letter-spacing: 0.15em;
-        font-size: 0.75rem;
-        font-weight: 700;
-        color: white;
-        background: #340C51; 
-        
-    }
-
-    .topbar h1 {
-        margin: 0;
-        font-size: 1.8rem;
-        color: #340C51; /* MORADO INSTITUCIONAL */
-        letter-spacing: -0.02em;
-        font-weight: 700;
-    }
-
-    .topbar p {
-        margin: 0.4rem 0 0;
-        color: #64748b;
-        font-size: 0.95rem;
-        
-    }
-
-    .button-icon {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        width: 2rem;
-        height: 2rem;
-        margin-right: 0.6rem;
-        border-radius: 999px;
-        background: rgba(52, 12, 81, 0.1);
-        color: #340C51;
-        font-size: 1rem;
-    }
-
-    .button-link,
-    .button-primary,
-    .button-secondary {
-        border: none;
-        border-radius: 12px;
-        cursor: pointer;
-        text-decoration: none;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
-        font-weight: 600;
-    }
-
-    /* Botón Volver - Acento Morado */
-    .button-link {
-        padding: 0.8rem 1.4rem;
-        color: #340C51;
-        background: rgba(52, 12, 81, 0.08);
-    }
-
-    .button-link:hover {
-        transform: translateY(-1px);
-        background: #340C51;
-        color: white;
-    }
-
-    /* Botón Guardar - VERDE INSTITUCIONAL */
-    .button-primary {
-        width: 100%;
-        padding: 1rem;
-        background: #124416;
-        color: #ffffff;
-        font-size: 1rem;
-        box-shadow: 0 4px 12px rgba(18, 68, 22, 0.15);
-    }
-
-    .button-primary:hover {
-        transform: translateY(-1px);
-        background-color: #0d3310;
-        box-shadow: 0 6px 15px rgba(18, 68, 22, 0.25);
-        
-    }
-
-    /* Botón Reporte - DORADO INSTITUCIONAL */
-    .button-secondary {
-        background: rgba(170, 127, 49, 0.1);
-        color: #AA7F31;
-        border: 1px solid rgba(170, 127, 49, 0.2);
-        padding: 0.8rem 1.4rem;
-    }
-
-    .button-secondary:hover {
-        background: #AA7F31;
-        color: white;
-    }
-
-    .summary-grid {
-        display: grid;
-        gap: 1.5rem;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        margin-bottom: 1.5rem;
-    }
-
-    /* Tarjetas Modificadas Redondeadas */
-    .card {
-        background: #ffffff;
-        border-radius: 50px;
-        padding: 1.6rem;
-        box-shadow: 0 8px 25px rgba(0,0,0,0.02);
-        border: 1px solid rgba(0, 0, 0, 0.03);
-        position: relative;
-    }
-
-    .card h2,
-    .card strong {
-        display: block;
-        margin: 0 0 1rem;
-        color: #340C51; /* MORADO INSTITUCIONAL */
-        font-size: 1.1rem;
-        font-weight: 700;
-    }
-
-    .card p,
-    .card li {
-        margin: 0.75rem 0;
-        color: #55627d;
-        line-height: 1.65;
-    }
-
-    .card-columns {
-        display: grid;
-        gap: 1.5rem;
-        grid-template-columns: 1.3fr 1fr;
-        margin-top: 1rem;
-    }
-
-    .form-group {
-        margin-bottom: 1.25rem;
-    }
-
-    label {
-        display: block;
-        margin-bottom: 0.5rem;
-        color: #475569;
-        font-size: 0.9rem;
-        font-weight: 500;
-    }
-
-    input[type="date"] {
-        width: 100%;
-        padding: 0.85rem 1rem;
-        border-radius: 12px;
-        border: 1px solid #cbd5e1;
-        background: #f8fafc;
-        color: #1e293b;
-        font-size: 0.95rem;
-        font-family: inherit;
-        transition: border-color 0.2s ease, box-shadow 0.2s ease;
-        outline: none;
-    }
-
-    input[type="date"]:focus {
-        border-color: #AA7F31; /* DORADO INSTITUCIONAL */
-        box-shadow: 0 0 0 3px rgba(170, 127, 49, 0.15);
-    }
-
-    .status {
-        border-radius: 14px;
-        padding: 1rem 1.2rem;
-        margin-bottom: 1.5rem;
-        font-size: 0.98rem;
-        font-weight: 500;
-    }
-
-    .status.success {
-        background: #d1fae5;
-        color: #065f46;
-        border: 1px solid #a7f3d0;
-    }
-
-    .status.error {
-        background: #fee2e2;
-        color: #991b1b;
-        border: 1px solid #fecaca;
-    }
-
-    .table-wrapper {
-        overflow-x: auto;
-    }
-
-    table {
-        width: 100%;
-        border-collapse: collapse;
-        min-width: 280px;
-    }
-
-    th, td {
-        padding: 1rem 0.75rem;
-        text-align: left;
-        border-bottom: 1px solid #f1f5f9;
-        font-size: 0.95rem;
-    }
-
-    th {
-        background: #f8fafc;
-        color: #340C51; /* MORADO INSTITUCIONAL */
-        font-weight: 600;
-    }
-
-    td strong {
-        color: #340C51;
-    }
-
-    .meta-row {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 0.75rem;
-        margin-top: 0.75rem;
-    }
-
-    /* Píldoras Informativas */
-    .meta-pill {
-        padding: 0.7rem 1.1rem;
-        border-radius: 50px;
-        background: #f8fafc;
-        color: #475569;
-        font-size: 0.9rem;
-        border: 1px solid #e2e8f0;
-    }
-    
-    .meta-pill strong {
-        color: #340C51;
-        display: inline;
+        padding: 1.5rem 0;
     }
 
     .logo-outer-container {
@@ -469,21 +216,383 @@
     }
 
     .logo-outside {
-        height: 85px;
+        height: 160px;
         width: auto;
         object-fit: contain;
     }
 
-    @media (max-width: 860px) {
+    /* --- ENCABEZADO ESTILO CONTROL DE EMPLEADOS --- */
+    .topbar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+        padding: 2rem 2.5rem;
+        border-radius: 20px;
+        background: var(--verde-uco);
+        box-shadow: 0 10px 25px rgba(18, 68, 22, 0.15);
+        border-bottom: 5px solid var(--dorado-uco);
+    }
+
+    .topbar-left {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .topbar-title {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 1.2rem;
+    }
+
+    .page-label {
+        display: inline-flex;
+        padding: 0.4rem 1rem;
+        border-radius: 999px;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        font-size: 0.75rem;
+        font-weight: 700;
+        color: white;
+        background: var(--morado-uco); 
+    }
+
+    .topbar h1 {
+        margin: 0;
+        font-size: 1.8rem;
+        color: #ffffff;
+        letter-spacing: -0.01em;
+        font-weight: 700;
+    }
+
+    .topbar p {
+        margin: 0.6rem 0 0;
+        color: rgba(255, 255, 255, 0.8);
+        font-size: 0.98rem;
+    }
+
+    /* --- BOTONES DE ACCIÓN --- */
+    .button-link {
+        border: none;
+        border-radius: 20px;
+        cursor: pointer;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.3s ease;
+        font-weight: 600;
+        padding: 0.7rem 1.4rem;
+        color: var(--verde-uco);
+        background: #ffffff;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.06);
+        font-size: 0.9rem;
+    }
+
+    .button-link:hover {
+        transform: translateY(-2px);
+        background: var(--dorado-uco);
+        color: #ffffff;
+        box-shadow: 0 6px 15px rgba(170, 127, 49, 0.3);
+    }
+
+    .button-icon-svg {
+        margin-right: 8px;
+        font-size: 0.95rem;
+    }
+
+    /* Botón Guardar */
+    .button-primary {
+        width: 100%;
+        padding: 0.9rem;
+        background: var(--verde-uco);
+        color: #ffffff;
+        font-size: 1rem;
+        font-weight: 600;
+        border: none;
+        border-radius: 12px;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        box-shadow: 0 4px 12px rgba(18, 68, 22, 0.2);
+        transition: all 0.3s ease;
+    }
+
+    .button-primary:hover {
+        transform: translateY(-2px);
+        background-color: #0e3511;
+        box-shadow: 0 6px 18px rgba(18, 68, 22, 0.35);
+    }
+
+    /* Botón Reporte PDF */
+    .button-secondary {
+        background: #ffffff;
+        color: var(--dorado-uco);
+        border: 2px solid var(--dorado-uco);
+        padding: 0.6rem 1.4rem;
+        border-radius: 20px;
+        font-weight: 600;
+        font-size: 0.9rem;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        transition: all 0.3s ease;
+    }
+
+    .button-secondary:hover {
+        background: var(--dorado-uco);
+        color: white;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(170, 127, 49, 0.2);
+    }
+
+    /* --- TARJETAS (ESTILO PANEL PRINCIPAL) --- */
+    .summary-grid {
+        display: grid;
+        gap: 1.5rem;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        margin-bottom: 2rem;
+    }
+
+    .card {
+        background: #ffffff;
+        border-radius: 20px;
+        padding: 1.8rem;
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.03);
+        border: 1px solid rgba(0, 0, 0, 0.04);
+        border-bottom: 4px solid var(--dorado-uco);
+    }
+
+    .card-header-title {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: var(--verde-uco);
+        margin-bottom: 1.2rem;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .card h2 {
+        margin: 0 0 1.2rem 0;
+        color: var(--verde-uco);
+        font-size: 1.2rem;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .card-columns {
+        display: grid;
+        gap: 1.5rem;
+        grid-template-columns: 1.2fr 1fr;
+    }
+
+    /* --- PÍLDORAS INFORMATIVAS (SEMÁNTICA) --- */
+    .meta-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.8rem;
+    }
+
+    .meta-pill {
+        padding: 0.6rem 1.1rem;
+        border-radius: 12px;
+        background: #f8fafc;
+        color: #475569;
+        font-size: 0.9rem;
+        border: 1px solid #e2e8f0;
+    }
+    
+    .meta-pill strong {
+        color: var(--text-main);
+        display: inline;
+    }
+
+    /* Colores dinámicos del Panel Principal */
+    .status-derecho {
+        background: rgba(18, 68, 22, 0.05);
+        border-color: rgba(18, 68, 22, 0.15);
+    }
+    .status-derecho strong { color: var(--verde-uco); }
+
+    .status-tomados {
+        background: rgba(185, 28, 28, 0.05);
+        border-color: rgba(185, 28, 28, 0.15);
+    }
+    .status-tomados strong { color: #b91c1c; }
+
+    .status-restantes {
+        background: rgba(18, 68, 22, 0.08);
+        border-color: rgba(18, 68, 22, 0.2);
+    }
+    .status-restantes strong { color: #124416; font-size: 1rem; }
+
+    /* --- FORMULARIOS --- */
+    .form-group {
+        margin-bottom: 1.25rem;
+    }
+
+    .form-instruction {
+        margin-bottom: 0.8rem; 
+        color: var(--text-muted); 
+        font-size: 0.9rem;
+        font-style: italic;
+    }
+
+    label {
+        display: block;
+        margin-bottom: 0.5rem;
+        color: #334155;
+        font-size: 0.9rem;
+        font-weight: 600;
+    }
+
+    input[type="date"] {
+        width: 100%;
+        padding: 0.8rem 1rem;
+        border-radius: 12px;
+        border: 1px solid #cbd5e1;
+        background: #f8fafc;
+        color: #1e293b;
+        font-size: 0.95rem;
+        font-family: inherit;
+        transition: all 0.3s ease;
+        outline: none;
+    }
+
+    input[type="date"]:focus {
+        border-color: var(--dorado-uco);
+        box-shadow: 0 0 0 3px rgba(170, 127, 49, 0.15);
+        background: #ffffff;
+    }
+
+    /* --- TABLA ESTILO SISTEMA UCO --- */
+    .table-wrapper {
+        overflow-x: auto;
+        border-radius: 12px;
+        border: 1px solid #e2e8f0;
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    th, td {
+        padding: 0.9rem 1.2rem;
+        text-align: left;
+        font-size: 0.92rem;
+    }
+
+    th {
+        background: var(--verde-uco);
+        color: #ffffff;
+        font-weight: 600;
+        letter-spacing: 0.02em;
+    }
+
+    th:first-child { border-top-left-radius: 4px; }
+    th:last-child { border-top-right-radius: 4px; }
+
+    td {
+        border-bottom: 1px solid #f1f5f9;
+        color: #334155;
+    }
+
+    tr:last-child td {
+        border-bottom: none;
+    }
+
+    tr:hover td {
+        background-color: #f8fafc;
+    }
+
+    .td-mes {
+        font-weight: 500;
+    }
+
+    .dias-count-table {
+        color: var(--morado-uco);
+        font-size: 0.95rem;
+    }
+
+    /* --- ALERTAS DE NOTIFICACIÓN --- */
+    .status {
+        border-radius: 12px;
+        padding: 1rem 1.5rem;
+        margin-bottom: 1.5rem;
+        font-size: 0.95rem;
+        font-weight: 500;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.02);
+    }
+
+    .status.success {
+        background: #ecfdf5;
+        color: #065f46;
+        border: 1px solid #a7f3d0;
+    }
+
+    .status.error {
+        background: #fef2f2;
+        color: #991b1b;
+        border: 1px solid #fecaca;
+    }
+
+    /* --- RESPONSIVO --- */
+    @media (max-width: 1024px) {
+        .page-shell {
+            width: 100%;
+            padding: 1rem;
+        }
+
         .summary-grid,
         .card-columns {
             grid-template-columns: 1fr;
         }
 
+        .card {
+            padding: 1.5rem;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .page-shell {
+            margin: 0 auto 1rem;
+            padding: 1rem;
+        }
+
         .topbar {
             flex-direction: column;
             align-items: flex-start;
-            padding: 1.5rem;
+            padding: 1.2rem;
+            gap: 1rem;
+        }
+
+        .topbar-title {
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .topbar h1 {
+            font-size: 1.4rem;
+        }
+
+        .topbar p {
+            font-size: 0.85rem;
+        }
+
+        .button-link {
+            width: 100%;
         }
 
         .logo-outer-container {
@@ -492,7 +601,121 @@
         }
         
         .logo-outside {
-            height: 65px;
+            height: 80px;
+        }
+
+        .meta-row {
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .meta-pill {
+            width: 100%;
+        }
+
+        .card {
+            padding: 1.2rem;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        label {
+            font-size: 0.85rem;
+        }
+
+        input[type="date"] {
+            padding: 0.7rem;
+            font-size: 0.9rem;
+        }
+
+        table {
+            font-size: 0.8rem;
+        }
+
+        th, td {
+            padding: 0.7rem 0.8rem;
+        }
+
+        .button-primary {
+            padding: 0.8rem;
+            font-size: 0.9rem;
+        }
+
+        .button-secondary {
+            padding: 0.5rem 1rem;
+            font-size: 0.8rem;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .page-shell {
+            width: 100%;
+            margin: 0;
+            padding: 0.5rem;
+        }
+
+        .topbar {
+            border-radius: 12px;
+            padding: 1rem;
+        }
+
+        .topbar h1 {
+            font-size: 1.1rem;
+        }
+
+        .page-label {
+            font-size: 0.65rem;
+            padding: 0.3rem 0.8rem;
+        }
+
+        .topbar p {
+            font-size: 0.75rem;
+            margin-top: 0.5rem;
+        }
+
+        .card {
+            border-radius: 12px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .card h2 {
+            font-size: 1rem;
+        }
+
+        .meta-pill {
+            font-size: 0.8rem;
+            padding: 0.5rem 0.8rem;
+        }
+
+        table {
+            font-size: 0.75rem;
+        }
+
+        th, td {
+            padding: 0.5rem;
+        }
+
+        .button-primary {
+            padding: 0.6rem;
+            font-size: 0.85rem;
+            gap: 4px;
+        }
+
+        .button-primary i {
+            font-size: 0.8rem;
+        }
+
+        .table-wrapper {
+            border-radius: 8px;
+        }
+
+        .status {
+            padding: 0.8rem 1rem;
+            font-size: 0.85rem;
+            margin-bottom: 1rem;
         }
     }
 </style>

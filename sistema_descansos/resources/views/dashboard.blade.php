@@ -165,13 +165,185 @@
         }
 
         /* --- RESPONSIVO --- */
-        @media (max-width: 1200px) {
-            .uco-stats-grid { grid-template-columns: repeat(2, 1fr); }
+        @media (max-width: 1400px) {
+            .dashboard-container {
+                padding: 1.5rem;
+            }
         }
+
+        @media (max-width: 1200px) {
+            .uco-stats-grid { 
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .dashboard-header {
+                padding: 1.5rem 2rem;
+            }
+
+            .dashboard-header h1 {
+                font-size: 1.5rem;
+            }
+
+            .dashboard-header p {
+                font-size: 0.9rem;
+            }
+        }
+
         @media (max-width: 768px) {
-            .uco-stats-grid { grid-template-columns: 1fr; }
-            .alert-table th, .alert-table td { padding: 12px 20px; }
-            .table-uco-header { padding: 15px 20px; }
+            .dashboard-container {
+                padding: 1rem;
+            }
+
+            .uco-stats-grid { 
+                grid-template-columns: 1fr;
+                gap: 1rem;
+                margin-bottom: 2rem;
+            }
+
+            .uco-stat-card {
+                padding: 1.2rem;
+                border-radius: 16px;
+            }
+
+            .uco-stat-icon-wrapper {
+                width: 45px;
+                height: 45px;
+                font-size: 1rem;
+            }
+
+            .uco-stat-label {
+                font-size: 0.75rem;
+            }
+
+            .uco-stat-number {
+                font-size: 1.4rem;
+            }
+
+            .dashboard-header {
+                padding: 1.2rem;
+                margin-bottom: 1.5rem;
+                border-radius: 16px;
+            }
+
+            .dashboard-header h1 {
+                font-size: 1.3rem;
+                letter-spacing: 0;
+            }
+
+            .dashboard-header p {
+                font-size: 0.8rem;
+                margin-top: 0.5rem;
+            }
+
+            .table-uco-container {
+                border-radius: 16px;
+                margin-top: 0;
+            }
+
+            .table-uco-header {
+                padding: 1rem;
+            }
+
+            .table-uco-header strong {
+                font-size: 1rem;
+            }
+
+            .alert-table th, .alert-table td { 
+                padding: 0.75rem;
+                font-size: 0.85rem;
+            }
+
+            .alert-table th {
+                font-size: 0.75rem;
+            }
+
+            .btn-calcular {
+                padding: 0.5rem 1rem;
+                font-size: 0.75rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .dashboard-container {
+                padding: 0.75rem;
+            }
+
+            .uco-stats-grid { 
+                gap: 0.75rem;
+                margin-bottom: 1.5rem;
+            }
+
+            .uco-stat-card {
+                padding: 1rem;
+                border-radius: 12px;
+                gap: 10px;
+            }
+
+            .uco-stat-icon-wrapper {
+                width: 40px;
+                height: 40px;
+                font-size: 0.9rem;
+            }
+
+            .uco-stat-info {
+                min-width: 0;
+            }
+
+            .uco-stat-label {
+                font-size: 0.7rem;
+                margin-bottom: 1px;
+            }
+
+            .uco-stat-number {
+                font-size: 1.2rem;
+            }
+
+            .dashboard-header {
+                padding: 0.8rem 1rem;
+                margin-bottom: 1rem;
+                border-radius: 12px;
+            }
+
+            .dashboard-header h1 {
+                font-size: 1rem;
+            }
+
+            .dashboard-header p {
+                font-size: 0.7rem;
+                display: none;
+            }
+
+            .table-uco-container {
+                border-radius: 12px;
+            }
+
+            .table-uco-header {
+                padding: 0.75rem 1rem;
+            }
+
+            .table-uco-header strong {
+                font-size: 0.9rem;
+            }
+
+            .alert-table th, .alert-table td { 
+                padding: 0.5rem;
+                font-size: 0.75rem;
+            }
+
+            .alert-table th {
+                font-size: 0.65rem;
+                padding: 0.5rem 0.3rem;
+            }
+
+            .btn-calcular {
+                padding: 0.4rem 0.8rem;
+                font-size: 0.7rem;
+            }
+
+            /* Ocultar columnas no esenciales en mobile muy pequeño */
+            .alert-table td:nth-child(3) {
+                font-size: 0.65rem;
+            }
         }
     </style>
 @endpush

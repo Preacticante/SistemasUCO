@@ -10,4 +10,8 @@ class Empleado extends Model
     public $timestamps = false;
     
     protected $fillable = ['nombre','apellido_paterno', 'apellido_materno', 'fecha_ingreso', 'puesto_id'];
+
+    public function puesto() {
+        return $this->belongsTo(Puesto::class, 'puesto_id');
+    }
 }

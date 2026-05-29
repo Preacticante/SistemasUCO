@@ -383,5 +383,214 @@
         color: #475569; 
         font-weight: 600;
     }
+
+    /* --- RESPONSIVO --- */
+    @media (max-width: 1024px) {
+        .profile-grid {
+            grid-template-columns: 1fr;
+            gap: 2rem;
+        }
+
+        .profile-card {
+            height: auto;
+        }
+
+        .avatar-circle {
+            width: 100px;
+            height: 100px;
+            font-size: 2.5rem;
+        }
+
+        .user-name {
+            font-size: 1.2rem;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .profile-grid {
+            gap: 1.5rem;
+        }
+
+        .profile-card {
+            border-radius: 12px;
+        }
+
+        .avatar-section {
+            padding: 1.5rem;
+        }
+
+        .profile-card .info-body {
+            padding: 0 1.5rem 1.5rem 1.5rem;
+        }
+
+        .card-content-body {
+            padding: 1.5rem;
+        }
+
+        .section-title {
+            padding: 1rem 1.5rem;
+            font-size: 0.9rem;
+            gap: 8px;
+        }
+
+        .avatar-circle {
+            width: 90px;
+            height: 90px;
+            font-size: 2rem;
+            margin-bottom: 12px;
+        }
+
+        .user-name {
+            font-size: 1rem;
+        }
+
+        .user-role {
+            font-size: 0.8rem;
+        }
+
+        .info-label {
+            font-size: 0.75rem;
+            margin-bottom: 4px;
+        }
+
+        .info-value {
+            font-size: 0.9rem;
+        }
+
+        .btn-profile {
+            padding: 0.7rem;
+            font-size: 0.85rem;
+        }
+
+        .stats-grid {
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin-top: 0;
+        }
+
+        .stat-box {
+            padding: 1rem;
+        }
+
+        .stat-number {
+            font-size: 1.4rem;
+        }
+
+        .stat-label {
+            font-size: 0.7rem;
+        }
+
+        .card-content-body > p {
+            font-size: 0.8rem;
+            margin-bottom: 1rem !important;
+        }
+
+        .card-content-body > div {
+            gap: 1.5rem !important;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .profile-grid {
+            gap: 1rem;
+        }
+
+        .profile-card {
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+        }
+
+        .avatar-section {
+            padding: 1rem;
+        }
+
+        .profile-card .info-body {
+            padding: 0 1rem 1rem 1rem;
+        }
+
+        .card-content-body {
+            padding: 1rem;
+        }
+
+        .avatar-circle {
+            width: 80px;
+            height: 80px;
+            font-size: 1.8rem;
+            margin-bottom: 10px;
+        }
+
+        .user-name {
+            font-size: 0.95rem;
+        }
+
+        .user-role {
+            font-size: 0.75rem;
+            margin-top: 3px;
+        }
+
+        .info-group {
+            margin-bottom: 12px;
+        }
+
+        .info-label {
+            font-size: 0.65rem;
+            margin-bottom: 3px;
+            letter-spacing: 0;
+        }
+
+        .info-value {
+            font-size: 0.85rem;
+        }
+
+        .section-title {
+            padding: 0.8rem 1rem;
+            font-size: 0.8rem;
+            gap: 6px;
+        }
+
+        .section-title i {
+            font-size: 0.9rem;
+        }
+
+        .btn-profile {
+            padding: 0.6rem;
+            font-size: 0.8rem;
+            gap: 6px;
+        }
+
+        .btn-profile i {
+            font-size: 0.85rem;
+        }
+
+        .stats-grid {
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+        }
+
+        .stat-box {
+            padding: 0.75rem;
+            border-radius: 8px;
+        }
+
+        .stat-number {
+            font-size: 1.1rem;
+            margin-bottom: 2px;
+        }
+
+        .stat-label {
+            font-size: 0.65rem;
+        }
+
+        .card-content-body > p {
+            font-size: 0.75rem;
+            margin-bottom: 0.8rem !important;
+            margin-top: 0 !important;
+        }
+
+        .card-content-body > div {
+            grid-template-columns: 1fr !important;
+            gap: 1rem !important;
+        }
+    }
 </style>
 @endpush

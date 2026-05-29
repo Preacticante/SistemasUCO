@@ -4,6 +4,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Validator;
 
 // Modelos
 use App\Models\Empleado;
@@ -139,10 +140,21 @@ Route::post('/empleados/{empleado}/vacaciones', function (Request $request, Empl
         ->first();
     $diasDerecho = $ley?->dias_derecho ?? 0;
 
-    $request->validate([
+    $validator = Validator::make($request->all(), [
         'fecha_inicio' => 'required|date',
-        'fecha_fin' => 'required|date|after_or_equal:fecha_inicio',
+        'fecha_fin'    => 'required|date|after_or_equal:fecha_inicio',
+    ], [
+        'fecha_inicio.required'    => 'El campo fecha de inicio es obligatorio.',
+        'fecha_fin.required'       => 'El campo fecha de fin es obligatorio.',
+        'fecha_fin.after_or_equal' => 'La fecha de fin no puede ser anterior a la fecha de inicio.',
     ]);
+
+    if ($validator->fails()) {
+        return redirect()->back()
+            ->withErrors($validator)
+            ->withInput();
+    }
+    
 
     $inicio = Carbon::parse($request->fecha_inicio);
     $fin = Carbon::parse($request->fecha_fin);
