@@ -11,6 +11,7 @@
         gap: 25px;
         font-family: 'Inter', sans-serif;
         
+        
     }
     
     /* Adaptado a la estética de la imagen: Bordes redondeados y sombra suave */
@@ -36,7 +37,7 @@
         align-items: center;
         gap: 10px;
         border-bottom: 1px solid #f1f5f9;
-        padding-bottom: 15px;
+        padding-bottom: 20px;
 
     }
 

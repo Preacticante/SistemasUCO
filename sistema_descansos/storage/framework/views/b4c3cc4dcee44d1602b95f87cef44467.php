@@ -1,5 +1,3 @@
-
-
 <?php $__env->startSection('title', 'Configuración'); ?>
 <?php $__env->startSection('header', 'Configuración del Sistema'); ?>
 
@@ -11,8 +9,10 @@
         gap: 25px;
         font-family: 'Inter', sans-serif;
         
+        
     }
     
+    /* Adaptado a la estética de la imagen: Bordes redondeados y sombra suave */
     .config-card {
         background: white;
         padding: 25px;
@@ -22,34 +22,49 @@
 
     }
 
+    /* Transforma el H3 en la barra superior verde pino sólida de la imagen */
     .config-card h3 {
-        margin-top: 0;
-        margin-bottom: 20px;
-        color: #1e293b;
-        font-size: 1.2rem;
+        margin: 0;
+        background-color: #124416; /* Color hexadecimal exacto que calculamos */
+        color: white;
+        font-size: 0.95rem;
+        font-weight: 700;
+        text-transform: uppercase; /* Todo en mayúsculas como "HISTORIAL DE..." */
+        letter-spacing: 0.5px;
         display: flex;
         align-items: center;
         gap: 10px;
         border-bottom: 1px solid #f1f5f9;
-        padding-bottom: 15px;
+        padding-bottom: 20px;
 
     }
 
+    /* El icono ahora se adapta en color blanco para contrastar con el fondo verde */
     .config-card h3 i {
-        color: #3b82f6;
+        color: white;
+        opacity: 0.9;
     }
 
+    /* Contenedor del contenido interno para dar margen respecto a la barra verde */
     .config-row {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        margin-bottom: 20px;
+        margin: 0;
+        padding: 20px 25px;
+        border-bottom: 1px solid #f1f5f9; /* Línea divisoria sutil entre filas */
+    }
+
+    /* Elimina la línea divisoria a la última fila de cada tarjeta */
+    .config-row:last-child {
+        border-bottom: none;
     }
 
     .config-info h4 {
         margin: 0 0 5px 0;
-        color: #334155;
+        color: #1e293b;
         font-size: 0.95rem;
+        font-weight: 600;
     }
 
     .config-info p {
@@ -68,10 +83,11 @@
         font-size: 0.9rem;
         outline: none;
         cursor: pointer;
+        transition: 0.2s;
     }
 
     .config-select:focus {
-        border-color: #3b82f6;
+        border-color: #124416; /* Foco cambia al verde institucional */
     }
 
     /* Estilos para los Interruptores (Toggles) */
@@ -90,7 +106,7 @@
         position: absolute;
         cursor: pointer;
         top: 0; left: 0; right: 0; bottom: 0;
-        background-color: #cbd5e1;
+        background-color: #340C51;
         transition: .4s;
         border-radius: 24px;
     }
@@ -106,16 +122,16 @@
         border-radius: 50%;
     }
     input:checked + .slider {
-        background-color: #10b981;
+        background-color: #AA7F31;
     }
     input:checked + .slider:before {
         transform: translateX(22px);
     }
 
-    /* Botones de acción */
+    /* Botones de acción adaptados al estilo del sistema */
     .btn-config {
-        background-color: #f1f5f9;
-        color: #3b82f6;
+        background-color: #f8fafc;
+        color: #124416; /* Texto verde */
         border: 1px solid #cbd5e1;
         padding: 8px 15px;
         border-radius: 6px;
@@ -125,7 +141,8 @@
         transition: 0.2s;
     }
     .btn-config:hover {
-        background-color: #e2e8f0;
+        background-color: #f1f5f9;
+        border-color: #124416;
     }
 </style>
 <?php $__env->stopPush(); ?>
