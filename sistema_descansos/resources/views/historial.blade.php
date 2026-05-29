@@ -1,11 +1,11 @@
 @extends('layouts.app')
 
 @section('title', 'Historial')
-@section('header', 'Historial de Vacaciones')
+
 
 @section('content')
     <div class="panel-principal-header">
-        <h2>Panel Principal</h2>
+        <h2>Historial de Vacaciones</h2>
         <p>Resumen general del estado de vacaciones y alertas de personal activo.</p>
     </div>
 

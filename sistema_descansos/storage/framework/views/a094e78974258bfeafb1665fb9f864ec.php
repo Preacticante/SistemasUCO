@@ -1,9 +1,9 @@
 <?php $__env->startSection('title', 'Historial'); ?>
-<?php $__env->startSection('header', 'Historial de Vacaciones'); ?>
+
 
 <?php $__env->startSection('content'); ?>
     <div class="panel-principal-header">
-        <h2>Panel Principal</h2>
+        <h2>Historial de Vacaciones</h2>
         <p>Resumen general del estado de vacaciones y alertas de personal activo.</p>
     </div>
 
@@ -118,7 +118,7 @@
 
         /* Banner de encabezado morado en la tabla */
         .table-card-header {
-            background-color: #2b0b4d;
+            background-color: #124416;
             color: white;
             padding: 18px 24px;
             font-size: 1.1rem;
@@ -139,7 +139,7 @@
         }
         .responsive-table-v2 th {
             padding: 16px 24px;
-            color: #3b1666; /* Encabezados de columnas color morado */
+            color: #124416; /* Encabezados de columnas color morado */
             text-align: left;
             font-size: 0.85rem;
             font-weight: 700;

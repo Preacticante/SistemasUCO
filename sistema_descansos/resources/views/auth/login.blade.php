@@ -62,7 +62,7 @@
             if(file_exists($path)){
                 $data = file_get_contents($path);
                 $base64 = 'data:image/' . $type . ';base64,' . base64_encode($data);
-                echo '<img src="'.$base64.'" alt="UCO PREPA CONTEMPORÁNEA" class="logo.png">';
+                echo '<img src="'.$base64.'" alt="UCO PREPA CONTEMPORÁNEA" class="logo.png" style ="height: 180px; margin-bottom: 0px;">';
             }
         @endphp
 

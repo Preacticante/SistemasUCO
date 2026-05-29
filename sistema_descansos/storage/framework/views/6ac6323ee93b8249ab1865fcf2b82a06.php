@@ -1,5 +1,3 @@
-
-
 <?php $__env->startSection('title', 'Configuración'); ?>
 <?php $__env->startSection('header', 'Configuración del Sistema'); ?>
 
@@ -10,53 +8,53 @@
         grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
         gap: 25px;
         font-family: 'Inter', sans-serif;
-        
     }
     
-    /* Adaptado a la estética de la imagen: Bordes redondeados y sombra suave */
+    /* 1. Ajustado el redondeado general y corregido el padding */
     .config-card {
         background: white;
-        padding: 25px;
-        border-radius: 12px;
-        box-shadow: 0 2px 10px rgba(0,0,0,0.03);
-                    border-bottom: 4px solid #AA7F31; /* Detalle Dorado UCO */
-
+        padding: 0; /* Quitamos el padding de aquí para que la barra verde toque los bordes */
+        border-radius: 16px; /* Bordes notablemente más redondos como en la imagen */
+        box-shadow: 0 4px 15px rgba(0,0,0,0.04);
+        border-bottom: 5px solid #AA7F31; /* Detalle Dorado UCO */
+        overflow: hidden; /* ¡CLAVE! Esto recorta todo lo que intente salirse de las esquinas redondas */
     }
 
-    /* Transforma el H3 en la barra superior verde pino sólida de la imagen */
+    /* 2. Modificado para que sea una barra completa y redondeada arriba */
     .config-card h3 {
         margin: 0;
-        background-color: #124416; /* Color hexadecimal exacto que calculamos */
+        background-color: #124416; /* Verde pino */
         color: white;
         font-size: 0.95rem;
         font-weight: 700;
-        text-transform: uppercase; /* Todo en mayúsculas como "HISTORIAL DE..." */
+        text-transform: uppercase;
         letter-spacing: 0.5px;
         display: flex;
         align-items: center;
         gap: 10px;
-        border-bottom: 1px solid #f1f5f9;
-        padding-bottom: 15px;
-
+        padding: 15px 25px; /* Añadimos el padding directamente aquí */
+        /* Redondeamos solo las esquinas superiores para acoplarse a la tarjeta */
+        border-top-left-radius: 16px;
+        border-top-right-radius: 16px;
     }
 
-    /* El icono ahora se adapta en color blanco para contrastar con el fondo verde */
+    /* El icono en color blanco */
     .config-card h3 i {
         color: white;
         opacity: 0.9;
     }
 
-    /* Contenedor del contenido interno para dar margen respecto a la barra verde */
+    /* 3. Contenedor de las filas con el padding correcto */
     .config-row {
         display: flex;
         justify-content: space-between;
         align-items: center;
         margin: 0;
-        padding: 20px 25px;
-        border-bottom: 1px solid #f1f5f9; /* Línea divisoria sutil entre filas */
+        padding: 22px 25px; /* Espaciado interno elegante */
+        border-bottom: 1px solid #f1f5f9; 
     }
 
-    /* Elimina la línea divisoria a la última fila de cada tarjeta */
+    /* Elimina la línea divisoria a la última fila */
     .config-row:last-child {
         border-bottom: none;
     }
@@ -78,7 +76,7 @@
     .config-select {
         padding: 8px 12px;
         border: 1px solid #cbd5e1;
-        border-radius: 6px;
+        border-radius: 8px; /* Un poco más redondo */
         background-color: #f8fafc;
         color: #334155;
         font-size: 0.9rem;
@@ -88,7 +86,7 @@
     }
 
     .config-select:focus {
-        border-color: #124416; /* Foco cambia al verde institucional */
+        border-color: #124416;
     }
 
     /* Estilos para los Interruptores (Toggles) */
@@ -107,7 +105,7 @@
         position: absolute;
         cursor: pointer;
         top: 0; left: 0; right: 0; bottom: 0;
-        background-color: #340C51;
+        background-color: #340C51; /* Color desactivado de tu diseño */
         transition: .4s;
         border-radius: 24px;
     }
@@ -123,16 +121,16 @@
         border-radius: 50%;
     }
     input:checked + .slider {
-        background-color: #AA7F31;
+        background-color: #AA7F31; /* Color activado dorado */
     }
     input:checked + .slider:before {
         transform: translateX(22px);
     }
 
-    /* Botones de acción adaptados al estilo del sistema */
+    /* Botones de acción */
     .btn-config {
         background-color: #f8fafc;
-        color: #124416; /* Texto verde */
+        color: #124416;
         border: 1px solid #cbd5e1;
         padding: 8px 15px;
         border-radius: 6px;
