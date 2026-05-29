@@ -3,7 +3,7 @@
 
 <?php $__env->startSection('content'); ?>
     <div class="panel-principal-header">
-        <h2>Panel Principal</h2>
+        <h2>Vacaciones</h2>
         <p>Resumen general del estado de vacaciones y alertas de personal activo.</p>
     </div>
 

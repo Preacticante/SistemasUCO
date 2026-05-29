@@ -10,6 +10,8 @@
         grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
         gap: 25px;
         font-family: 'Inter', sans-serif;
+        
+        
     }
     
     /* 1. Ajustado el redondeado general y corregido el padding */
@@ -34,6 +36,9 @@
         display: flex;
         align-items: center;
         gap: 10px;
+        border-bottom: 1px solid #f1f5f9;
+        padding-bottom: 20px;
+
         padding: 15px 25px; /* Añadimos el padding directamente aquí */
         /* Redondeamos solo las esquinas superiores para acoplarse a la tarjeta */
         border-top-left-radius: 16px;

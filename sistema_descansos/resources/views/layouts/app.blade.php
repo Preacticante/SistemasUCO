@@ -149,7 +149,7 @@
         <aside class="sidebar">
             <div class="sidebar-header">
                 <div style="padding: 0; margin-bottom: 45px; display: flex; justify-content: center;">
-                    <img src="{{ asset('img/logo_uco1.png') }}" alt="Logo UCO" style="max-height: 130px; mix-blend-mode: screen;">
+                    <img src="{{ asset('img/logo_uco1.png') }}" alt="Logo UCO" style="max-height: 110px; mix-blend-mode: screen;">
                 </div>
                 <span style="font-size: 1.1rem; font-weight: bold; color: white;">SISTEMA UCO</span>
             </div>

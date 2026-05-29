@@ -292,6 +292,8 @@
         color: white;
         font-size: 0.95rem;
         font-weight: 700;
+                border-radius: 24px;
+
         text-transform: uppercase;
         letter-spacing: 0.5px;
         display: flex;
@@ -320,6 +322,8 @@
         font-weight: 600;
         font-size: 0.9rem;
         transition: 0.2s;
+                border-radius: 24px;
+
         display: flex;
         align-items: center;
         justify-content: center;
