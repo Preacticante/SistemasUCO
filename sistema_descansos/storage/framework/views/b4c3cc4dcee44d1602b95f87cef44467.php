@@ -12,24 +12,24 @@
         
     }
     
-    /* Adaptado a la estética de la imagen: Bordes redondeados y sombra suave */
+    /* 1. Ajustado el redondeado general y corregido el padding */
     .config-card {
         background: white;
-        padding: 25px;
-        border-radius: 12px;
-        box-shadow: 0 2px 10px rgba(0,0,0,0.03);
-                    border-bottom: 4px solid #AA7F31; /* Detalle Dorado UCO */
-
+        padding: 0; /* Quitamos el padding de aquí para que la barra verde toque los bordes */
+        border-radius: 16px; /* Bordes notablemente más redondos como en la imagen */
+        box-shadow: 0 4px 15px rgba(0,0,0,0.04);
+        border-bottom: 5px solid #AA7F31; /* Detalle Dorado UCO */
+        overflow: hidden; /* ¡CLAVE! Esto recorta todo lo que intente salirse de las esquinas redondas */
     }
 
-    /* Transforma el H3 en la barra superior verde pino sólida de la imagen */
+    /* 2. Modificado para que sea una barra completa y redondeada arriba */
     .config-card h3 {
         margin: 0;
-        background-color: #124416; /* Color hexadecimal exacto que calculamos */
+        background-color: #124416; /* Verde pino */
         color: white;
         font-size: 0.95rem;
         font-weight: 700;
-        text-transform: uppercase; /* Todo en mayúsculas como "HISTORIAL DE..." */
+        text-transform: uppercase;
         letter-spacing: 0.5px;
         display: flex;
         align-items: center;
@@ -37,25 +37,29 @@
         border-bottom: 1px solid #f1f5f9;
         padding-bottom: 20px;
 
+        padding: 15px 25px; /* Añadimos el padding directamente aquí */
+        /* Redondeamos solo las esquinas superiores para acoplarse a la tarjeta */
+        border-top-left-radius: 16px;
+        border-top-right-radius: 16px;
     }
 
-    /* El icono ahora se adapta en color blanco para contrastar con el fondo verde */
+    /* El icono en color blanco */
     .config-card h3 i {
         color: white;
         opacity: 0.9;
     }
 
-    /* Contenedor del contenido interno para dar margen respecto a la barra verde */
+    /* 3. Contenedor de las filas con el padding correcto */
     .config-row {
         display: flex;
         justify-content: space-between;
         align-items: center;
         margin: 0;
-        padding: 20px 25px;
-        border-bottom: 1px solid #f1f5f9; /* Línea divisoria sutil entre filas */
+        padding: 22px 25px; /* Espaciado interno elegante */
+        border-bottom: 1px solid #f1f5f9; 
     }
 
-    /* Elimina la línea divisoria a la última fila de cada tarjeta */
+    /* Elimina la línea divisoria a la última fila */
     .config-row:last-child {
         border-bottom: none;
     }
@@ -77,7 +81,7 @@
     .config-select {
         padding: 8px 12px;
         border: 1px solid #cbd5e1;
-        border-radius: 6px;
+        border-radius: 8px; /* Un poco más redondo */
         background-color: #f8fafc;
         color: #334155;
         font-size: 0.9rem;
@@ -87,7 +91,7 @@
     }
 
     .config-select:focus {
-        border-color: #124416; /* Foco cambia al verde institucional */
+        border-color: #124416;
     }
 
     /* Estilos para los Interruptores (Toggles) */
@@ -106,7 +110,7 @@
         position: absolute;
         cursor: pointer;
         top: 0; left: 0; right: 0; bottom: 0;
-        background-color: #340C51;
+        background-color: #340C51; /* Color desactivado de tu diseño */
         transition: .4s;
         border-radius: 24px;
     }
@@ -122,16 +126,16 @@
         border-radius: 50%;
     }
     input:checked + .slider {
-        background-color: #AA7F31;
+        background-color: #AA7F31; /* Color activado dorado */
     }
     input:checked + .slider:before {
         transform: translateX(22px);
     }
 
-    /* Botones de acción adaptados al estilo del sistema */
+    /* Botones de acción */
     .btn-config {
         background-color: #f8fafc;
-        color: #124416; /* Texto verde */
+        color: #124416;
         border: 1px solid #cbd5e1;
         padding: 8px 15px;
         border-radius: 6px;
@@ -143,6 +147,193 @@
     .btn-config:hover {
         background-color: #f1f5f9;
         border-color: #124416;
+    }
+
+    /* --- RESPONSIVO --- */
+    @media (max-width: 1200px) {
+        .config-grid {
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .config-grid {
+            grid-template-columns: 1fr;
+            gap: 1.2rem;
+        }
+
+        .config-card {
+            border-radius: 12px;
+        }
+
+        .config-card h3 {
+            padding: 1rem 1.2rem;
+            font-size: 0.85rem;
+            gap: 8px;
+        }
+
+        .config-row {
+            padding: 1rem 1.2rem;
+            flex-direction: row;
+            gap: 1rem;
+        }
+
+        .config-info h4 {
+            font-size: 0.9rem;
+            margin-bottom: 3px;
+        }
+
+        .config-info p {
+            font-size: 0.8rem;
+        }
+
+        .config-select {
+            padding: 0.5rem 0.8rem;
+            font-size: 0.85rem;
+            min-width: 120px;
+        }
+
+        .btn-config {
+            padding: 0.5rem 1rem;
+            font-size: 0.8rem;
+            white-space: nowrap;
+        }
+
+        .switch {
+            width: 44px;
+            height: 22px;
+        }
+
+        .slider:before {
+            height: 16px;
+            width: 16px;
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(20px);
+        }
+    }
+
+    @media (max-width: 480px) {
+        .config-grid {
+            grid-template-columns: 1fr;
+            gap: 1rem;
+        }
+
+        .config-card {
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+        }
+
+        .config-card h3 {
+            padding: 0.8rem 1rem;
+            font-size: 0.8rem;
+            gap: 6px;
+            border-top-left-radius: 10px;
+            border-top-right-radius: 10px;
+        }
+
+        .config-card h3 i {
+            font-size: 0.95rem;
+        }
+
+        .config-row {
+            padding: 0.8rem 1rem;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 0.75rem;
+            border-bottom: 1px solid #f1f5f9;
+        }
+
+        .config-row:last-child {
+            border-bottom: none;
+        }
+
+        .config-info h4 {
+            font-size: 0.8rem;
+            margin-bottom: 2px;
+        }
+
+        .config-info p {
+            font-size: 0.7rem;
+            color: #94a3b8;
+        }
+
+        .config-select {
+            width: 100%;
+            padding: 0.5rem 0.8rem;
+            font-size: 0.8rem;
+        }
+
+        .btn-config {
+            width: 100%;
+            padding: 0.6rem 0.8rem;
+            font-size: 0.75rem;
+            text-align: center;
+        }
+
+        .switch {
+            width: 42px;
+            height: 20px;
+            align-self: flex-end;
+            margin-top: -2rem;
+        }
+
+        .slider {
+            border-radius: 20px;
+        }
+
+        .slider:before {
+            height: 14px;
+            width: 14px;
+            left: 2px;
+            bottom: 2px;
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(18px);
+        }
+    }
+
+    @media (max-width: 320px) {
+        .config-card h3 {
+            padding: 0.7rem 0.8rem;
+            font-size: 0.75rem;
+        }
+
+        .config-row {
+            padding: 0.6rem 0.8rem;
+        }
+
+        .config-info h4 {
+            font-size: 0.75rem;
+        }
+
+        .config-info p {
+            font-size: 0.65rem;
+            display: none;
+        }
+
+        .config-select,
+        .btn-config {
+            font-size: 0.7rem;
+            padding: 0.4rem 0.6rem;
+        }
+
+        .switch {
+            width: 40px;
+            height: 18px;
+        }
+
+        .slider:before {
+            height: 12px;
+            width: 12px;
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(16px);
+        }
     }
 </style>
 <?php $__env->stopPush(); ?>

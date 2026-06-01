@@ -1,9 +1,10 @@
 <?php $__env->startSection('title', 'Historial'); ?>
-<?php $__env->startSection('header', 'Historial de Vacaciones'); ?>
+<?php $__env->startSection('header', 'Directorio de vacaciones'); ?>
+
 
 <?php $__env->startSection('content'); ?>
     <div class="panel-principal-header">
-        <h2>Vacaciones</h2>
+        <h2>Historial de Vacaciones</h2>
         <p>Resumen general del estado de vacaciones y alertas de personal activo.</p>
     </div>
 

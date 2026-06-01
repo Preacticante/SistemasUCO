@@ -84,9 +84,10 @@ Route::get('/historial', function () {
 Route::get('/configuracion', [SettingsController::class, 'index'])->name('configuracion');
 Route::post('/configuracion', [SettingsController::class, 'update'])->name('configuracion.update');
 
-// 5. Mi Perfil
+// 5. Mi Perfil (ACTUALIZADO Y CONECTADO CON LOS MODALES)
 Route::get('/perfil', [ProfileController::class, 'show'])->name('perfil');
-Route::post('/perfil', [ProfileController::class, 'update'])->name('perfil.update');
+Route::post('/perfil/update', [ProfileController::class, 'update'])->name('perfil.update');
+Route::post('/perfil/password', [ProfileController::class, 'changePassword'])->name('perfil.password');
 
 
 /*
