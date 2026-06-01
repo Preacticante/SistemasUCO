@@ -1,9 +1,9 @@
-@extends('layouts.app')
+﻿@extends('layouts.app')
 
 @section('title', 'Empleados')
 @section('header', 'Directorio de Personal')
 
-{{-- 1. BLOQUE DE ESTILOS CSS --}}
+{{-- BLOQUE DE ESTILOS CSS --}}
 @push('styles')
 <style>
     .employees-container {
@@ -93,10 +93,22 @@
     td {
         padding: 0.875rem;
         border-bottom: 1px solid #f1f5f9;
+        transition: all 0.4s ease;
     }
 
     tr:hover td {
         background-color: #f8fafc;
+    }
+
+    /* Animación para el borrado suave */
+    .row-fade-out td {
+        opacity: 0 !important;
+        padding-top: 0 !important;
+        padding-bottom: 0 !important;
+        height: 0 !important;
+        line-height: 0 !important;
+        transform: scaleY(0);
+        border: none !important;
     }
 
     .td-id {
@@ -293,64 +305,55 @@
         background: #8c6827;
     }
 
-    /* RESPONSIVO */
-    @media (max-width: 1024px) {
-        .employees-container { padding: 1.5rem; }
-        .employees-header { padding: 1.5rem; }
-        .employees-header h2 { font-size: 1.5rem; }
-    }
-
     @media (max-width: 768px) {
-        .employees-container { padding: 1rem; }
-        .employees-header { padding: 1.2rem; margin-bottom: 1.5rem; }
-        .employees-header h2 { font-size: 1.3rem; }
-        .button-add-employee { margin-bottom: 1rem; }
-        .btn-add { width: 100%; justify-content: center; padding: 0.7rem 1rem; }
-        table { font-size: 0.9rem; }
-        th, td { padding: 0.7rem; }
         .actions-cell { gap: 0.3rem; }
         .btn-action { padding: 0.3rem 0.6rem; font-size: 0.75rem; }
-        .btn-action i { font-size: 0.8rem; }
-        .modal-content { padding: 1.5rem; }
-        .modal-header { font-size: 1.2rem; }
-        .modal-actions { flex-direction: column; }
-        .btn-cancel, .btn-submit { width: 100%; }
-    }
-
-    @media (max-width: 480px) {
-        .employees-container { padding: 0.75rem; }
-        .employees-header { padding: 1rem; margin-bottom: 1rem; border-radius: 16px; }
-        .employees-header h2 { font-size: 1.1rem; letter-spacing: 0; }
-        .button-add-employee { margin-bottom: 0.75rem; }
-        .table-container { border-radius: 8px; }
-        table { font-size: 0.8rem; }
-        th, td { padding: 0.5rem; }
-        .td-id { max-width: 30px; overflow: hidden; text-overflow: ellipsis; }
-        .actions-cell { flex-direction: column; gap: 0.2rem; }
-        .btn-action { width: 100%; justify-content: center; padding: 0.5rem; font-size: 0.7rem; }
-        .modal-content { padding: 1.2rem; max-height: calc(100vh - 2rem); }
-        .modal-header { font-size: 1rem; gap: 0.3rem; }
-        .form-group { margin-bottom: 0.75rem; }
-        .form-group label { font-size: 0.8rem; margin-bottom: 0.2rem; }
-        .form-group input, .form-group select { padding: 0.5rem; font-size: 0.9rem; }
-        .modal-actions { gap: 0.5rem; }
-        .btn-cancel, .btn-submit { padding: 0.5rem; font-size: 0.8rem; }
     }
 </style>
 @endpush
 
-{{-- 2. BLOQUE DE CONTENIDO PRINCIPAL --}}
+{{-- BLOQUE DE CONTENIDO PRINCIPAL --}}
 @section('content')
 <div class="employees-container">
+    @if(session('success'))
+        <div style="margin-bottom:1rem; padding:12px 16px; border-radius:8px; background:#ecfdf5; color:#065f46; font-weight:600;">
+            <i class="fa-solid fa-circle-check"></i> {{ session('success') }}
+        </div>
+    @endif
+
+    @if($errors->any())
+        <div style="margin-bottom:1rem; padding:12px 16px; border-radius:8px; background:#fff1f2; color:#9f1239; font-weight:600;">
+            <i class="fa-solid fa-triangle-exclamation"></i> {{ $errors->first() }}
+        </div>
+    @endif
     <div class="employees-header">
         <h2>Control de Empleados</h2>
     </div>
 
+    {{-- Selector de año y exportar PDF masivo --}}
+    @php
+        $startYear = $empleados->count() ? $empleados->map(fn($e)=>\Carbon\Carbon::parse($e->fecha_ingreso)->year)->min() : now()->year;
+        $endYear = now()->year;
+        $selectedYear = request()->query('anio', $endYear);
+    @endphp
+    <div style="display:flex; gap:1rem; align-items:center; margin:0.8rem 0;">
+        <form method="GET" action="{{ route('empleados.vacaciones.pdf_all') }}" target="_blank" style="display:flex; gap:0.5rem; align-items:center;">
+            <label style="font-weight:600;">Año:</label>
+            <select name="anio" style="padding:6px; border-radius:6px;">
+                @for($y = $endYear; $y >= $startYear; $y--)
+                    <option value="{{ $y }}" @if($y == $selectedYear) selected @endif>{{ $y }}</option>
+                @endfor
+            </select>
+            <button type="submit" class="btn-add" style="padding:6px 10px;">Exportar Vacaciones (PDF)</button>
+        </form>
+    </div>
+
     <div class="button-add-employee">
-        <button onclick="abrirModal()" class="btn-add">
+        <button type="button" onclick="abrirModal()" class="btn-add">
             <i class="fa-solid fa-user-plus"></i> 
             <span class="btn-text">Agregar Empleado</span>
         </button>
+        <button type="button" onclick="clearHiddenEmpleados()" title="Mostrar empleados ocultos" style="background:#f3f4f6; color:#334155; border:none; padding:6px 10px; border-radius:8px; font-weight:600;">Mostrar ocultos</button>
     </div>
 
     <div class="table-container">
@@ -365,13 +368,13 @@
             </thead>
             <tbody>
                 @foreach($empleados as $emp)
-                <tr id="fila-empleado-{{ $emp->id }}" style="transition: all 0.4s ease;">
+                <tr id="fila-empleado-{{ $emp->id }}" style="transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);">
                     <td class="td-id">{{ $emp->id }}</td>
                     <td class="td-nombre">{{ $emp->nombre }} {{ $emp->apellido_paterno }} {{ $emp->apellido_materno }}</td>
                     <td class="td-puesto">{{ $emp->puesto->nombre ?? 'Sin Puesto' }}</td>
                     <td>
                         <div class="actions-cell">
-                            <button onclick="abrirModalEditar({{ json_encode($emp) }})" class="btn-action btn-edit">
+                            <button type="button" onclick="abrirModalEditar(@json($emp))" class="btn-action btn-edit">
                                 <i class="fa-solid fa-pen-to-square"></i> 
                                 <span class="btn-text">Editar</span>
                             </button>
@@ -381,7 +384,7 @@
                                 <span class="btn-text">Vacaciones</span>
                             </a>
 
-                            <button onclick="eliminarFilaVisual({{ $emp->id }})" class="btn-action btn-delete">
+                            <button type="button" onclick="confirmarSoftDelete({{ $emp->id }}, '{{ route('empleados.destroy', $emp->id) }}')" class="btn-action btn-delete">
                                 <i class="fa-solid fa-trash"></i> 
                                 <span class="btn-text">Eliminar</span>
                             </button>
@@ -476,13 +479,14 @@
 </div>
 @endsection
 
-{{-- 3. BLOQUE DE SCRIPTS JAVASCRIPT --}}
+{{-- BLOQUE DE SCRIPTS JAVASCRIPT --}}
 @push('scripts')
 <script>
+    const csrfToken = '{{ csrf_token() }}';
+
     function abrirModal() {
         document.getElementById('modalAgregar').classList.add('show');
     }
-
     function cerrarModal() {
         document.getElementById('modalAgregar').classList.remove('show');
     }
@@ -499,28 +503,65 @@
 
         document.getElementById('modalEditar').classList.add('show');
     }
-
     function cerrarModalEditar() {
         document.getElementById('modalEditar').classList.remove('show');
     }
 
-    function eliminarFilaVisual(id) {
-        if (confirm('¿Eliminar de la vista?')) {
-            const fila = document.getElementById('fila-empleado-' + id);
-            if (fila) {
-                fila.style.opacity = '0';
-                setTimeout(() => fila.style.display = 'none', 300);
-            }
+    function getHiddenEmpleados() {
+        try {
+            return JSON.parse(localStorage.getItem('empleados_ocultos') || '[]');
+        } catch (e) {
+            return [];
         }
     }
 
-    // Cerrar modales al hacer clic fuera de ellos
-    window.onclick = function(event) {
+    function persistHiddenEmpleado(id) {
+        const arr = getHiddenEmpleados();
+        if (!arr.includes(id)) {
+            arr.push(id);
+            localStorage.setItem('empleados_ocultos', JSON.stringify(arr));
+        }
+    }
+
+    function confirmarSoftDelete(id, urlRoute) {
+        // Eliminación SOLO visual: se persiste en localStorage para mantenerlo oculto tras recarga
+        if (!confirm('¿Deseas ocultar visualmente este empleado? (No se eliminará de la base de datos)')) return;
+
+        const fila = document.getElementById('fila-empleado-' + id);
+        if (fila) {
+            fila.classList.add('row-fade-out');
+            setTimeout(() => {
+                fila.remove();
+            }, 500);
+        }
+        persistHiddenEmpleado(id);
+    }
+
+    function applyHiddenEmpleados() {
+        const hidden = getHiddenEmpleados();
+        hidden.forEach(id => {
+            const fila = document.getElementById('fila-empleado-' + id);
+            if (fila) {
+                fila.style.display = 'none';
+            }
+        });
+    }
+
+    function clearHiddenEmpleados() {
+        if (!confirm('¿Restaurar empleados ocultos? Esto mostrará nuevamente las filas ocultas y recargará la página.')) return;
+        localStorage.removeItem('empleados_ocultos');
+        location.reload();
+    }
+
+    // Aplicar ocultamientos persistidos al cargar la página
+    document.addEventListener('DOMContentLoaded', applyHiddenEmpleados);
+
+    // Listener global nativo sin interferencias para el cierre de modales externos
+    window.addEventListener('click', function(event) {
         const modalAgregar = document.getElementById('modalAgregar');
         const modalEditar = document.getElementById('modalEditar');
-        
-        if (event.target == modalAgregar) cerrarModal();
-        if (event.target == modalEditar) cerrarModalEditar();
-    }
+        if (event.target === modalAgregar) cerrarModal();
+        if (event.target === modalEditar) cerrarModalEditar();
+    });
 </script>
 @endpush
