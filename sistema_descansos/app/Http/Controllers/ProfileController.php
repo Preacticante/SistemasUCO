@@ -3,40 +3,41 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB; // 1. ASEGÚRATE DE IMPORTAR EL FACADE DB AQUÍ ARRIBA
 
 class ProfileController extends Controller
 {
-    /**
-     * Muestra la vista del perfil
-     */
     public function show()
     {
         if (! session('logeado')) {
             return redirect()->route('login');
         }
-        
         return view('perfil');
     }
 
-    /**
-     * Procesa la actualización del nombre y correo (¡La función que nos falta!)
-     */
     public function update(Request $request)
     {
-        // 1. Validamos que los datos cumplan con los requisitos básicos
         $request->validate([
             'name'  => 'required|string|max:255',
             'email' => 'required|email|max:255',
         ]);
 
-        // 2. Guardamos los nuevos datos en la sesión para que se actualice la interfaz
+        // 2. GUARDAR EN LA BASE DE DATOS (Para que lo vea tu compañero)
+        // NOTA: Cambia 'users' por el nombre exacto de tu tabla de administradores si se llama distinto (ej. 'usuarios')
+        // Y si guardas el ID del admin en la sesión, cambia el '1' por session('user_id')
+        DB::table('users')
+            ->where('id', session('user_id', 1)) 
+            ->update([
+                'name'  => $request->name,
+                'email' => $request->email,
+            ]);
+
+        // 3. ACTUALIZAR TU SESIÓN LOCAL (Para que lo veas tú de inmediato)
         session([
             'nombre' => $request->name,
             'email'  => $request->email
         ]);
 
-        // 3. EL REBOTE CRÍTICO: Redireccionamos a la ruta 'perfil' con un mensaje de éxito
-        // Esto es lo que elimina la pantalla blanca y te regresa de golpe
-        return redirect()->route('perfil')->with('success', '¡Perfil actualizado correctamente!');
+        return redirect()->route('perfil')->with('success', '¡Perfil actualizado en el sistema correctamente!');
     }
 }
