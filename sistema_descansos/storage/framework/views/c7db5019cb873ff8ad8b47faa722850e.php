@@ -77,7 +77,19 @@
                 <div class="meta-row">
                     <span class="meta-pill status-tomados">Tomados: <strong><?php echo e($diasTomados); ?></strong></span>
                     <span class="meta-pill status-restantes">Restantes: <strong><?php echo e($diasRestantes); ?></strong></span>
-                    <span class="meta-pill">Año: <strong><?php echo e($anioActual); ?></strong></span>
+                    <form method="GET" action="<?php echo e(route('empleados.vacaciones', $empleado->id)); ?>" style="display:inline-block;">
+                        <?php
+                            $startYear = \Carbon\Carbon::parse($empleado->fecha_ingreso)->year;
+                            $endYear = now()->year;
+                        ?>
+                        <label class="meta-pill" style="display:inline-block">Año:
+                            <select name="anio" onchange="this.form.submit()" style="margin-left:0.5rem;">
+                                <?php for($y = $endYear; $y >= $startYear; $y--): ?>
+                                    <option value="<?php echo e($y); ?>" <?php if($y == $anioActual): ?> selected <?php endif; ?>><?php echo e($y); ?></option>
+                                <?php endfor; ?>
+                            </select>
+                        </label>
+                    </form>
                 </div>
             </article>
         </section>
@@ -85,7 +97,7 @@
         <section class="card-columns">
             <article class="card">
                 <h2><i class="fa-solid fa-calendar-plus" style="color: #124416;"></i> Registrar vacaciones</h2>
-                <form action="<?php echo e(route('empleados.vacaciones.guardar', $empleado->id)); ?>" method="POST">
+                <form action="<?php echo e(route('empleados.vacaciones.guardar', $empleado->id)); ?>?anio=<?php echo e($anioActual); ?>" method="POST">
                     <?php echo csrf_field(); ?>
                     <div class="form-group">
                         <label for="fecha_inicio">Fecha de inicio</label>
@@ -134,7 +146,7 @@
                 </div>
 
                 <div style="margin-top: 1.5rem; display: flex; justify-content: flex-end;">
-                    <a href="<?php echo e(route('empleados.vacaciones.pdf', $empleado->id)); ?>" target="_blank" rel="noopener noreferrer" class="button-secondary">
+                    <a href="<?php echo e(route('empleados.vacaciones.pdf', $empleado->id)); ?>?anio=<?php echo e($anioActual); ?>" target="_blank" rel="noopener noreferrer" class="button-secondary">
                         <i class="fa-solid fa-file-pdf"></i> Reporte PDF
                     </a>
                 </div>

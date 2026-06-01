@@ -148,6 +148,193 @@
         background-color: #f1f5f9;
         border-color: #124416;
     }
+
+    /* --- RESPONSIVO --- */
+    @media (max-width: 1200px) {
+        .config-grid {
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .config-grid {
+            grid-template-columns: 1fr;
+            gap: 1.2rem;
+        }
+
+        .config-card {
+            border-radius: 12px;
+        }
+
+        .config-card h3 {
+            padding: 1rem 1.2rem;
+            font-size: 0.85rem;
+            gap: 8px;
+        }
+
+        .config-row {
+            padding: 1rem 1.2rem;
+            flex-direction: row;
+            gap: 1rem;
+        }
+
+        .config-info h4 {
+            font-size: 0.9rem;
+            margin-bottom: 3px;
+        }
+
+        .config-info p {
+            font-size: 0.8rem;
+        }
+
+        .config-select {
+            padding: 0.5rem 0.8rem;
+            font-size: 0.85rem;
+            min-width: 120px;
+        }
+
+        .btn-config {
+            padding: 0.5rem 1rem;
+            font-size: 0.8rem;
+            white-space: nowrap;
+        }
+
+        .switch {
+            width: 44px;
+            height: 22px;
+        }
+
+        .slider:before {
+            height: 16px;
+            width: 16px;
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(20px);
+        }
+    }
+
+    @media (max-width: 480px) {
+        .config-grid {
+            grid-template-columns: 1fr;
+            gap: 1rem;
+        }
+
+        .config-card {
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+        }
+
+        .config-card h3 {
+            padding: 0.8rem 1rem;
+            font-size: 0.8rem;
+            gap: 6px;
+            border-top-left-radius: 10px;
+            border-top-right-radius: 10px;
+        }
+
+        .config-card h3 i {
+            font-size: 0.95rem;
+        }
+
+        .config-row {
+            padding: 0.8rem 1rem;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 0.75rem;
+            border-bottom: 1px solid #f1f5f9;
+        }
+
+        .config-row:last-child {
+            border-bottom: none;
+        }
+
+        .config-info h4 {
+            font-size: 0.8rem;
+            margin-bottom: 2px;
+        }
+
+        .config-info p {
+            font-size: 0.7rem;
+            color: #94a3b8;
+        }
+
+        .config-select {
+            width: 100%;
+            padding: 0.5rem 0.8rem;
+            font-size: 0.8rem;
+        }
+
+        .btn-config {
+            width: 100%;
+            padding: 0.6rem 0.8rem;
+            font-size: 0.75rem;
+            text-align: center;
+        }
+
+        .switch {
+            width: 42px;
+            height: 20px;
+            align-self: flex-end;
+            margin-top: -2rem;
+        }
+
+        .slider {
+            border-radius: 20px;
+        }
+
+        .slider:before {
+            height: 14px;
+            width: 14px;
+            left: 2px;
+            bottom: 2px;
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(18px);
+        }
+    }
+
+    @media (max-width: 320px) {
+        .config-card h3 {
+            padding: 0.7rem 0.8rem;
+            font-size: 0.75rem;
+        }
+
+        .config-row {
+            padding: 0.6rem 0.8rem;
+        }
+
+        .config-info h4 {
+            font-size: 0.75rem;
+        }
+
+        .config-info p {
+            font-size: 0.65rem;
+            display: none;
+        }
+
+        .config-select,
+        .btn-config {
+            font-size: 0.7rem;
+            padding: 0.4rem 0.6rem;
+        }
+
+        .switch {
+            width: 40px;
+            height: 18px;
+        }
+
+        .slider:before {
+            height: 12px;
+            width: 12px;
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(16px);
+        }
+    }
 </style>
 <?php $__env->stopPush(); ?>
 
