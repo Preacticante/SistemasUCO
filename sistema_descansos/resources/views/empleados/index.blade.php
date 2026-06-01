@@ -1,9 +1,9 @@
-
 @extends('layouts.app')
 
 @section('title', 'Empleados')
 @section('header', 'Directorio de Personal')
 
+{{-- 1. BLOQUE DE ESTILOS CSS --}}
 @push('styles')
 <style>
     .employees-container {
@@ -295,171 +295,53 @@
 
     /* RESPONSIVO */
     @media (max-width: 1024px) {
-        .employees-container {
-            padding: 1.5rem;
-        }
-
-        .employees-header {
-            padding: 1.5rem;
-        }
-
-        .employees-header h2 {
-            font-size: 1.5rem;
-        }
+        .employees-container { padding: 1.5rem; }
+        .employees-header { padding: 1.5rem; }
+        .employees-header h2 { font-size: 1.5rem; }
     }
 
     @media (max-width: 768px) {
-        .employees-container {
-            padding: 1rem;
-        }
-
-        .employees-header {
-            padding: 1.2rem;
-            margin-bottom: 1.5rem;
-        }
-
-        .employees-header h2 {
-            font-size: 1.3rem;
-        }
-
-        .button-add-employee {
-            margin-bottom: 1rem;
-        }
-
-        .btn-add {
-            width: 100%;
-            justify-content: center;
-            padding: 0.7rem 1rem;
-        }
-
-        table {
-            font-size: 0.9rem;
-        }
-
-        th, td {
-            padding: 0.7rem;
-        }
-
-        .actions-cell {
-            gap: 0.3rem;
-        }
-
-        .btn-action {
-            padding: 0.3rem 0.6rem;
-            font-size: 0.75rem;
-        }
-
-        .btn-action i {
-            font-size: 0.8rem;
-        }
-
-        .modal-content {
-            padding: 1.5rem;
-        }
-
-        .modal-header {
-            font-size: 1.2rem;
-        }
-
-        .modal-actions {
-            flex-direction: column;
-        }
-
-        .btn-cancel, .btn-submit {
-            width: 100%;
-        }
+        .employees-container { padding: 1rem; }
+        .employees-header { padding: 1.2rem; margin-bottom: 1.5rem; }
+        .employees-header h2 { font-size: 1.3rem; }
+        .button-add-employee { margin-bottom: 1rem; }
+        .btn-add { width: 100%; justify-content: center; padding: 0.7rem 1rem; }
+        table { font-size: 0.9rem; }
+        th, td { padding: 0.7rem; }
+        .actions-cell { gap: 0.3rem; }
+        .btn-action { padding: 0.3rem 0.6rem; font-size: 0.75rem; }
+        .btn-action i { font-size: 0.8rem; }
+        .modal-content { padding: 1.5rem; }
+        .modal-header { font-size: 1.2rem; }
+        .modal-actions { flex-direction: column; }
+        .btn-cancel, .btn-submit { width: 100%; }
     }
 
     @media (max-width: 480px) {
-        .employees-container {
-            padding: 0.75rem;
-        }
-
-        .employees-header {
-            padding: 1rem;
-            margin-bottom: 1rem;
-            border-radius: 16px;
-        }
-
-        .employees-header h2 {
-            font-size: 1.1rem;
-            letter-spacing: 0;
-        }
-
-        .button-add-employee {
-            margin-bottom: 0.75rem;
-        }
-
-        .table-container {
-            border-radius: 8px;
-        }
-
-        table {
-            font-size: 0.8rem;
-        }
-
-        th, td {
-            padding: 0.5rem;
-        }
-
-        .td-id {
-            max-width: 30px;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-
-        .actions-cell {
-            flex-direction: column;
-            gap: 0.2rem;
-        }
-
-        .btn-action {
-            width: 100%;
-            justify-content: center;
-            padding: 0.5rem;
-            font-size: 0.7rem;
-        }
-
-        .modal-content {
-            padding: 1.2rem;
-            max-height: calc(100vh - 2rem);
-        }
-
-        .modal-header {
-            font-size: 1rem;
-            gap: 0.3rem;
-        }
-
-        .form-group {
-            margin-bottom: 0.75rem;
-        }
-
-        .form-group label {
-            font-size: 0.8rem;
-            margin-bottom: 0.2rem;
-        }
-
-        .form-group input,
-        .form-group select {
-            padding: 0.5rem;
-            font-size: 0.9rem;
-        }
-
-        .modal-actions {
-            gap: 0.5rem;
-        }
-
-        .btn-cancel, .btn-submit {
-            padding: 0.5rem;
-            font-size: 0.8rem;
-        }
+        .employees-container { padding: 0.75rem; }
+        .employees-header { padding: 1rem; margin-bottom: 1rem; border-radius: 16px; }
+        .employees-header h2 { font-size: 1.1rem; letter-spacing: 0; }
+        .button-add-employee { margin-bottom: 0.75rem; }
+        .table-container { border-radius: 8px; }
+        table { font-size: 0.8rem; }
+        th, td { padding: 0.5rem; }
+        .td-id { max-width: 30px; overflow: hidden; text-overflow: ellipsis; }
+        .actions-cell { flex-direction: column; gap: 0.2rem; }
+        .btn-action { width: 100%; justify-content: center; padding: 0.5rem; font-size: 0.7rem; }
+        .modal-content { padding: 1.2rem; max-height: calc(100vh - 2rem); }
+        .modal-header { font-size: 1rem; gap: 0.3rem; }
+        .form-group { margin-bottom: 0.75rem; }
+        .form-group label { font-size: 0.8rem; margin-bottom: 0.2rem; }
+        .form-group input, .form-group select { padding: 0.5rem; font-size: 0.9rem; }
+        .modal-actions { gap: 0.5rem; }
+        .btn-cancel, .btn-submit { padding: 0.5rem; font-size: 0.8rem; }
     }
 </style>
 @endpush
 
+{{-- 2. BLOQUE DE CONTENIDO PRINCIPAL --}}
 @section('content')
 <div class="employees-container">
-    
     <div class="employees-header">
         <h2>Control de Empleados</h2>
     </div>
@@ -512,7 +394,6 @@
     </div>
 </div>
 
-<!-- MODAL AGREGAR -->
 <div id="modalAgregar" class="modal">
     <div class="modal-content">
         <h3 class="modal-header add">
@@ -553,7 +434,6 @@
     </div>
 </div>
 
-<!-- MODAL EDITAR -->
 <div id="modalEditar" class="modal">
     <div class="modal-content">
         <h3 class="modal-header edit">
@@ -594,7 +474,10 @@
         </form>
     </div>
 </div>
+@endsection
 
+{{-- 3. BLOQUE DE SCRIPTS JAVASCRIPT --}}
+@push('scripts')
 <script>
     function abrirModal() {
         document.getElementById('modalAgregar').classList.add('show');
@@ -631,192 +514,7 @@
         }
     }
 
-    // Cerrar modales al hacer clic fuera
-    window.onclick = function(event) {
-        const modalAgregar = document.getElementById('modalAgregar');
-        const modalEditar = document.getElementById('modalEditar');
-        
-        if (event.target == modalAgregar) cerrarModal();
-        if (event.target == modalEditar) cerrarModalEditar();
-    }
-</style>
-@endpush
-
-@section('content')
-<div class="employees-container">
-    
-    <div class="employees-header">
-        <h2>Control de Empleados</h2>
-    </div>
-
-    <div class="button-add-employee">
-        <button onclick="abrirModal()" class="btn-add">
-            <i class="fa-solid fa-user-plus"></i> 
-            <span class="btn-text">Agregar Empleado</span>
-        </button>
-    </div>
-
-    <div class="table-container">
-        <table>
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Nombre Completo</th>
-                    <th>Puesto</th>
-                    <th style="text-align: center;">Acciones</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach($empleados as $emp)
-                <tr id="fila-empleado-{{ $emp->id }}" style="transition: all 0.4s ease;">
-                    <td class="td-id">{{ $emp->id }}</td>
-                    <td class="td-nombre">{{ $emp->nombre }} {{ $emp->apellido_paterno }} {{ $emp->apellido_materno }}</td>
-                    <td class="td-puesto">{{ $emp->puesto->nombre ?? 'Sin Puesto' }}</td>
-                    <td>
-                        <div class="actions-cell">
-                            <button onclick="abrirModalEditar({{ json_encode($emp) }})" class="btn-action btn-edit">
-                                <i class="fa-solid fa-pen-to-square"></i> 
-                                <span class="btn-text">Editar</span>
-                            </button>
-
-                            <a href="{{ route('empleados.vacaciones', $emp->id) }}" class="btn-action btn-vacations">
-                                <i class="fa-solid fa-calendar"></i> 
-                                <span class="btn-text">Vacaciones</span>
-                            </a>
-
-                            <button onclick="eliminarFilaVisual({{ $emp->id }})" class="btn-action btn-delete">
-                                <i class="fa-solid fa-trash"></i> 
-                                <span class="btn-text">Eliminar</span>
-                            </button>
-                        </div>
-                    </td>
-                </tr>
-                @endforeach
-            </tbody>
-        </table>
-    </div>
-</div>
-
-<!-- MODAL AGREGAR -->
-<div id="modalAgregar" class="modal">
-    <div class="modal-content">
-        <h3 class="modal-header add">
-            <i class="fa-solid fa-user-plus"></i> Nuevo Empleado
-        </h3>
-        <form action="{{ route('empleados.store') }}" method="POST">
-            @csrf 
-            <div class="form-group">
-                <label>Nombre(s)</label>
-                <input type="text" name="nombre" required>
-            </div>
-            <div class="form-group">
-                <label>Apellido Paterno</label>
-                <input type="text" name="apellido_paterno" required>
-            </div>
-            <div class="form-group">
-                <label>Apellido Materno</label>
-                <input type="text" name="apellido_materno">
-            </div>
-            <div class="form-group">
-                <label>Puesto</label>
-                <select name="puesto_id" required>
-                    <option value="" disabled selected>Selecciona un puesto...</option>
-                    @foreach($puestos as $puesto)
-                        <option value="{{ $puesto->id }}">{{ $puesto->nombre }}</option>
-                    @endforeach
-                </select>
-            </div>
-            <div class="form-group">
-                <label>Fecha de Ingreso</label>
-                <input type="date" name="fecha_ingreso" required>
-            </div>
-            <div class="modal-actions">
-                <button type="button" onclick="cerrarModal()" class="btn-cancel">Cancelar</button>
-                <button type="submit" class="btn-submit">Guardar</button>
-            </div>
-        </form>
-    </div>
-</div>
-
-<!-- MODAL EDITAR -->
-<div id="modalEditar" class="modal">
-    <div class="modal-content">
-        <h3 class="modal-header edit">
-            <i class="fa-solid fa-user-pen"></i> Editar Empleado
-        </h3>
-        <form id="formEditar" method="POST">
-            @csrf 
-            @method('PUT')
-            <div class="form-group">
-                <label>Nombre(s)</label>
-                <input type="text" name="nombre" id="edit_nombre" required>
-            </div>
-            <div class="form-group">
-                <label>Apellido Paterno</label>
-                <input type="text" name="apellido_paterno" id="edit_paterno" required>
-            </div>
-            <div class="form-group">
-                <label>Apellido Materno</label>
-                <input type="text" name="apellido_materno" id="edit_materno">
-            </div>
-            <div class="form-group">
-                <label>Puesto</label>
-                <select name="puesto_id" id="edit_puesto_id" required>
-                    <option value="" disabled>Selecciona un puesto...</option>
-                    @foreach($puestos as $puesto)
-                        <option value="{{ $puesto->id }}">{{ $puesto->nombre }}</option>
-                    @endforeach
-                </select>
-            </div>
-            <div class="form-group">
-                <label>Fecha de Ingreso</label>
-                <input type="date" name="fecha_ingreso" id="edit_fecha" required>
-            </div>
-            <div class="modal-actions">
-                <button type="button" onclick="cerrarModalEditar()" class="btn-cancel">Cancelar</button>
-                <button type="submit" class="btn-submit edit">Actualizar</button>
-            </div>
-        </form>
-    </div>
-</div>
-
-<script>
-    function abrirModal() {
-        document.getElementById('modalAgregar').classList.add('show');
-    }
-
-    function cerrarModal() {
-        document.getElementById('modalAgregar').classList.remove('show');
-    }
-
-    function abrirModalEditar(empleado) {
-        const form = document.getElementById('formEditar');
-        form.action = `/empleados/${empleado.id}`;
-
-        document.getElementById('edit_nombre').value = empleado.nombre;
-        document.getElementById('edit_paterno').value = empleado.apellido_paterno;
-        document.getElementById('edit_materno').value = empleado.apellido_materno || '';
-        document.getElementById('edit_puesto_id').value = empleado.puesto_id;
-        document.getElementById('edit_fecha').value = empleado.fecha_ingreso;
-
-        document.getElementById('modalEditar').classList.add('show');
-    }
-
-    function cerrarModalEditar() {
-        document.getElementById('modalEditar').classList.remove('show');
-    }
-
-    function eliminarFilaVisual(id) {
-        if (confirm('¿Eliminar de la vista?')) {
-            const fila = document.getElementById('fila-empleado-' + id);
-            if (fila) {
-                fila.style.opacity = '0';
-                setTimeout(() => fila.style.display = 'none', 300);
-            }
-        }
-    }
-
-    // Cerrar modales al hacer clic fuera
+    // Cerrar modales al hacer clic fuera de ellos
     window.onclick = function(event) {
         const modalAgregar = document.getElementById('modalAgregar');
         const modalEditar = document.getElementById('modalEditar');
@@ -825,4 +523,4 @@
         if (event.target == modalEditar) cerrarModalEditar();
     }
 </script>
-@endsection
+@endpush
