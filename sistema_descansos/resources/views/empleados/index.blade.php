@@ -1,4 +1,4 @@
-@extends('layouts.app')
+﻿@extends('layouts.app')
 
 @section('title', 'Empleados')
 @section('header', 'Directorio de Personal')
@@ -279,10 +279,22 @@
     td {
         padding: 0.875rem;
         border-bottom: 1px solid #f1f5f9;
+        transition: all 0.4s ease;
     }
 
     tr:hover td {
         background-color: #f8fafc;
+    }
+
+    /* Animación para el borrado suave */
+    .row-fade-out td {
+        opacity: 0 !important;
+        padding-top: 0 !important;
+        padding-bottom: 0 !important;
+        height: 0 !important;
+        line-height: 0 !important;
+        transform: scaleY(0);
+        border: none !important;
     }
 
     .td-id {
@@ -479,49 +491,99 @@
         background: #8c6827;
     }
 
-    /* RESPONSIVO */
-    @media (max-width: 1024px) {
-        .employees-container { padding: 1.5rem; }
-        .employees-header { padding: 1.5rem; }
-        .employees-header h2 { font-size: 1.5rem; }
-    }
-
     @media (max-width: 768px) {
-        .employees-container { padding: 1rem; }
-        .employees-header { padding: 1.2rem; margin-bottom: 1.5rem; }
-        .employees-header h2 { font-size: 1.3rem; }
-        .button-add-employee { margin-bottom: 1rem; }
-        .btn-add { width: 100%; justify-content: center; padding: 0.7rem 1rem; }
-        table { font-size: 0.9rem; }
-        th, td { padding: 0.7rem; }
         .actions-cell { gap: 0.3rem; }
         .btn-action { padding: 0.3rem 0.6rem; font-size: 0.75rem; }
-        .btn-action i { font-size: 0.8rem; }
-        .modal-content { padding: 1.5rem; }
-        .modal-header { font-size: 1.2rem; }
-        .modal-actions { flex-direction: column; }
-        .btn-cancel, .btn-submit { width: 100%; }
     }
+    /* Estilos para la tabla */
+.tabla-empleados {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+    border-radius: 8px;
+    overflow: hidden;
+}
 
-    @media (max-width: 480px) {
-        .employees-container { padding: 0.75rem; }
-        .employees-header { padding: 1rem; margin-bottom: 1rem; border-radius: 16px; }
-        .employees-header h2 { font-size: 1.1rem; letter-spacing: 0; }
-        .button-add-employee { margin-bottom: 0.75rem; }
-        .table-container { border-radius: 8px; }
-        table { font-size: 0.8rem; }
-        th, td { padding: 0.5rem; }
-        .td-id { max-width: 30px; overflow: hidden; text-overflow: ellipsis; }
-        .actions-cell { flex-direction: column; gap: 0.2rem; }
-        .btn-action { width: 100%; justify-content: center; padding: 0.5rem; font-size: 0.7rem; }
-        .modal-content { padding: 1.2rem; max-height: calc(100vh - 2rem); }
-        .modal-header { font-size: 1rem; gap: 0.3rem; }
-        .form-group { margin-bottom: 0.75rem; }
-        .form-group label { font-size: 0.8rem; margin-bottom: 0.2rem; }
-        .form-group input, .form-group select { padding: 0.5rem; font-size: 0.9rem; }
-        .modal-actions { gap: 0.5rem; }
-        .btn-cancel, .btn-submit { padding: 0.5rem; font-size: 0.8rem; }
-    }
+.tabla-empleados th {
+    background-color: #1e4620; /* El color verde de tu barra actual */
+    color: white;
+    padding: 14px 16px;
+    font-weight: 600;
+    text-align: left;
+}
+
+.tabla-empleados td {
+    padding: 12px 16px;
+    border-bottom: 1px solid #eef2f5;
+    color: #333;
+    font-size: 14px;
+}
+
+.tabla-empleados tr:hover {
+    background-color: #f8fafc;
+}
+
+/* Contenedor de botones en una sola línea */
+.contenedor-acciones {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    align-items: center;
+}
+
+/* Botones Base */
+.btn-accion {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 12px;
+    font-size: 13px;
+    font-weight: 500;
+    border-radius: 6px;
+    border: none;
+    cursor: pointer;
+    text-decoration: none;
+    transition: all 0.2s ease;
+}
+
+/* Botón Editar (Dorado/Marrón elegante) */
+.btn-edit {
+    background-color: #b58930;
+    color: white;
+}
+.btn-edit:hover {
+    background-color: #967126;
+    box-shadow: 0 2px 4px rgba(181,137,48,0.3);
+}
+
+/* Botón Vacaciones (Verde institucional) */
+.btn-vacaciones {
+    background-color: #1e4620;
+    color: white;
+}
+.btn-vacaciones:hover {
+    background-color: #143015;
+    box-shadow: 0 2px 4px rgba(30,70,32,0.3);
+}
+
+/* Botón Eliminar (Rojo controlado) */
+.btn-eliminar {
+    background-color: #dc3545;
+    color: white;
+}
+.btn-eliminar:hover {
+    background-color: #bd2130;
+    box-shadow: 0 2px 4px rgba(220,53,69,0.3);
+}
+
+/* Efecto de desvanecimiento suave al eliminar filas con Soft Delete */
+.row-fade-out {
+    opacity: 0;
+    transform: translateX(-20px);
+    transition: all 0.5s ease;
+}
 </style>
 @endpush
 @endpush

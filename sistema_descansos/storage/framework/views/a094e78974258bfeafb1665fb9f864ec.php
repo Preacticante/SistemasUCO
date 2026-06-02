@@ -30,7 +30,8 @@
                         <?php
                             $empleado = $periodo->empleado;
                             $fechaFin = \Carbon\Carbon::parse($periodo->fecha_fin);
-                            $estado = $fechaFin->isPast() ? 'Tomado' : 'Programado';
+                            $yaTomado = $fechaFin->isPast();
+                            $estado = $yaTomado ? 'Tomado' : 'Programado';
                         ?>
                         <tr>
                             <td class="text-employee-name">
@@ -48,18 +49,29 @@
                                 <?php echo e($fechaFin->format('d/m/Y')); ?>
 
                             </td>
-                            <td class="<?php echo e($fechaFin->isPast() ? 'text-muted-days' : 'text-danger-bold'); ?>">
+                            <td class="<?php echo e($yaTomado ? 'text-muted-days' : 'text-danger-bold'); ?>">
                                 <?php echo e($periodo->dias); ?> día<?php echo e($periodo->dias === 1 ? '' : 's'); ?>
 
                             </td>
                             <td>
-                                <span class="badge <?php echo e($fechaFin->isPast() ? 'badge-success' : 'badge-info'); ?>">
+                                <span class="badge <?php echo e($yaTomado ? 'badge-success' : 'badge-info'); ?>">
                                     <?php echo e($estado); ?>
 
                                 </span>
                             </td>
-                            <td style="text-align: center;">
-                                <a href="#" class="btn-action-ver">Ver</a>
+                            <td style="text-align: center; display: flex; gap: 8px; justify-content: center;">
+                                <?php if($yaTomado): ?>
+                                    <button type="button" class="btn-action-edit btn-disabled" title="No se puede editar un período ya tomado" disabled>
+                                        <i class="fas fa-lock"></i> Completado
+                                    </button>
+                                <?php else: ?>
+                                    <button type="button" class="btn-action-edit" onclick="openEditModal(<?php echo e($periodo->id); ?>)">
+                                        <i class="fas fa-pencil"></i> Editar
+                                    </button>
+                                    <button type="button" class="btn-action-delete" onclick="deletePeriodo(<?php echo e($periodo->id); ?>)">
+                                        <i class="fas fa-trash"></i> Eliminar
+                                    </button>
+                                <?php endif; ?>
                             </td>
                         </tr>
                     <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
@@ -201,6 +213,295 @@
             background-color: #e0f2fe;
             color: #0369a1;
         }
+
+        /* Estilos para botones de editar y eliminar */
+        .btn-action-edit,
+        .btn-action-delete {
+            border: none;
+            cursor: pointer;
+            padding: 6px 14px;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            color: white;
+            text-decoration: none;
+        }
+
+        .btn-action-edit {
+            background-color: #124416;
+        }
+
+        .btn-action-edit:hover:not(:disabled) {
+            background-color: #0d2e10;
+            transform: translateY(-2px);
+        }
+
+        .btn-action-delete {
+            background-color: #dc2626;
+        }
+
+        .btn-action-delete:hover {
+            background-color: #b91c1c;
+            transform: translateY(-2px);
+        }
+
+        /* Botón deshabilitado */
+        .btn-disabled {
+            background-color: #cbd5e1 !important;
+            color: #64748b !important;
+            cursor: not-allowed !important;
+            transform: none !important;
+            box-shadow: none !important;
+        }
+
+        /* Modal de edición */
+        .modal-edit {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-edit.show {
+            display: flex;
+        }
+
+        .modal-edit-content {
+            background-color: white;
+            padding: 30px;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+        }
+
+        .modal-edit-content h3 {
+            margin-top: 0;
+            color: #124416;
+            font-size: 1.3rem;
+        }
+
+        .modal-edit-content .form-group {
+            margin-bottom: 15px;
+        }
+
+        .modal-edit-content label {
+            display: block;
+            margin-bottom: 5px;
+            color: #334155;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .modal-edit-content input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            font-size: 0.95rem;
+            box-sizing: border-box;
+        }
+
+        .modal-edit-content input:focus {
+            outline: none;
+            border-color: #124416;
+            box-shadow: 0 0 0 3px rgba(18, 68, 22, 0.1);
+        }
+
+        .modal-edit-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            margin-top: 20px;
+        }
+
+        .modal-edit-buttons button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-save {
+            background-color: #124416;
+            color: white;
+        }
+
+        .btn-save:hover {
+            background-color: #0d2e10;
+        }
+
+        .btn-cancel {
+            background-color: #e2e8f0;
+            color: #334155;
+        }
+
+        .btn-cancel:hover {
+            background-color: #cbd5e1;
+        }
     </style>
+
+    <div id="editModal" class="modal-edit">
+        <div class="modal-edit-content">
+            <h3>Editar Período Vacacional</h3>
+            <form id="editForm">
+                <?php echo csrf_field(); ?>
+                <div class="form-group">
+                    <label for="editEmpleado">Empleado:</label>
+                    <input type="text" id="editEmpleado" readonly>
+                </div>
+                <div class="form-group">
+                    <label for="editFechaInicio">Fecha Inicio:</label>
+                    <input type="date" id="editFechaInicio" required>
+                </div>
+                <div class="form-group">
+                    <label for="editFechaFin">Fecha Fin:</label>
+                    <input type="date" id="editFechaFin" required>
+                </div>
+                <div class="form-group">
+                    <label for="editDias">Días:</label>
+                    <input type="number" id="editDias" min="1" required>
+                </div>
+                <div class="modal-edit-buttons">
+                    <button type="button" class="btn-cancel" onclick="closeEditModal()">Cancelar</button>
+                    <button type="button" class="btn-save" onclick="guardarEdicion()">Guardar</button>
+                </div>
+            </form>
+        </div>
+    </div>
 <?php $__env->stopSection(); ?>
+
+<?php $__env->startPush('scripts'); ?>
+<script>
+    let csrfTokenHist = document.querySelector('meta[name="csrf-token"]')?.content || '';
+    let periodoEnEdicion = null;
+
+    function openEditModal(id) {
+        periodoEnEdicion = id;
+        
+        fetch(`/periodos/${id}`)
+            .then(response => {
+                if (!response.ok) throw new Error('Error fetching periodo');
+                return response.json();
+            })
+            .then(data => {
+                // Validación de seguridad en Frontend: comprobar si la fecha fin ya pasó
+                const fechaFinPeriodo = new Date(data.fecha_fin + 'T23:59:59');
+                const hoy = new Date();
+
+                if (fechaFinPeriodo < hoy) {
+                    alert('Este período vacacional ya concluyó y no puede modificarse.');
+                    periodoEnEdicion = null;
+                    return;
+                }
+
+                document.getElementById('editEmpleado').value = data.empleado_nombre || 'N/A';
+                document.getElementById('editFechaInicio').value = data.fecha_inicio;
+                document.getElementById('editFechaFin').value = data.fecha_fin;
+                document.getElementById('editDias').value = data.dias;
+                document.getElementById('editModal').classList.add('show');
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('No se pudo cargar el período');
+            });
+    }
+
+    function closeEditModal() {
+        document.getElementById('editModal').classList.remove('show');
+        periodoEnEdicion = null;
+    }
+
+    function guardarEdicion() {
+        if (!periodoEnEdicion) return;
+
+        const fechaInicio = document.getElementById('editFechaInicio').value;
+        const fechaFin = document.getElementById('editFechaFin').value;
+        const dias = parseInt(document.getElementById('editDias').value);
+
+        if (!fechaInicio || !fechaFin || !dias) {
+            alert('Por favor completa todos los campos');
+            return;
+        }
+
+        // Doble verificación antes de enviar el formulario por AJAX
+        const fechaFinObj = new Date(fechaFin + 'T23:59:59');
+        if (fechaFinObj < new Date()) {
+            alert('No puedes guardar un período con fechas que marquen el estatus como "Tomado".');
+            return;
+        }
+
+        fetch(`/periodos/${periodoEnEdicion}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': csrfTokenHist
+            },
+            body: JSON.stringify({
+                fecha_inicio: fechaInicio,
+                fecha_fin: fechaFin,
+                days: dias
+            })
+        })
+        .then(response => {
+            if (!response.ok) throw new Error('Error updating periodo');
+            return response.json();
+        })
+        .then(data => {
+            alert('Período actualizado correctamente');
+            closeEditModal();
+            location.reload();
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error al actualizar el período');
+        });
+    }
+
+    function deletePeriodo(id) {
+        // En tu controlador o backend también es altamente recomendable bloquear la petición DELETE si el ID pertenece a un registro pasado.
+        if (!confirm('¿Estás seguro de que deseas eliminar este período vacacional?')) {
+            return;
+        }
+
+        fetch(`/periodos/${id}`, {
+            method: 'DELETE',
+            headers: {
+                'X-CSRF-TOKEN': csrfTokenHist
+            }
+        })
+        .then(response => {
+            if (!response.ok) throw new Error('Error deleting periodo');
+            return response.json();
+        })
+        .then(data => {
+            alert('Período eliminado correctamente');
+            location.reload();
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error al eliminar el período');
+        });
+    }
+
+    document.getElementById('editModal').addEventListener('click', function(e) {
+        if (e.target === this) {
+            closeEditModal();
+        }
+    });
+</script>
+<?php $__env->stopPush(); ?>
 <?php echo $__env->make('layouts.app', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH C:\Users\becario.tie\Documents\GitHub\SistemasUCO\sistema_descansos\resources\views/historial.blade.php ENDPATH**/ ?>

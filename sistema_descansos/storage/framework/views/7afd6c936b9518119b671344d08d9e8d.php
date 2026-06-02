@@ -1,3 +1,5 @@
+﻿
+
 <?php $__env->startSection('title', 'Empleados'); ?>
 <?php $__env->startSection('header', 'Directorio de Personal'); ?>
 
@@ -91,10 +93,22 @@
     td {
         padding: 0.875rem;
         border-bottom: 1px solid #f1f5f9;
+        transition: all 0.4s ease;
     }
 
     tr:hover td {
         background-color: #f8fafc;
+    }
+
+    /* Animación para el borrado suave */
+    .row-fade-out td {
+        opacity: 0 !important;
+        padding-top: 0 !important;
+        padding-bottom: 0 !important;
+        height: 0 !important;
+        line-height: 0 !important;
+        transform: scaleY(0);
+        border: none !important;
     }
 
     .td-id {
@@ -291,104 +305,196 @@
         background: #8c6827;
     }
 
-    /* RESPONSIVO */
-    @media (max-width: 1024px) {
-        .employees-container { padding: 1.5rem; }
-        .employees-header { padding: 1.5rem; }
-        .employees-header h2 { font-size: 1.5rem; }
-    }
-
     @media (max-width: 768px) {
-        .employees-container { padding: 1rem; }
-        .employees-header { padding: 1.2rem; margin-bottom: 1.5rem; }
-        .employees-header h2 { font-size: 1.3rem; }
-        .button-add-employee { margin-bottom: 1rem; }
-        .btn-add { width: 100%; justify-content: center; padding: 0.7rem 1rem; }
-        table { font-size: 0.9rem; }
-        th, td { padding: 0.7rem; }
         .actions-cell { gap: 0.3rem; }
         .btn-action { padding: 0.3rem 0.6rem; font-size: 0.75rem; }
-        .btn-action i { font-size: 0.8rem; }
-        .modal-content { padding: 1.5rem; }
-        .modal-header { font-size: 1.2rem; }
-        .modal-actions { flex-direction: column; }
-        .btn-cancel, .btn-submit { width: 100%; }
     }
+    /* Estilos para la tabla */
+.tabla-empleados {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+    border-radius: 8px;
+    overflow: hidden;
+}
 
-    @media (max-width: 480px) {
-        .employees-container { padding: 0.75rem; }
-        .employees-header { padding: 1rem; margin-bottom: 1rem; border-radius: 16px; }
-        .employees-header h2 { font-size: 1.1rem; letter-spacing: 0; }
-        .button-add-employee { margin-bottom: 0.75rem; }
-        .table-container { border-radius: 8px; }
-        table { font-size: 0.8rem; }
-        th, td { padding: 0.5rem; }
-        .td-id { max-width: 30px; overflow: hidden; text-overflow: ellipsis; }
-        .actions-cell { flex-direction: column; gap: 0.2rem; }
-        .btn-action { width: 100%; justify-content: center; padding: 0.5rem; font-size: 0.7rem; }
-        .modal-content { padding: 1.2rem; max-height: calc(100vh - 2rem); }
-        .modal-header { font-size: 1rem; gap: 0.3rem; }
-        .form-group { margin-bottom: 0.75rem; }
-        .form-group label { font-size: 0.8rem; margin-bottom: 0.2rem; }
-        .form-group input, .form-group select { padding: 0.5rem; font-size: 0.9rem; }
-        .modal-actions { gap: 0.5rem; }
-        .btn-cancel, .btn-submit { padding: 0.5rem; font-size: 0.8rem; }
-    }
+.tabla-empleados th {
+    background-color: #1e4620; /* El color verde de tu barra actual */
+    color: white;
+    padding: 14px 16px;
+    font-weight: 600;
+    text-align: left;
+}
+
+.tabla-empleados td {
+    padding: 12px 16px;
+    border-bottom: 1px solid #eef2f5;
+    color: #333;
+    font-size: 14px;
+}
+
+.tabla-empleados tr:hover {
+    background-color: #f8fafc;
+}
+
+/* Contenedor de botones en una sola línea */
+.contenedor-acciones {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    align-items: center;
+}
+
+/* Botones Base */
+.btn-accion {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 12px;
+    font-size: 13px;
+    font-weight: 500;
+    border-radius: 6px;
+    border: none;
+    cursor: pointer;
+    text-decoration: none;
+    transition: all 0.2s ease;
+}
+
+/* Botón Editar (Dorado/Marrón elegante) */
+.btn-edit {
+    background-color: #b58930;
+    color: white;
+}
+.btn-edit:hover {
+    background-color: #967126;
+    box-shadow: 0 2px 4px rgba(181,137,48,0.3);
+}
+
+/* Botón Vacaciones (Verde institucional) */
+.btn-vacaciones {
+    background-color: #1e4620;
+    color: white;
+}
+.btn-vacaciones:hover {
+    background-color: #143015;
+    box-shadow: 0 2px 4px rgba(30,70,32,0.3);
+}
+
+/* Botón Eliminar (Rojo controlado) */
+.btn-eliminar {
+    background-color: #dc3545;
+    color: white;
+}
+.btn-eliminar:hover {
+    background-color: #bd2130;
+    box-shadow: 0 2px 4px rgba(220,53,69,0.3);
+}
+
+/* Efecto de desvanecimiento suave al eliminar filas con Soft Delete */
+.row-fade-out {
+    opacity: 0;
+    transform: translateX(-20px);
+    transition: all 0.5s ease;
+}
 </style>
 <?php $__env->stopPush(); ?>
 
 
 <?php $__env->startSection('content'); ?>
 <div class="employees-container">
+    <?php if(session('success')): ?>
+        <div style="margin-bottom:1rem; padding:12px 16px; border-radius:8px; background:#ecfdf5; color:#065f46; font-weight:600;">
+            <i class="fa-solid fa-circle-check"></i> <?php echo e(session('success')); ?>
+
+        </div>
+    <?php endif; ?>
+
+    <?php if($errors->any()): ?>
+        <div style="margin-bottom:1rem; padding:12px 16px; border-radius:8px; background:#fff1f2; color:#9f1239; font-weight:600;">
+            <i class="fa-solid fa-triangle-exclamation"></i> <?php echo e($errors->first()); ?>
+
+        </div>
+    <?php endif; ?>
     <div class="employees-header">
         <h2>Control de Empleados</h2>
     </div>
 
+    
+    <?php
+        $startYear = $empleados->count() ? $empleados->map(fn($e)=>\Carbon\Carbon::parse($e->fecha_ingreso)->year)->min() : now()->year;
+        $endYear = now()->year;
+        $selectedYear = request()->query('anio', $endYear);
+    ?>
+    <div style="display:flex; gap:1rem; align-items:center; margin:0.8rem 0;">
+        <form method="GET" action="/empleados/vacaciones/pdf-masivo" target="_blank" style="display:flex; gap:0.5rem; align-items:center;">
+            <select name="anio" style="padding:6px; border-radius:6px;">
+                <?php for($y = $endYear; $y >= $startYear; $y--): ?>
+                    <option value="<?php echo e($y); ?>" <?php if($y == $selectedYear): ?> selected <?php endif; ?>><?php echo e($y); ?></option>
+                <?php endfor; ?>
+            </select>
+            <button type="submit" class="btn-add" style="padding:6px 10px;">Exportar Vacaciones (PDF)</button>
+        </form>
+    </div>
+
     <div class="button-add-employee">
-        <button onclick="abrirModal()" class="btn-add">
+        <button type="button" onclick="abrirModal()" class="btn-add">
             <i class="fa-solid fa-user-plus"></i> 
             <span class="btn-text">Agregar Empleado</span>
         </button>
     </div>
 
-    <div class="table-container">
-        <table>
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Nombre Completo</th>
-                    <th>Puesto</th>
-                    <th style="text-align: center;">Acciones</th>
-                </tr>
-            </thead>
-            <tbody>
-                <?php $__currentLoopData = $empleados; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $emp): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-                <tr id="fila-empleado-<?php echo e($emp->id); ?>" style="transition: all 0.4s ease;">
-                    <td class="td-id"><?php echo e($emp->id); ?></td>
-                    <td class="td-nombre"><?php echo e($emp->nombre); ?> <?php echo e($emp->apellido_paterno); ?> <?php echo e($emp->apellido_materno); ?></td>
-                    <td class="td-puesto"><?php echo e($emp->puesto->nombre ?? 'Sin Puesto'); ?></td>
-                    <td>
-                        <div class="actions-cell">
-                            <button onclick="abrirModalEditar(<?php echo e(json_encode($emp)); ?>)" class="btn-action btn-edit">
-                                <i class="fa-solid fa-pen-to-square"></i> 
-                                <span class="btn-text">Editar</span>
-                            </button>
+    <table class="tabla-empleados">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Nombre Completo</th>
+            <th>Puesto</th>
+            <th style="text-align: center;">Acciones</th>
+        </tr>
+    </thead>
+    <tbody>
+        <?php $__currentLoopData = $empleados; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $empleado): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+            <tr id="fila-empleado-<?php echo e($empleado->id); ?>">
+                <td><?php echo e($empleado->id); ?></td>
+                <td class="td-nombre">
+                    <?php echo e($empleado->nombre); ?> <?php echo e($empleado->apellido_paterno); ?> <?php echo e($empleado->apellido_materno); ?>
 
-                            <a href="<?php echo e(route('empleados.vacaciones', $emp->id)); ?>" class="btn-action btn-vacations">
-                                <i class="fa-solid fa-calendar"></i> 
-                                <span class="btn-text">Vacaciones</span>
-                            </a>
+                </td>
+                <td class="td-puesto">
+                    <?php echo e($empleado->puesto->nombre ?? 'Sin Puesto'); ?>
 
-                            <button onclick="eliminarFilaVisual(<?php echo e($emp->id); ?>)" class="btn-action btn-delete">
-                                <i class="fa-solid fa-trash"></i> 
-                                <span class="btn-text">Eliminar</span>
-                            </button>
-                        </div>
-                    </td>
-                </tr>
-                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
-            </tbody>
-        </table>
+                </td>
+                <td>
+                    <div class="contenedor-acciones">
+                        <button type="button" 
+                                class="btn-accion btn-edit" 
+                                onclick="abrirModalEditar(this)"
+                                data-id="<?php echo e($empleado->id); ?>"
+                                data-nombre="<?php echo e($empleado->nombre); ?>"
+                                data-paterno="<?php echo e($empleado->apellido_paterno); ?>"
+                                data-materno="<?php echo e($empleado->apellido_materno); ?>"
+                                data-puesto="<?php echo e($empleado->puesto_id); ?>"
+                                data-fecha="<?php echo e($empleado->fecha_ingreso); ?>">
+                            <i class="fa-solid fa-pen-to-square"></i> Editar
+                        </button>
+
+                        <a href="#" class="btn-accion btn-vacaciones">
+                            <i class="fa-solid fa-calendar-days"></i> Vacaciones
+                        </a>
+
+                        <button type="button" 
+                                class="btn-accion btn-eliminar" 
+                                onclick="confirmarSoftDelete(<?php echo e($empleado->id); ?>, '<?php echo e(route('empleados.destroy', $empleado->id)); ?>')">
+                            <i class="fa-solid fa-trash"></i> Eliminar
+                        </button>
+                    </div>
+                </td>
+            </tr>
+        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+    </tbody>
+</table>
     </div>
 </div>
 
@@ -437,9 +543,12 @@
         <h3 class="modal-header edit">
             <i class="fa-solid fa-user-pen"></i> Editar Empleado
         </h3>
-        <form id="formEditar" method="POST">
+        <form id="formEditar" onsubmit="actualizarEmpleado(event)">
             <?php echo csrf_field(); ?> 
             <?php echo method_field('PUT'); ?>
+            
+            <input type="hidden" id="edit_id" name="id">
+
             <div class="form-group">
                 <label>Nombre(s)</label>
                 <input type="text" name="nombre" id="edit_nombre" required>
@@ -477,49 +586,145 @@
 
 <?php $__env->startPush('scripts'); ?>
 <script>
+    const csrfToken = '<?php echo e(csrf_token()); ?>';
+
+    // --- MODAL DE AGREGAR ---
     function abrirModal() {
         document.getElementById('modalAgregar').classList.add('show');
     }
-
     function cerrarModal() {
         document.getElementById('modalAgregar').classList.remove('show');
     }
 
-    function abrirModalEditar(empleado) {
-        const form = document.getElementById('formEditar');
-        form.action = `/empleados/${empleado.id}`;
+    // --- MODAL DE EDICIÓN (LECTURA ULTRA ESTABLE) ---
+    function abrirModalEditar(boton) {
+        try {
+            // Extraemos los datos directamente de los atributos data- del botón que fue presionado
+            const id = boton.getAttribute('data-id');
+            const nombre = boton.getAttribute('data-nombre');
+            const paterno = boton.getAttribute('data-paterno');
+            const materno = boton.getAttribute('data-materno') || '';
+            const puestoId = boton.getAttribute('data-puesto');
+            let fecha = boton.getAttribute('data-fecha') || '';
 
-        document.getElementById('edit_nombre').value = empleado.nombre;
-        document.getElementById('edit_paterno').value = empleado.apellido_paterno;
-        document.getElementById('edit_materno').value = empleado.apellido_materno || '';
-        document.getElementById('edit_puesto_id').value = empleado.puesto_id;
-        document.getElementById('edit_fecha').value = empleado.fecha_ingreso;
+            // Limpiamos la fecha por si viene con horas desde la base de datos
+            if (fecha) {
+                fecha = fecha.split(' ')[0];
+            }
 
-        document.getElementById('modalEditar').classList.add('show');
+            // Inyectamos los valores a los inputs del modal de edición
+            document.getElementById('edit_id').value = id;
+            document.getElementById('edit_nombre').value = nombre;
+            document.getElementById('edit_paterno').value = paterno;
+            document.getElementById('edit_materno').value = materno;
+            document.getElementById('edit_puesto_id').value = puestoId;
+            document.getElementById('edit_fecha').value = fecha;
+
+            // Abrimos el modal añadiendo la clase show
+            document.getElementById('modalEditar').classList.add('show');
+        } catch (error) {
+            console.error("Error al abrir el modal:", error);
+            alert("No se pudieron cargar los datos en el formulario.");
+        }
     }
 
     function cerrarModalEditar() {
         document.getElementById('modalEditar').classList.remove('show');
     }
 
-    function eliminarFilaVisual(id) {
-        if (confirm('¿Eliminar de la vista?')) {
-            const fila = document.getElementById('fila-empleado-' + id);
-            if (fila) {
-                fila.style.opacity = '0';
-                setTimeout(() => fila.style.display = 'none', 300);
+    // --- GUARDAR CAMBIOS EN LA BASE DE DATOS ---
+    function actualizarEmpleado(event) {
+        event.preventDefault();
+
+        const form = document.getElementById('formEditar');
+        const id = document.getElementById('edit_id').value;
+        const formData = new FormData(form);
+
+        fetch(`/empleados/${id}`, {
+            method: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': csrfToken,
+                'Accept': 'application/json'
+            },
+            body: formData
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Error en el servidor');
             }
-        }
+            return response.json();
+        })
+        .then(data => {
+            if (data.success) {
+                // Actualizamos visualmente la tabla
+                const fila = document.getElementById(`fila-empleado-${id}`);
+                if (fila) {
+                    const selectPuesto = document.getElementById('edit_puesto_id');
+                    const textoPuesto = selectPuesto.options[selectPuesto.selectedIndex].text;
+
+                    const nombreCompleto = `${formData.get('nombre')} ${formData.get('apellido_paterno')} ${formData.get('apellido_materno')}`;
+                    
+                    // Reemplazamos los textos de la fila en tiempo real
+                    fila.querySelector('.td-nombre').textContent = nombreCompleto;
+                    fila.querySelector('.td-puesto').textContent = textoPuesto;
+                    
+                    // Actualizamos también los atributos data- del botón por si lo vuelven a editar sin recargar
+                    const btnEditar = fila.querySelector('.btn-edit');
+                    if (btnEditar) {
+                        btnEditar.setAttribute('data-nombre', formData.get('nombre'));
+                        btnEditar.setAttribute('data-paterno', formData.get('apellido_paterno'));
+                        btnEditar.setAttribute('data-materno', formData.get('apellido_materno'));
+                        btnEditar.setAttribute('data-puesto', formData.get('puesto_id'));
+                        btnEditar.setAttribute('data-fecha', formData.get('fecha_ingreso'));
+                    }
+                }
+
+                cerrarModalEditar();
+                alert('Empleado guardado correctamente en la Base de Datos.');
+            } else {
+                alert('No se pudieron guardar los cambios: ' + (data.message || 'Error interno'));
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error de comunicación con el servidor.');
+        });
     }
 
-    // Cerrar modales al hacer clic fuera de ellos
-    window.onclick = function(event) {
+    // --- SOFT DELETE REAL ---
+    function confirmarSoftDelete(id, urlRoute) {
+        if (!confirm('¿Realmente deseas eliminar a este empleado?')) return;
+
+        fetch(urlRoute, {
+            method: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': csrfToken,
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify({ _method: 'DELETE' })
+        })
+        .then(response => {
+            if (response.ok) {
+                const fila = document.getElementById('fila-empleado-' + id);
+                if (fila) {
+                    fila.classList.add('row-fade-out');
+                    setTimeout(() => { fila.remove(); }, 500);
+                }
+            } else {
+                alert('Error al eliminar en el servidor.');
+            }
+        })
+        .catch(error => alert('Error de red.'));
+    }
+
+    // Evento para cerrar haciendo clic afuera de los modales
+    window.addEventListener('click', function(event) {
         const modalAgregar = document.getElementById('modalAgregar');
         const modalEditar = document.getElementById('modalEditar');
-        
-        if (event.target == modalAgregar) cerrarModal();
-        if (event.target == modalEditar) cerrarModalEditar();
-    }
+        if (event.target === modalAgregar) cerrarModal();
+        if (event.target === modalEditar) cerrarModalEditar();
+    });
 </script>
 <?php $__env->stopPush(); ?>
 <?php echo $__env->make('layouts.app', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH C:\Users\becario.tie\Documents\GitHub\SistemasUCO\sistema_descansos\resources\views/empleados/index.blade.php ENDPATH**/ ?>
