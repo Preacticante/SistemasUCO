@@ -9,11 +9,13 @@ use Carbon\Carbon;
 class EmpleadoController extends Controller
 {
     public function index() {
-        // Jalamos todos los empleados de la base de datos
-        $empleados = \App\Models\Empleado::with('puesto')->get();
-        $puestos = \App\Models\Puesto::all();
+       $empleados = \App\Models\Empleado::with('puesto')
+                    ->whereNull('deleted_at') 
+                    ->get();
 
-        return view('empleados.index', compact('empleados', 'puestos'));
+    $puestos = \App\Models\Puesto::all();
+
+    return view('empleados.index', compact('empleados', 'puestos'));
     }
 
     public function show($id) {
@@ -96,17 +98,26 @@ class EmpleadoController extends Controller
     }
 
     public function destroy($id) {
-        try {
-            $empleado = \App\Models\Empleado::find($id);
-            if (! $empleado) {
-                return response()->json(['success' => false, 'message' => 'Empleado no encontrado'], 404);
-            }
-            $empleado->delete();
-            return response()->json(['success' => true]);
-        } catch (\Exception $e) {
-            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+    try {
+        
+        $empleado = \DB::table('empleados')->where('id', $id)->first();
+        
+        if (!$empleado) {
+            return response()->json(['success' => false, 'message' => 'Empleado no encontrado'], 404);
         }
+        
+        
+        \DB::table('empleados')
+            ->where('id', $id)
+            ->update([
+                'deleted_at' => \Carbon\Carbon::now()
+            ]);
+        
+        return response()->json(['success' => true]);
+    } catch (\Exception $e) {
+        return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
     }
+}
 
     /**
      * Genera el reporte PDF masivo de vacaciones de todos los empleados

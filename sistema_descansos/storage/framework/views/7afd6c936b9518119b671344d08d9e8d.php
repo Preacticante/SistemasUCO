@@ -4,6 +4,226 @@
 <?php $__env->startSection('header', 'Directorio de Personal'); ?>
 
 
+
+
+
+<?php $__env->startSection('content'); ?>
+<div class="employees-container">
+    <div class="employees-header">
+        <h2>Control de Empleados</h2>
+    </div>
+
+    <div class="button-add-employee">
+        <button onclick="abrirModal()" class="btn-add">
+            <i class="fa-solid fa-user-plus"></i> 
+            <span class="btn-text">Agregar Empleado</span>
+        </button>
+    </div>
+
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Nombre Completo</th>
+                    <th>Puesto</th>
+                    <th style="text-align: center;">Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php $__currentLoopData = $empleados; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $emp): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                <tr id="fila-empleado-<?php echo e($emp->id); ?>" style="transition: all 0.4s ease;">
+                    <td class="td-id"><?php echo e($emp->id); ?></td>
+                    <td class="td-nombre"><?php echo e($emp->nombre); ?> <?php echo e($emp->apellido_paterno); ?> <?php echo e($emp->apellido_materno); ?></td>
+                    <td class="td-puesto"><?php echo e($emp->puesto->nombre ?? 'Sin Puesto'); ?></td>
+                    <td>
+                        <div class="actions-cell">
+                            <button onclick="abrirModalEditar(<?php echo e(json_encode($emp)); ?>)" class="btn-action btn-edit">
+                                <i class="fa-solid fa-pen-to-square"></i> 
+                                <span class="btn-text">Editar</span>
+                            </button>
+
+                            <a href="<?php echo e(route('empleados.vacaciones', $emp->id)); ?>" class="btn-action btn-vacations">
+                                <i class="fa-solid fa-calendar"></i> 
+                                <span class="btn-text">Vacaciones</span>
+                            </a>
+
+                                                        <button type="button" 
+                                    class="btn-accion btn-eliminar" 
+                                    onclick="ejecutarSoftDelete(this)"
+                                    data-id="<?php echo e($emp->id); ?>">
+                                <i class="fa-solid fa-trash"></i> Eliminar
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div id="modalAgregar" class="modal">
+    <div class="modal-content">
+        <h3 class="modal-header add">
+            <i class="fa-solid fa-user-plus"></i> Nuevo Empleado
+        </h3>
+        <form action="<?php echo e(route('empleados.store')); ?>" method="POST">
+            <?php echo csrf_field(); ?> 
+            <div class="form-group">
+                <label>Nombre(s)</label>
+                <input type="text" name="nombre" required>
+            </div>
+            <div class="form-group">
+                <label>Apellido Paterno</label>
+                <input type="text" name="apellido_paterno" required>
+            </div>
+            <div class="form-group">
+                <label>Apellido Materno</label>
+                <input type="text" name="apellido_materno">
+            </div>
+            <div class="form-group">
+                <label>Puesto</label>
+                <select name="puesto_id" required>
+                    <option value="" disabled selected>Selecciona un puesto...</option>
+                    <?php $__currentLoopData = $puestos; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $puesto): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                        <option value="<?php echo e($puesto->id); ?>"><?php echo e($puesto->nombre); ?></option>
+                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Fecha de Ingreso</label>
+                <input type="date" name="fecha_ingreso" required>
+            </div>
+            <div class="modal-actions">
+                <button type="button" onclick="cerrarModal()" class="btn-cancel">Cancelar</button>
+                <button type="submit" class="btn-submit">Guardar</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div id="modalEditar" class="modal">
+    <div class="modal-content">
+        <h3 class="modal-header edit">
+            <i class="fa-solid fa-user-pen"></i> Editar Empleado
+        </h3>
+        <form id="formEditar" method="POST">
+            <?php echo csrf_field(); ?> 
+            <?php echo method_field('PUT'); ?>
+            <div class="form-group">
+                <label>Nombre(s)</label>
+                <input type="text" name="nombre" id="edit_nombre" required>
+            </div>
+            <div class="form-group">
+                <label>Apellido Paterno</label>
+                <input type="text" name="apellido_paterno" id="edit_paterno" required>
+            </div>
+            <div class="form-group">
+                <label>Apellido Materno</label>
+                <input type="text" name="apellido_materno" id="edit_materno">
+            </div>
+            <div class="form-group">
+                <label>Puesto</label>
+                <select name="puesto_id" id="edit_puesto_id" required>
+                    <option value="" disabled>Selecciona un puesto...</option>
+                    <?php $__currentLoopData = $puestos; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $puesto): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                        <option value="<?php echo e($puesto->id); ?>"><?php echo e($puesto->nombre); ?></option>
+                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Fecha de Ingreso</label>
+                <input type="date" name="fecha_ingreso" id="edit_fecha" required>
+            </div>
+            <div class="modal-actions">
+                <button type="button" onclick="cerrarModalEditar()" class="btn-cancel">Cancelar</button>
+                <button type="submit" class="btn-submit edit">Actualizar</button>
+            </div>
+        </form>
+    </div>
+</div>
+<?php $__env->stopSection(); ?>
+
+
+<?php $__env->startPush('scripts'); ?>
+<script>
+    function abrirModal() {
+        document.getElementById('modalAgregar').classList.add('show');
+    }
+
+    function cerrarModal() {
+        document.getElementById('modalAgregar').classList.remove('show');
+    }
+
+    function abrirModalEditar(empleado) {
+        const form = document.getElementById('formEditar');
+        form.action = `/empleados/${empleado.id}`;
+
+        document.getElementById('edit_nombre').value = empleado.nombre;
+        document.getElementById('edit_paterno').value = empleado.apellido_paterno;
+        document.getElementById('edit_materno').value = empleado.apellido_materno || '';
+        document.getElementById('edit_puesto_id').value = empleado.puesto_id;
+        document.getElementById('edit_fecha').value = empleado.fecha_ingreso;
+
+        document.getElementById('modalEditar').classList.add('show');
+    }
+
+    function cerrarModalEditar() {
+        document.getElementById('modalEditar').classList.remove('show');
+    }
+
+   function ejecutarSoftDelete(boton) {
+    const id = boton.getAttribute('data-id');
+    
+    if (!confirm('¿Realmente deseas eliminar a este empleado?')) return;
+
+    // SOLUCIÓN: Declaramos el token localmente de forma segura directamente desde Laravel
+    const tokenSeguro = '<?php echo e(csrf_token()); ?>';
+
+    // Enviamos la petición directamente a la URL '/empleados/ID'
+    fetch(`/empleados/${id}`, {
+        method: 'POST',
+        headers: {
+            'X-CSRF-TOKEN': tokenSeguro, // Usamos el nuevo token seguro
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+        },
+        body: JSON.stringify({ _method: 'DELETE' })
+    })
+    .then(response => {
+        if (!response.ok) {
+            return response.json().then(err => { throw new Error(err.message || 'Error interno del servidor') });
+        }
+        return response.json();
+    })
+    .then(data => {
+        if (data.success) {
+            // Borramos la fila de la pantalla con la animación
+            const fila = document.getElementById('fila-empleado-' + id);
+            if (fila) {
+                fila.classList.add('row-fade-out');
+                setTimeout(() => { fila.remove(); }, 500);
+            }
+            alert('Empleado eliminado con éxito en la Base de Datos.');
+        } else {
+            alert('El servidor dijo que no pudo eliminar: ' + data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Error completo:', error);
+        alert('Error al intentar conectar o procesar en el servidor: ' + error.message);
+    });
+}
+    // Cerrar modales al hacer clic fuera de ellos
+    window.onclick = function(event) {
+        const modalAgregar = document.getElementById('modalAgregar');
+        const modalEditar = document.getElementById('modalEditar');
+        
+        if (event.target == modalAgregar) cerrarModal();
+        if (event.target == modalEditar) cerrarModalEditar();
+    }
+</script>
 <?php $__env->startPush('styles'); ?>
 <style>
     .employees-container {
@@ -400,331 +620,5 @@
 }
 </style>
 <?php $__env->stopPush(); ?>
-
-
-<?php $__env->startSection('content'); ?>
-<div class="employees-container">
-    <?php if(session('success')): ?>
-        <div style="margin-bottom:1rem; padding:12px 16px; border-radius:8px; background:#ecfdf5; color:#065f46; font-weight:600;">
-            <i class="fa-solid fa-circle-check"></i> <?php echo e(session('success')); ?>
-
-        </div>
-    <?php endif; ?>
-
-    <?php if($errors->any()): ?>
-        <div style="margin-bottom:1rem; padding:12px 16px; border-radius:8px; background:#fff1f2; color:#9f1239; font-weight:600;">
-            <i class="fa-solid fa-triangle-exclamation"></i> <?php echo e($errors->first()); ?>
-
-        </div>
-    <?php endif; ?>
-    <div class="employees-header">
-        <h2>Control de Empleados</h2>
-    </div>
-
-    
-    <?php
-        $startYear = $empleados->count() ? $empleados->map(fn($e)=>\Carbon\Carbon::parse($e->fecha_ingreso)->year)->min() : now()->year;
-        $endYear = now()->year;
-        $selectedYear = request()->query('anio', $endYear);
-    ?>
-    <div style="display:flex; gap:1rem; align-items:center; margin:0.8rem 0;">
-        <form method="GET" action="/empleados/vacaciones/pdf-masivo" target="_blank" style="display:flex; gap:0.5rem; align-items:center;">
-            <select name="anio" style="padding:6px; border-radius:6px;">
-                <?php for($y = $endYear; $y >= $startYear; $y--): ?>
-                    <option value="<?php echo e($y); ?>" <?php if($y == $selectedYear): ?> selected <?php endif; ?>><?php echo e($y); ?></option>
-                <?php endfor; ?>
-            </select>
-            <button type="submit" class="btn-add" style="padding:6px 10px;">Exportar Vacaciones (PDF)</button>
-        </form>
-    </div>
-
-    <div class="button-add-employee">
-        <button type="button" onclick="abrirModal()" class="btn-add">
-            <i class="fa-solid fa-user-plus"></i> 
-            <span class="btn-text">Agregar Empleado</span>
-        </button>
-    </div>
-
-    <table class="tabla-empleados">
-    <thead>
-        <tr>
-            <th>ID</th>
-            <th>Nombre Completo</th>
-            <th>Puesto</th>
-            <th style="text-align: center;">Acciones</th>
-        </tr>
-    </thead>
-    <tbody>
-        <?php $__currentLoopData = $empleados; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $empleado): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-            <tr id="fila-empleado-<?php echo e($empleado->id); ?>">
-                <td><?php echo e($empleado->id); ?></td>
-                <td class="td-nombre">
-                    <?php echo e($empleado->nombre); ?> <?php echo e($empleado->apellido_paterno); ?> <?php echo e($empleado->apellido_materno); ?>
-
-                </td>
-                <td class="td-puesto">
-                    <?php echo e($empleado->puesto->nombre ?? 'Sin Puesto'); ?>
-
-                </td>
-                <td>
-                    <div class="contenedor-acciones">
-                        <button type="button" 
-                                class="btn-accion btn-edit" 
-                                onclick="abrirModalEditar(this)"
-                                data-id="<?php echo e($empleado->id); ?>"
-                                data-nombre="<?php echo e($empleado->nombre); ?>"
-                                data-paterno="<?php echo e($empleado->apellido_paterno); ?>"
-                                data-materno="<?php echo e($empleado->apellido_materno); ?>"
-                                data-puesto="<?php echo e($empleado->puesto_id); ?>"
-                                data-fecha="<?php echo e($empleado->fecha_ingreso); ?>">
-                            <i class="fa-solid fa-pen-to-square"></i> Editar
-                        </button>
-
-                        <a href="#" class="btn-accion btn-vacaciones">
-                            <i class="fa-solid fa-calendar-days"></i> Vacaciones
-                        </a>
-
-                        <button type="button" 
-                                class="btn-accion btn-eliminar" 
-                                onclick="confirmarSoftDelete(<?php echo e($empleado->id); ?>, '<?php echo e(route('empleados.destroy', $empleado->id)); ?>')">
-                            <i class="fa-solid fa-trash"></i> Eliminar
-                        </button>
-                    </div>
-                </td>
-            </tr>
-        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
-    </tbody>
-</table>
-    </div>
-</div>
-
-<div id="modalAgregar" class="modal">
-    <div class="modal-content">
-        <h3 class="modal-header add">
-            <i class="fa-solid fa-user-plus"></i> Nuevo Empleado
-        </h3>
-        <form action="<?php echo e(route('empleados.store')); ?>" method="POST">
-            <?php echo csrf_field(); ?> 
-            <div class="form-group">
-                <label>Nombre(s)</label>
-                <input type="text" name="nombre" required>
-            </div>
-            <div class="form-group">
-                <label>Apellido Paterno</label>
-                <input type="text" name="apellido_paterno" required>
-            </div>
-            <div class="form-group">
-                <label>Apellido Materno</label>
-                <input type="text" name="apellido_materno">
-            </div>
-            <div class="form-group">
-                <label>Puesto</label>
-                <select name="puesto_id" required>
-                    <option value="" disabled selected>Selecciona un puesto...</option>
-                    <?php $__currentLoopData = $puestos; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $puesto): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-                        <option value="<?php echo e($puesto->id); ?>"><?php echo e($puesto->nombre); ?></option>
-                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
-                </select>
-            </div>
-            <div class="form-group">
-                <label>Fecha de Ingreso</label>
-                <input type="date" name="fecha_ingreso" required>
-            </div>
-            <div class="modal-actions">
-                <button type="button" onclick="cerrarModal()" class="btn-cancel">Cancelar</button>
-                <button type="submit" class="btn-submit">Guardar</button>
-            </div>
-        </form>
-    </div>
-</div>
-
-<div id="modalEditar" class="modal">
-    <div class="modal-content">
-        <h3 class="modal-header edit">
-            <i class="fa-solid fa-user-pen"></i> Editar Empleado
-        </h3>
-        <form id="formEditar" onsubmit="actualizarEmpleado(event)">
-            <?php echo csrf_field(); ?> 
-            <?php echo method_field('PUT'); ?>
-            
-            <input type="hidden" id="edit_id" name="id">
-
-            <div class="form-group">
-                <label>Nombre(s)</label>
-                <input type="text" name="nombre" id="edit_nombre" required>
-            </div>
-            <div class="form-group">
-                <label>Apellido Paterno</label>
-                <input type="text" name="apellido_paterno" id="edit_paterno" required>
-            </div>
-            <div class="form-group">
-                <label>Apellido Materno</label>
-                <input type="text" name="apellido_materno" id="edit_materno">
-            </div>
-            <div class="form-group">
-                <label>Puesto</label>
-                <select name="puesto_id" id="edit_puesto_id" required>
-                    <option value="" disabled>Selecciona un puesto...</option>
-                    <?php $__currentLoopData = $puestos; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $puesto): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-                        <option value="<?php echo e($puesto->id); ?>"><?php echo e($puesto->nombre); ?></option>
-                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
-                </select>
-            </div>
-            <div class="form-group">
-                <label>Fecha de Ingreso</label>
-                <input type="date" name="fecha_ingreso" id="edit_fecha" required>
-            </div>
-            <div class="modal-actions">
-                <button type="button" onclick="cerrarModalEditar()" class="btn-cancel">Cancelar</button>
-                <button type="submit" class="btn-submit edit">Actualizar</button>
-            </div>
-        </form>
-    </div>
-</div>
-<?php $__env->stopSection(); ?>
-
-
-<?php $__env->startPush('scripts'); ?>
-<script>
-    const csrfToken = '<?php echo e(csrf_token()); ?>';
-
-    // --- MODAL DE AGREGAR ---
-    function abrirModal() {
-        document.getElementById('modalAgregar').classList.add('show');
-    }
-    function cerrarModal() {
-        document.getElementById('modalAgregar').classList.remove('show');
-    }
-
-    // --- MODAL DE EDICIÓN (LECTURA ULTRA ESTABLE) ---
-    function abrirModalEditar(boton) {
-        try {
-            // Extraemos los datos directamente de los atributos data- del botón que fue presionado
-            const id = boton.getAttribute('data-id');
-            const nombre = boton.getAttribute('data-nombre');
-            const paterno = boton.getAttribute('data-paterno');
-            const materno = boton.getAttribute('data-materno') || '';
-            const puestoId = boton.getAttribute('data-puesto');
-            let fecha = boton.getAttribute('data-fecha') || '';
-
-            // Limpiamos la fecha por si viene con horas desde la base de datos
-            if (fecha) {
-                fecha = fecha.split(' ')[0];
-            }
-
-            // Inyectamos los valores a los inputs del modal de edición
-            document.getElementById('edit_id').value = id;
-            document.getElementById('edit_nombre').value = nombre;
-            document.getElementById('edit_paterno').value = paterno;
-            document.getElementById('edit_materno').value = materno;
-            document.getElementById('edit_puesto_id').value = puestoId;
-            document.getElementById('edit_fecha').value = fecha;
-
-            // Abrimos el modal añadiendo la clase show
-            document.getElementById('modalEditar').classList.add('show');
-        } catch (error) {
-            console.error("Error al abrir el modal:", error);
-            alert("No se pudieron cargar los datos en el formulario.");
-        }
-    }
-
-    function cerrarModalEditar() {
-        document.getElementById('modalEditar').classList.remove('show');
-    }
-
-    // --- GUARDAR CAMBIOS EN LA BASE DE DATOS ---
-    function actualizarEmpleado(event) {
-        event.preventDefault();
-
-        const form = document.getElementById('formEditar');
-        const id = document.getElementById('edit_id').value;
-        const formData = new FormData(form);
-
-        fetch(`/empleados/${id}`, {
-            method: 'POST',
-            headers: {
-                'X-CSRF-TOKEN': csrfToken,
-                'Accept': 'application/json'
-            },
-            body: formData
-        })
-        .then(response => {
-            if (!response.ok) {
-                throw new Error('Error en el servidor');
-            }
-            return response.json();
-        })
-        .then(data => {
-            if (data.success) {
-                // Actualizamos visualmente la tabla
-                const fila = document.getElementById(`fila-empleado-${id}`);
-                if (fila) {
-                    const selectPuesto = document.getElementById('edit_puesto_id');
-                    const textoPuesto = selectPuesto.options[selectPuesto.selectedIndex].text;
-
-                    const nombreCompleto = `${formData.get('nombre')} ${formData.get('apellido_paterno')} ${formData.get('apellido_materno')}`;
-                    
-                    // Reemplazamos los textos de la fila en tiempo real
-                    fila.querySelector('.td-nombre').textContent = nombreCompleto;
-                    fila.querySelector('.td-puesto').textContent = textoPuesto;
-                    
-                    // Actualizamos también los atributos data- del botón por si lo vuelven a editar sin recargar
-                    const btnEditar = fila.querySelector('.btn-edit');
-                    if (btnEditar) {
-                        btnEditar.setAttribute('data-nombre', formData.get('nombre'));
-                        btnEditar.setAttribute('data-paterno', formData.get('apellido_paterno'));
-                        btnEditar.setAttribute('data-materno', formData.get('apellido_materno'));
-                        btnEditar.setAttribute('data-puesto', formData.get('puesto_id'));
-                        btnEditar.setAttribute('data-fecha', formData.get('fecha_ingreso'));
-                    }
-                }
-
-                cerrarModalEditar();
-                alert('Empleado guardado correctamente en la Base de Datos.');
-            } else {
-                alert('No se pudieron guardar los cambios: ' + (data.message || 'Error interno'));
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            alert('Error de comunicación con el servidor.');
-        });
-    }
-
-    // --- SOFT DELETE REAL ---
-    function confirmarSoftDelete(id, urlRoute) {
-        if (!confirm('¿Realmente deseas eliminar a este empleado?')) return;
-
-        fetch(urlRoute, {
-            method: 'POST',
-            headers: {
-                'X-CSRF-TOKEN': csrfToken,
-                'Content-Type': 'application/json',
-                'Accept': 'application/json'
-            },
-            body: JSON.stringify({ _method: 'DELETE' })
-        })
-        .then(response => {
-            if (response.ok) {
-                const fila = document.getElementById('fila-empleado-' + id);
-                if (fila) {
-                    fila.classList.add('row-fade-out');
-                    setTimeout(() => { fila.remove(); }, 500);
-                }
-            } else {
-                alert('Error al eliminar en el servidor.');
-            }
-        })
-        .catch(error => alert('Error de red.'));
-    }
-
-    // Evento para cerrar haciendo clic afuera de los modales
-    window.addEventListener('click', function(event) {
-        const modalAgregar = document.getElementById('modalAgregar');
-        const modalEditar = document.getElementById('modalEditar');
-        if (event.target === modalAgregar) cerrarModal();
-        if (event.target === modalEditar) cerrarModalEditar();
-    });
-</script>
 <?php $__env->stopPush(); ?>
 <?php echo $__env->make('layouts.app', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH C:\Users\becario.tie\Documents\GitHub\SistemasUCO\sistema_descansos\resources\views/empleados/index.blade.php ENDPATH**/ ?>
