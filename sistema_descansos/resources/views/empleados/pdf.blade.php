@@ -363,6 +363,209 @@
     </div>
 
 </div>
+ <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            font-size: 11px;
+            color: #000;
+            line-height: 1.3;
+            background-color: #fff;
+        }
+
+        /* Cambiamos el contenedor a un porcentaje fijo para asegurar el centrado en PDF */
+        .container {
+            width: 92%;
+            margin: 0 auto;
+            padding-top: 20px;
+            text-align: center;
+        }
+
+        /* Forzamos a que todas las tablas ocupen exactamente el 100% del contenedor centrado */
+        .header-table, .info-table, .balances-table, .vacation-table {
+            width: 100% !important;
+            border-collapse: collapse;
+            margin-top: 12px !important;
+            margin-bottom: 12px !important;
+            margin-left: 0 !important;
+            margin-right: 0 !important;
+        }
+
+        .header-table td {
+            border: none;
+            padding: 0;
+            vertical-align: bottom;
+        }
+
+        .logo-area { width: 30%; }
+        .logo-main { font-size: 26px; font-weight: 900; color: #4A148C; letter-spacing: -1px; line-height: 1; }
+        .logo-sub { font-size: 8px; font-weight: bold; color: #E65100; letter-spacing: 0.5px; margin-top: -2px; }
+        .logo-slogan { font-size: 6px; color: #757575; font-style: italic; }
+
+        .title-area {
+            width: 40%;
+            text-align: center;
+            font-size: 14px;
+            font-weight: bold;
+            letter-spacing: 0.5px;
+            padding-bottom: 5px;
+        }
+
+        .date-area {
+            width: 30%;
+            text-align: right;
+            font-size: 10px;
+        }
+
+        .date-box {
+            display: inline-block;
+            border-bottom: 1px solid #000;
+            width: 100px;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        .date-format {
+            font-size: 8px;
+            color: #9e9e9e;
+            padding-right: 25px;
+            margin-top: 2px;
+        }
+
+        /* Alineamos el bloque de texto con los bordes de las tablas */
+        .intro-text {
+            width: 100%;
+            margin: 15px 0;
+            font-size: 10.5px;
+            text-align: justify;
+        }
+
+        .info-table td {
+            border: 1px solid #000;
+            padding: 6px 8px;
+            font-size: 10.5px;
+            text-align: left;
+        }
+
+        .info-table td.label {
+            width: 15%;
+            font-weight: bold;
+        }
+
+        .info-table td.value {
+            width: 85%;
+        }
+
+        .balances-table td {
+            border: none;
+            padding: 5px 0;
+            vertical-align: middle;
+            font-size: 10.5px;
+            text-align: left;
+        }
+
+        .cell-inline-border {
+            border: 1px solid #000 !important;
+            text-align: center !important;
+            font-weight: bold;
+            padding: 4px 8px !important;
+        }
+
+        .vacation-section-title {
+            font-weight: bold;
+            margin: 15px auto 5px auto;
+            font-size: 10.5px;
+            text-align: center;
+        }
+
+        .vacation-table th, 
+        .vacation-table td {
+            border: 1px solid #000;
+            padding: 5px 2px;
+            text-align: center;
+            font-size: 10px;
+        }
+
+        .vacation-table th {
+            font-weight: bold;
+            background-color: #fff;
+        }
+
+        .observations-title {
+            font-weight: bold;
+            margin-top: 15px;
+            font-size: 10.5px;
+            text-align: center;
+        }
+
+        .observations-box {
+            width: 100%;
+            border: 1px solid #000;
+            height: 55px;
+            margin: 6px 0 12px 0;
+        }
+
+        .disclaimer {
+            width: 100%;
+            margin: 0 0 35px 0;
+            font-size: 9px;
+            text-align: justify;
+        }
+
+        .signatures-container {
+            width: 100%;
+            margin-top: 20px;
+        }
+
+        .signatures-row {
+            display: table;
+            width: 100%;
+            table-layout: fixed;
+            margin: 0 auto 35px auto;
+        }
+
+        .signature-col {
+            display: table-cell;
+            width: 40%;
+            text-align: center;
+            vertical-align: top;
+        }
+
+        .signature-space {
+            width: 20%;
+            display: table-cell;
+        }
+
+        .signature-line {
+            border-top: 1px solid #000;
+            padding-top: 4px;
+            font-weight: bold;
+            font-size: 10px;
+        }
+
+        .signature-details {
+            font-size: 9.5px;
+            margin-top: 2px;
+        }
+
+        .vobo-row {
+            display: table;
+            width: 100%;
+            table-layout: fixed;
+            margin: 0 auto;
+        }
+
+        .vobo-col {
+            display: table-cell;
+            width: 40%;
+            text-align: center;
+        }
+    </style>
 
 </body>
 </html>

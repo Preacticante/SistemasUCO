@@ -80,9 +80,9 @@ Route::get('/historial', function () {
     
 })->name('historial');
 
-// 4. Configuración / Ajustes
+// 4. Configuración / Ajustes (ACTUALIZADO PARA PROCESAR EL FORMULARIO)
 Route::get('/configuracion', [SettingsController::class, 'index'])->name('configuracion');
-Route::post('/configuracion', [SettingsController::class, 'update'])->name('configuracion.update');
+Route::post('/configuracion/update', [SettingsController::class, 'update'])->name('configuracion.update');
 
 // 5. Mi Perfil (ACTUALIZADO Y CONECTADO CON LOS MODALES)
 Route::get('/perfil', [ProfileController::class, 'show'])->name('perfil');

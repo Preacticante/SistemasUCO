@@ -2,6 +2,42 @@
 
 @section('title', 'Restablecer contraseña')
 
+@section('content')
+    <div class="card">
+        <h1>Restablecer contraseña</h1>
+        <p>Elige una nueva contraseña para tu cuenta.</p>
+
+        @if(session('status'))
+            <div class="alert">{{ session('status') }}</div>
+        @endif
+
+        @if($errors->any())
+            <div class="error-list">
+                <ul style="margin: 0; padding-left: 1.25rem;">
+                    @foreach($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
+
+        <form action="{{ route('password.update') }}" method="POST">
+            @csrf
+            <input type="hidden" name="token" value="{{ $token }}">
+            <input type="hidden" name="correo" value="{{ $email }}">
+
+            <label for="contrasena">Nueva contraseña</label>
+            <input id="contrasena" type="password" name="contrasena" required placeholder="********">
+
+            <label for="contrasena_confirmation">Confirmar contraseña</label>
+            <input id="contrasena_confirmation" type="password" name="contrasena_confirmation" required placeholder="********">
+
+            <button type="submit">Guardar nueva contraseña</button>
+        </form>
+
+        <p class="footer-link">¿Recordaste tu contraseña? <a href="{{ route('login') }}">Volver al inicio</a></p>
+    </div>
+@endsection
 @push('styles')
 <style>
         :root {
@@ -116,40 +152,3 @@
         }
     </style>
 @endpush
-
-@section('content')
-    <div class="card">
-        <h1>Restablecer contraseña</h1>
-        <p>Elige una nueva contraseña para tu cuenta.</p>
-
-        @if(session('status'))
-            <div class="alert">{{ session('status') }}</div>
-        @endif
-
-        @if($errors->any())
-            <div class="error-list">
-                <ul style="margin: 0; padding-left: 1.25rem;">
-                    @foreach($errors->all() as $error)
-                        <li>{{ $error }}</li>
-                    @endforeach
-                </ul>
-            </div>
-        @endif
-
-        <form action="{{ route('password.update') }}" method="POST">
-            @csrf
-            <input type="hidden" name="token" value="{{ $token }}">
-            <input type="hidden" name="correo" value="{{ $email }}">
-
-            <label for="contrasena">Nueva contraseña</label>
-            <input id="contrasena" type="password" name="contrasena" required placeholder="********">
-
-            <label for="contrasena_confirmation">Confirmar contraseña</label>
-            <input id="contrasena_confirmation" type="password" name="contrasena_confirmation" required placeholder="********">
-
-            <button type="submit">Guardar nueva contraseña</button>
-        </form>
-
-        <p class="footer-link">¿Recordaste tu contraseña? <a href="{{ route('login') }}">Volver al inicio</a></p>
-    </div>
-@endsection

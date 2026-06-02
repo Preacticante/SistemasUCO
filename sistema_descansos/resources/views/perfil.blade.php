@@ -206,7 +206,7 @@
 @section('content')
 
 <!-- CONTENEDOR DE ALERTAS Y NOTIFICACIONES -->
-<div style="font-family: 'Inter', sans-serif;">
+<div>
     @if(session('success'))
         <div style="background-color: #d1e7dd; color: #0f5132; padding: 15px 20px; border-radius: 12px; margin-bottom: 20px; border: 1px solid #badbcc; display: flex; align-items: center; gap: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.02);">
             <i class="fa-solid fa-circle-check" style="font-size: 1.2rem;"></i>
@@ -277,7 +277,6 @@
                     </div>
                     <div class="info-group">
                         <div class="info-label">Correo Electrónico</div>
-                        <!-- Correo dinámico jalado de la sesión -->
                         <div class="info-value" id="perfil-correo-visto">{{ session('email', 'admin@preparatoria.edu') }}</div>
                     </div>
                     <div class="info-group">

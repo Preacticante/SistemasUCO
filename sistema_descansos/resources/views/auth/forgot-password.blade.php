@@ -2,6 +2,39 @@
 
 @section('title', 'Olvidé mi contraseña')
 
+
+
+@section('content')
+    <div class="card">
+        <h1>¿Olvidaste tu contraseña?</h1>
+        <p>Escribe tu correo institucional y te enviaremos un enlace para restablecerla.</p>
+
+        @if(session('status'))
+            <div class="alert">{{ session('status') }}</div>
+        @endif
+
+        @if($errors->any())
+            <div class="error-list">
+                <ul style="margin: 0; padding-left: 1.25rem;">
+                    @foreach($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
+
+
+        <form action="{{ route('password.email') }}" method="POST">
+            @csrf
+            <label for="correo">Correo electrónico</label>
+            <input id="correo" type="email" name="correo" value="{{ old('correo') }}" required placeholder="admin@preparatoria.edu">
+            <button type="submit">Enviar enlace</button>
+        </form>
+
+        <p class="footer-link">¿Ya recuerdas tu contraseña? <a href="{{ route('login') }}">Inicia sesión</a></p>
+    </div>
+@endsection
+
 @push('styles')
 <style>
         :root {
@@ -121,34 +154,3 @@
         }
     </style>
 @endpush
-
-@section('content')
-    <div class="card">
-        <h1>¿Olvidaste tu contraseña?</h1>
-        <p>Escribe tu correo institucional y te enviaremos un enlace para restablecerla.</p>
-
-        @if(session('status'))
-            <div class="alert">{{ session('status') }}</div>
-        @endif
-
-        @if($errors->any())
-            <div class="error-list">
-                <ul style="margin: 0; padding-left: 1.25rem;">
-                    @foreach($errors->all() as $error)
-                        <li>{{ $error }}</li>
-                    @endforeach
-                </ul>
-            </div>
-        @endif
-
-
-        <form action="{{ route('password.email') }}" method="POST">
-            @csrf
-            <label for="correo">Correo electrónico</label>
-            <input id="correo" type="email" name="correo" value="{{ old('correo') }}" required placeholder="admin@preparatoria.edu">
-            <button type="submit">Enviar enlace</button>
-        </form>
-
-        <p class="footer-link">¿Ya recuerdas tu contraseña? <a href="{{ route('login') }}">Inicia sesión</a></p>
-    </div>
-@endsection
