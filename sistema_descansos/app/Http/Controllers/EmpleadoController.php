@@ -51,6 +51,9 @@ class EmpleadoController extends Controller
         // lógica para mostrar formulario de edición
     }
 
+    /**
+     * ACTUALIZACIÓN ADAPTADA PARA PETICIONES EMERGENTES (AJAX / FETCH)
+     */
     public function update(Request $request, $id) {
         $validated = $request->validate([
             'nombre' => 'required|string|max:191',
@@ -69,13 +72,26 @@ class EmpleadoController extends Controller
         try {
             $empleado = \App\Models\Empleado::find($id);
             if (! $empleado) {
-                return redirect()->route('empleados.index')->withErrors(['error' => 'Empleado no encontrado.']);
+                // Si es por AJAX devolvemos un JSON de error con código 404
+                return response()->json(['success' => false, 'message' => 'Empleado no encontrado.'], 404);
             }
 
+            // Actualiza de verdad en la base de datos
             $empleado->update($validated);
-            return redirect()->route('empleados.index')->with('success', 'Empleado actualizado correctamente.');
+            
+            // CAMBIO AQUÍ: Retornamos éxito en formato JSON para que JavaScript cierre el modal y actualice la tabla
+            return response()->json([
+                'success' => true,
+                'message' => 'Empleado actualizado correctamente.',
+                'id' => $empleado->id
+            ]);
+
         } catch (\Exception $e) {
-            return back()->withInput()->withErrors(['error' => 'No se pudo actualizar el empleado: ' . $e->getMessage()]);
+            // Si algo falla, atrapa el error y mándalo al JavaScript sin romper la web
+            return response()->json([
+                'success' => false, 
+                'message' => 'No se pudo actualizar el empleado en la base de datos: ' . $e->getMessage()
+            ], 500);
         }
     }
 
@@ -96,8 +112,6 @@ class EmpleadoController extends Controller
      * Genera el reporte PDF masivo de vacaciones de todos los empleados
      */
     public function pdfAll(Request $request)
-
-
     {
       // 1. Obtener el año seleccionado desde el formulario (por defecto el año actual)
         $anio = $request->query('anio', \Carbon\Carbon::now()->year);
@@ -130,7 +144,6 @@ class EmpleadoController extends Controller
             }
 
             // !!! CONEXIÓN CON TU TABLA DE LEY (Muestra los días de derecho correspondientes) !!!
-            // Buscamos en tu tabla ley_vacaciones el registro que coincida con sus años de antigüedad
             $ley = \DB::table('ley_vacaciones')
                         ->where('anios_antiguedad', '<=', $antiguedad)
                         ->orderBy('anios_antiguedad', 'desc')
@@ -140,18 +153,17 @@ class EmpleadoController extends Controller
             $diasDerecho = $ley ? $ley->dias_derecho : 0;
 
             // 4. Obtener el desglose mensual del empleado filtrando por la columna 'fecha_inicio'
-            // Evitamos errores de columnas inexistentes cargando la colección completa de ese año
-            $descansos = \DB::table('periodos_vacacionales') // Cambiar por tu tabla de registros mensuales si corresponde
+            $descansos = \DB::table('periodos_vacacionales') 
                         ->where('empleado_id', $emp->id)
                         ->whereYear('fecha_inicio', $anio)
                         ->get();
 
-            // Construir el desglose del mes 1 al 12 (lo que dibuja los números en las columnas del PDF)
+            // Construir el desglose del mes 1 al 12
             $registroPorMes = [];
             for ($m = 1; $m <= 12; $m++) {
                 $sumaMes = $descansos->filter(function($item) use ($m) {
                     return \Carbon\Carbon::parse($item->fecha_inicio)->month == $m;
-                })->sum('dias'); // Suma de la columna real 'dias' observada en tu captura
+                })->sum('dias'); 
 
                 $registroPorMes[$m] = $sumaMes > 0 ? $sumaMes : 0;
             }
@@ -184,5 +196,5 @@ class EmpleadoController extends Controller
         ])->setPaper('letter', 'landscape');
 
         return $pdf->stream("Vacaciones_Personal_{$anio}.pdf");
-}
+    }
 }

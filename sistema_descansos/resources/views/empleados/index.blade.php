@@ -309,6 +309,95 @@
         .actions-cell { gap: 0.3rem; }
         .btn-action { padding: 0.3rem 0.6rem; font-size: 0.75rem; }
     }
+    /* Estilos para la tabla */
+.tabla-empleados {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.tabla-empleados th {
+    background-color: #1e4620; /* El color verde de tu barra actual */
+    color: white;
+    padding: 14px 16px;
+    font-weight: 600;
+    text-align: left;
+}
+
+.tabla-empleados td {
+    padding: 12px 16px;
+    border-bottom: 1px solid #eef2f5;
+    color: #333;
+    font-size: 14px;
+}
+
+.tabla-empleados tr:hover {
+    background-color: #f8fafc;
+}
+
+/* Contenedor de botones en una sola línea */
+.contenedor-acciones {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    align-items: center;
+}
+
+/* Botones Base */
+.btn-accion {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 12px;
+    font-size: 13px;
+    font-weight: 500;
+    border-radius: 6px;
+    border: none;
+    cursor: pointer;
+    text-decoration: none;
+    transition: all 0.2s ease;
+}
+
+/* Botón Editar (Dorado/Marrón elegante) */
+.btn-edit {
+    background-color: #b58930;
+    color: white;
+}
+.btn-edit:hover {
+    background-color: #967126;
+    box-shadow: 0 2px 4px rgba(181,137,48,0.3);
+}
+
+/* Botón Vacaciones (Verde institucional) */
+.btn-vacaciones {
+    background-color: #1e4620;
+    color: white;
+}
+.btn-vacaciones:hover {
+    background-color: #143015;
+    box-shadow: 0 2px 4px rgba(30,70,32,0.3);
+}
+
+/* Botón Eliminar (Rojo controlado) */
+.btn-eliminar {
+    background-color: #dc3545;
+    color: white;
+}
+.btn-eliminar:hover {
+    background-color: #bd2130;
+    box-shadow: 0 2px 4px rgba(220,53,69,0.3);
+}
+
+/* Efecto de desvanecimiento suave al eliminar filas con Soft Delete */
+.row-fade-out {
+    opacity: 0;
+    transform: translateX(-20px);
+    transition: all 0.5s ease;
+}
 </style>
 @endpush
 
@@ -354,44 +443,54 @@
         </button>
     </div>
 
-    <div class="table-container">
-        <table>
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Nombre Completo</th>
-                    <th>Puesto</th>
-                    <th style="text-align: center;">Acciones</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach($empleados as $emp)
-                <tr id="fila-empleado-{{ $emp->id }}" style="transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);">
-                    <td class="td-id">{{ $emp->id }}</td>
-                    <td class="td-nombre">{{ $emp->nombre }} {{ $emp->apellido_paterno }} {{ $emp->apellido_materno }}</td>
-                    <td class="td-puesto">{{ $emp->puesto->nombre ?? 'Sin Puesto' }}</td>
-                    <td>
-                        <div class="actions-cell">
-                            <button type="button" onclick="abrirModalEditar(@json($emp))" class="btn-action btn-edit">
-                                <i class="fa-solid fa-pen-to-square"></i> 
-                                <span class="btn-text">Editar</span>
-                            </button>
+    <table class="tabla-empleados">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Nombre Completo</th>
+            <th>Puesto</th>
+            <th style="text-align: center;">Acciones</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach($empleados as $empleado)
+            <tr id="fila-empleado-{{ $empleado->id }}">
+                <td>{{ $empleado->id }}</td>
+                <td class="td-nombre">
+                    {{ $empleado->nombre }} {{ $empleado->apellido_paterno }} {{ $empleado->apellido_materno }}
+                </td>
+                <td class="td-puesto">
+                    {{ $empleado->puesto->nombre ?? 'Sin Puesto' }}
+                </td>
+                <td>
+                    <div class="contenedor-acciones">
+                        <button type="button" 
+                                class="btn-accion btn-edit" 
+                                onclick="abrirModalEditar(this)"
+                                data-id="{{ $empleado->id }}"
+                                data-nombre="{{ $empleado->nombre }}"
+                                data-paterno="{{ $empleado->apellido_paterno }}"
+                                data-materno="{{ $empleado->apellido_materno }}"
+                                data-puesto="{{ $empleado->puesto_id }}"
+                                data-fecha="{{ $empleado->fecha_ingreso }}">
+                            <i class="fa-solid fa-pen-to-square"></i> Editar
+                        </button>
 
-                            <a href="{{ route('empleados.vacaciones', $emp->id) }}" class="btn-action btn-vacations">
-                                <i class="fa-solid fa-calendar"></i> 
-                                <span class="btn-text">Vacaciones</span>
-                            </a>
+                        <a href="#" class="btn-accion btn-vacaciones">
+                            <i class="fa-solid fa-calendar-days"></i> Vacaciones
+                        </a>
 
-                            <button type="button" onclick="confirmarSoftDelete({{ $emp->id }}, '{{ route('empleados.destroy', $emp->id) }}')" class="btn-action btn-delete">
-                                <i class="fa-solid fa-trash"></i> 
-                                <span class="btn-text">Eliminar</span>
-                            </button>
-                        </div>
-                    </td>
-                </tr>
-                @endforeach
-            </tbody>
-        </table>
+                        <button type="button" 
+                                class="btn-accion btn-eliminar" 
+                                onclick="confirmarSoftDelete({{ $empleado->id }}, '{{ route('empleados.destroy', $empleado->id) }}')">
+                            <i class="fa-solid fa-trash"></i> Eliminar
+                        </button>
+                    </div>
+                </td>
+            </tr>
+        @endforeach
+    </tbody>
+</table>
     </div>
 </div>
 
@@ -440,9 +539,12 @@
         <h3 class="modal-header edit">
             <i class="fa-solid fa-user-pen"></i> Editar Empleado
         </h3>
-        <form id="formEditar" method="POST">
+        <form id="formEditar" onsubmit="actualizarEmpleado(event)">
             @csrf 
             @method('PUT')
+            
+            <input type="hidden" id="edit_id" name="id">
+
             <div class="form-group">
                 <label>Nombre(s)</label>
                 <input type="text" name="nombre" id="edit_nombre" required>
@@ -480,10 +582,9 @@
 {{-- BLOQUE DE SCRIPTS JAVASCRIPT --}}
 @push('scripts')
 <script>
-    // Token CSRF global requerido por Laravel para peticiones seguras de JavaScript
     const csrfToken = '{{ csrf_token() }}';
 
-    // Modales de agregar
+    // --- MODAL DE AGREGAR ---
     function abrirModal() {
         document.getElementById('modalAgregar').classList.add('show');
     }
@@ -491,57 +592,129 @@
         document.getElementById('modalAgregar').classList.remove('show');
     }
 
-    // Modal de edición con vinculación dinámica correcta
-    function abrirModalEditar(empleado) {
-        const form = document.getElementById('formEditar');
-        form.action = `/empleados/${empleado.id}`;
+    // --- MODAL DE EDICIÓN (LECTURA ULTRA ESTABLE) ---
+    function abrirModalEditar(boton) {
+        try {
+            // Extraemos los datos directamente de los atributos data- del botón que fue presionado
+            const id = boton.getAttribute('data-id');
+            const nombre = boton.getAttribute('data-nombre');
+            const paterno = boton.getAttribute('data-paterno');
+            const materno = boton.getAttribute('data-materno') || '';
+            const puestoId = boton.getAttribute('data-puesto');
+            let fecha = boton.getAttribute('data-fecha') || '';
 
-        document.getElementById('edit_nombre').value = empleado.nombre;
-        document.getElementById('edit_paterno').value = empleado.apellido_paterno;
-        document.getElementById('edit_materno').value = empleado.apellido_materno || '';
-        document.getElementById('edit_puesto_id').value = empleado.puesto_id;
-        document.getElementById('edit_fecha').value = empleado.fecha_ingreso;
+            // Limpiamos la fecha por si viene con horas desde la base de datos
+            if (fecha) {
+                fecha = fecha.split(' ')[0];
+            }
 
-        document.getElementById('modalEditar').classList.add('show');
+            // Inyectamos los valores a los inputs del modal de edición
+            document.getElementById('edit_id').value = id;
+            document.getElementById('edit_nombre').value = nombre;
+            document.getElementById('edit_paterno').value = paterno;
+            document.getElementById('edit_materno').value = materno;
+            document.getElementById('edit_puesto_id').value = puestoId;
+            document.getElementById('edit_fecha').value = fecha;
+
+            // Abrimos el modal añadiendo la clase show
+            document.getElementById('modalEditar').classList.add('show');
+        } catch (error) {
+            console.error("Error al abrir el modal:", error);
+            alert("No se pudieron cargar los datos en el formulario.");
+        }
     }
+
     function cerrarModalEditar() {
         document.getElementById('modalEditar').classList.remove('show');
     }
 
-    function confirmarSoftDelete(id, urlRoute) {
-        // Eliminación SOLO visual: no tocar la base de datos
-        if (!confirm('¿Deseas eliminar al empleado? ')) return;
+    // --- GUARDAR CAMBIOS EN LA BASE DE DATOS ---
+    function actualizarEmpleado(event) {
+        event.preventDefault();
 
-        const fila = document.getElementById('fila-empleado-' + id);
-        if (fila) {
-            fila.classList.add('row-fade-out');
-            setTimeout(() => {
-                fila.remove();
-            }, 500);
-        }
-        persistHiddenEmpleado(id);
-    }
+        const form = document.getElementById('formEditar');
+        const id = document.getElementById('edit_id').value;
+        const formData = new FormData(form);
 
-    function applyHiddenEmpleados() {
-        const hidden = getHiddenEmpleados();
-        hidden.forEach(id => {
-            const fila = document.getElementById('fila-empleado-' + id);
-            if (fila) {
-                fila.style.display = 'none';
+        fetch(`/empleados/${id}`, {
+            method: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': csrfToken,
+                'Accept': 'application/json'
+            },
+            body: formData
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Error en el servidor');
             }
+            return response.json();
+        })
+        .then(data => {
+            if (data.success) {
+                // Actualizamos visualmente la tabla
+                const fila = document.getElementById(`fila-empleado-${id}`);
+                if (fila) {
+                    const selectPuesto = document.getElementById('edit_puesto_id');
+                    const textoPuesto = selectPuesto.options[selectPuesto.selectedIndex].text;
+
+                    const nombreCompleto = `${formData.get('nombre')} ${formData.get('apellido_paterno')} ${formData.get('apellido_materno')}`;
+                    
+                    // Reemplazamos los textos de la fila en tiempo real
+                    fila.querySelector('.td-nombre').textContent = nombreCompleto;
+                    fila.querySelector('.td-puesto').textContent = textoPuesto;
+                    
+                    // Actualizamos también los atributos data- del botón por si lo vuelven a editar sin recargar
+                    const btnEditar = fila.querySelector('.btn-edit');
+                    if (btnEditar) {
+                        btnEditar.setAttribute('data-nombre', formData.get('nombre'));
+                        btnEditar.setAttribute('data-paterno', formData.get('apellido_paterno'));
+                        btnEditar.setAttribute('data-materno', formData.get('apellido_materno'));
+                        btnEditar.setAttribute('data-puesto', formData.get('puesto_id'));
+                        btnEditar.setAttribute('data-fecha', formData.get('fecha_ingreso'));
+                    }
+                }
+
+                cerrarModalEditar();
+                alert('Empleado guardado correctamente en la Base de Datos.');
+            } else {
+                alert('No se pudieron guardar los cambios: ' + (data.message || 'Error interno'));
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error de comunicación con el servidor.');
         });
     }
 
-    function clearHiddenEmpleados() {
-        if (!confirm('¿Restaurar empleados ocultos? Esto mostrará nuevamente las filas ocultas y recargará la página.')) return;
-        localStorage.removeItem('empleados_ocultos');
-        location.reload();
+    // --- SOFT DELETE REAL ---
+    function confirmarSoftDelete(id, urlRoute) {
+        if (!confirm('¿Realmente deseas eliminar a este empleado?')) return;
+
+        fetch(urlRoute, {
+            method: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': csrfToken,
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify({ _method: 'DELETE' })
+        })
+        .then(response => {
+            if (response.ok) {
+                const fila = document.getElementById('fila-empleado-' + id);
+                if (fila) {
+                    fila.classList.add('row-fade-out');
+                    setTimeout(() => { fila.remove(); }, 500);
+                }
+            } else {
+                alert('Error al eliminar en el servidor.');
+            }
+        })
+        .catch(error => alert('Error de red.'));
     }
 
-    // Aplicar ocultamientos persistidos al cargar la página
-    document.addEventListener('DOMContentLoaded', applyHiddenEmpleados);
-
-    // Listener global nativo sin interferencias para el cierre de modales externos
+    // Evento para cerrar haciendo clic afuera de los modales
     window.addEventListener('click', function(event) {
         const modalAgregar = document.getElementById('modalAgregar');
         const modalEditar = document.getElementById('modalEditar');

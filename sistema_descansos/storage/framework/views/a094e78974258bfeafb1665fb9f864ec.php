@@ -30,7 +30,8 @@
                         <?php
                             $empleado = $periodo->empleado;
                             $fechaFin = \Carbon\Carbon::parse($periodo->fecha_fin);
-                            $estado = $fechaFin->isPast() ? 'Tomado' : 'Programado';
+                            $yaTomado = $fechaFin->isPast();
+                            $estado = $yaTomado ? 'Tomado' : 'Programado';
                         ?>
                         <tr>
                             <td class="text-employee-name">
@@ -48,23 +49,29 @@
                                 <?php echo e($fechaFin->format('d/m/Y')); ?>
 
                             </td>
-                            <td class="<?php echo e($fechaFin->isPast() ? 'text-muted-days' : 'text-danger-bold'); ?>">
+                            <td class="<?php echo e($yaTomado ? 'text-muted-days' : 'text-danger-bold'); ?>">
                                 <?php echo e($periodo->dias); ?> día<?php echo e($periodo->dias === 1 ? '' : 's'); ?>
 
                             </td>
                             <td>
-                                <span class="badge <?php echo e($fechaFin->isPast() ? 'badge-success' : 'badge-info'); ?>">
+                                <span class="badge <?php echo e($yaTomado ? 'badge-success' : 'badge-info'); ?>">
                                     <?php echo e($estado); ?>
 
                                 </span>
                             </td>
                             <td style="text-align: center; display: flex; gap: 8px; justify-content: center;">
-                                <button type="button" class="btn-action-edit" onclick="openEditModal(<?php echo e($periodo->id); ?>)">
-                                    <i class="fas fa-pencil"></i> Editar
-                                </button>
-                                <button type="button" class="btn-action-delete" onclick="deletePeriodo(<?php echo e($periodo->id); ?>)">
-                                    <i class="fas fa-trash"></i> Eliminar
-                                </button>
+                                <?php if($yaTomado): ?>
+                                    <button type="button" class="btn-action-edit btn-disabled" title="No se puede editar un período ya tomado" disabled>
+                                        <i class="fas fa-lock"></i> Completado
+                                    </button>
+                                <?php else: ?>
+                                    <button type="button" class="btn-action-edit" onclick="openEditModal(<?php echo e($periodo->id); ?>)">
+                                        <i class="fas fa-pencil"></i> Editar
+                                    </button>
+                                    <button type="button" class="btn-action-delete" onclick="deletePeriodo(<?php echo e($periodo->id); ?>)">
+                                        <i class="fas fa-trash"></i> Eliminar
+                                    </button>
+                                <?php endif; ?>
                             </td>
                         </tr>
                     <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
@@ -228,7 +235,7 @@
             background-color: #124416;
         }
 
-        .btn-action-edit:hover {
+        .btn-action-edit:hover:not(:disabled) {
             background-color: #0d2e10;
             transform: translateY(-2px);
         }
@@ -240,6 +247,15 @@
         .btn-action-delete:hover {
             background-color: #b91c1c;
             transform: translateY(-2px);
+        }
+
+        /* Botón deshabilitado */
+        .btn-disabled {
+            background-color: #cbd5e1 !important;
+            color: #64748b !important;
+            cursor: not-allowed !important;
+            transform: none !important;
+            box-shadow: none !important;
         }
 
         /* Modal de edición */
@@ -338,7 +354,6 @@
         }
     </style>
 
-    <!-- Modal para editar período -->
     <div id="editModal" class="modal-edit">
         <div class="modal-edit-content">
             <h3>Editar Período Vacacional</h3>
@@ -383,6 +398,16 @@
                 return response.json();
             })
             .then(data => {
+                // Validación de seguridad en Frontend: comprobar si la fecha fin ya pasó
+                const fechaFinPeriodo = new Date(data.fecha_fin + 'T23:59:59');
+                const hoy = new Date();
+
+                if (fechaFinPeriodo < hoy) {
+                    alert('Este período vacacional ya concluyó y no puede modificarse.');
+                    periodoEnEdicion = null;
+                    return;
+                }
+
                 document.getElementById('editEmpleado').value = data.empleado_nombre || 'N/A';
                 document.getElementById('editFechaInicio').value = data.fecha_inicio;
                 document.getElementById('editFechaFin').value = data.fecha_fin;
@@ -412,6 +437,13 @@
             return;
         }
 
+        // Doble verificación antes de enviar el formulario por AJAX
+        const fechaFinObj = new Date(fechaFin + 'T23:59:59');
+        if (fechaFinObj < new Date()) {
+            alert('No puedes guardar un período con fechas que marquen el estatus como "Tomado".');
+            return;
+        }
+
         fetch(`/periodos/${periodoEnEdicion}`, {
             method: 'PUT',
             headers: {
@@ -421,7 +453,7 @@
             body: JSON.stringify({
                 fecha_inicio: fechaInicio,
                 fecha_fin: fechaFin,
-                dias: dias
+                days: dias
             })
         })
         .then(response => {
@@ -440,6 +472,7 @@
     }
 
     function deletePeriodo(id) {
+        // En tu controlador o backend también es altamente recomendable bloquear la petición DELETE si el ID pertenece a un registro pasado.
         if (!confirm('¿Estás seguro de que deseas eliminar este período vacacional?')) {
             return;
         }
@@ -464,7 +497,6 @@
         });
     }
 
-    // Cerrar modal al hacer click fuera de él
     document.getElementById('editModal').addEventListener('click', function(e) {
         if (e.target === this) {
             closeEditModal();
