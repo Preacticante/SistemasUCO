@@ -38,13 +38,13 @@ Route::get('/forgot-password', [ForgotPasswordController::class, 'showLinkReques
 Route::post('/forgot-password', [ForgotPasswordController::class, 'sendResetLinkEmail'])->name('password.email');
 Route::get('/reset-password/{token}', [ResetPasswordController::class, 'showResetForm'])->name('password.reset');
 Route::post('/reset-password', [ResetPasswordController::class, 'reset'])->name('password.update');
-Route::get('/empleados/vacaciones/pdf-masivo', [App\Http\Controllers\EmpleadoController::class, 'pdfAll'])->name('empleados.vacaciones.pdf_all');
+
 // Cerrar Sesión (Unificada por GET para que funcione el botón del menú)
 Route::get('/logout', function () {
     session()->forget(['logeado', 'nombre']);
     return redirect()->route('login');
 })->name('logout');
-
+Route::get('/empleados/vacaciones/pdf-masivo', [EmpleadoController::class, 'pdfAll'])->name('empleados.vacaciones.pdf-masivo');
 
 /*
 |--------------------------------------------------------------------------

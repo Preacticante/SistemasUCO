@@ -339,8 +339,7 @@
         $selectedYear = request()->query('anio', $endYear);
     ?>
     <div style="display:flex; gap:1rem; align-items:center; margin:0.8rem 0;">
-        <form method="GET" action="<?php echo e(route('empleados.vacaciones.pdf_all')); ?>" target="_blank" style="display:flex; gap:0.5rem; align-items:center;">
-            <label style="font-weight:600;">Año:</label>
+        <form method="GET" action="/empleados/vacaciones/pdf-masivo" target="_blank" style="display:flex; gap:0.5rem; align-items:center;">
             <select name="anio" style="padding:6px; border-radius:6px;">
                 <?php for($y = $endYear; $y >= $startYear; $y--): ?>
                     <option value="<?php echo e($y); ?>" <?php if($y == $selectedYear): ?> selected <?php endif; ?>><?php echo e($y); ?></option>
@@ -355,7 +354,6 @@
             <i class="fa-solid fa-user-plus"></i> 
             <span class="btn-text">Agregar Empleado</span>
         </button>
-        <button type="button" onclick="clearHiddenEmpleados()" title="Mostrar empleados ocultos" style="background:#f3f4f6; color:#334155; border:none; padding:6px 10px; border-radius:8px; font-weight:600;">Mostrar ocultos</button>
     </div>
 
     <div class="table-container">
@@ -484,8 +482,10 @@
 
 <?php $__env->startPush('scripts'); ?>
 <script>
+    // Token CSRF global requerido por Laravel para peticiones seguras de JavaScript
     const csrfToken = '<?php echo e(csrf_token()); ?>';
 
+    // Modales de agregar
     function abrirModal() {
         document.getElementById('modalAgregar').classList.add('show');
     }
@@ -493,6 +493,7 @@
         document.getElementById('modalAgregar').classList.remove('show');
     }
 
+    // Modal de edición con vinculación dinámica correcta
     function abrirModalEditar(empleado) {
         const form = document.getElementById('formEditar');
         form.action = `/empleados/${empleado.id}`;
@@ -509,25 +510,9 @@
         document.getElementById('modalEditar').classList.remove('show');
     }
 
-    function getHiddenEmpleados() {
-        try {
-            return JSON.parse(localStorage.getItem('empleados_ocultos') || '[]');
-        } catch (e) {
-            return [];
-        }
-    }
-
-    function persistHiddenEmpleado(id) {
-        const arr = getHiddenEmpleados();
-        if (!arr.includes(id)) {
-            arr.push(id);
-            localStorage.setItem('empleados_ocultos', JSON.stringify(arr));
-        }
-    }
-
     function confirmarSoftDelete(id, urlRoute) {
-        // Eliminación SOLO visual: se persiste en localStorage para mantenerlo oculto tras recarga
-        if (!confirm('¿Deseas ocultar visualmente este empleado? (No se eliminará de la base de datos)')) return;
+        // Eliminación SOLO visual: no tocar la base de datos
+        if (!confirm('¿Deseas eliminar al empleado? ')) return;
 
         const fila = document.getElementById('fila-empleado-' + id);
         if (fila) {
