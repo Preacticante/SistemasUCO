@@ -1,9 +1,7 @@
-@extends('layouts.app')
+<?php $__env->startSection('title', 'Configuración'); ?>
+<?php $__env->startSection('header', 'Configuración del Sistema'); ?>
 
-@section('title', 'Configuración')
-@section('header', 'Configuración del Sistema')
-
-@push('styles')
+<?php $__env->startPush('styles'); ?>
 <style>
     .config-container {
         font-family: 'Inter', sans-serif;
@@ -200,22 +198,22 @@
         .btn-save-all { width: 100%; justify-content: center; }
     }
 </style>
-@endpush
+<?php $__env->stopPush(); ?>
 
-@section('content')
+<?php $__env->startSection('content'); ?>
 <div class="config-container">
 
     <!-- ALERTAS DE ÉXITO OPERATIVO -->
-    @if(session('success'))
+    <?php if(session('success')): ?>
         <div style="background-color: #d1e7dd; color: #0f5132; padding: 15px 20px; border-radius: 12px; margin-bottom: 25px; border: 1px solid #badbcc; display: flex; align-items: center; gap: 10px; font-weight: 500;">
             <i class="fa-solid fa-circle-check" style="font-size: 1.2rem;"></i>
-            <span>{{ session('success') }}</span>
+            <span><?php echo e(session('success')); ?></span>
         </div>
-    @endif
+    <?php endif; ?>
 
     <!-- FORMULARIO CONECTADO CON WEB.PHP -->
-    <form action="{{ route('configuracion.update') }}" method="POST">
-        @csrf
+    <form action="<?php echo e(route('configuracion.update')); ?>" method="POST">
+        <?php echo csrf_field(); ?>
         
         <div class="config-grid">
             
@@ -230,12 +228,19 @@
                     </div>
                     <input type="hidden" name="sabados_contables" value="0">
                     <label class="switch">
-                        <input type="checkbox" name="sabados_contables" value="1" {{ old('sabados_contables', session('sabados_contables')) == '1' ? 'checked' : '' }}>
+                        <input type="checkbox" name="sabados_contables" value="1" <?php echo e(old('sabados_contables', session('sabados_contables')) == '1' ? 'checked' : ''); ?>>
                         <span class="slider"></span>
                     </label>
-                    @error('sabados_contables')
-                        <div style="color:#b91c1c; font-size:0.85rem; margin-top:6px;">{{ $message }}</div>
-                    @enderror
+                    <?php $__errorArgs = ['sabados_contables'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?>
+                        <div style="color:#b91c1c; font-size:0.85rem; margin-top:6px;"><?php echo e($message); ?></div>
+                    <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>
                 </div>
 
                 <div class="config-row">
@@ -244,13 +249,20 @@
                         <p>Días mínimos que debe tomar un empleado por solicitud legal.</p>
                     </div>
                     <select name="minimo_dias_continuos" class="config-select">
-                        <option value="6" {{ old('minimo_dias_continuos', session('minimo_dias_continuos')) == '6' ? 'selected' : '' }}>6 Días continuos (Ley Federal)</option>
-                        <option value="1" {{ old('minimo_dias_continuos', session('minimo_dias_continuos')) == '1' ? 'selected' : '' }}>Sin mínimo obligatorio</option>
-                        <option value="2" {{ old('minimo_dias_continuos', session('minimo_dias_continuos')) == '2' ? 'selected' : '' }}>2 Días mínimos</option>
+                        <option value="6" <?php echo e(old('minimo_dias_continuos', session('minimo_dias_continuos')) == '6' ? 'selected' : ''); ?>>6 Días continuos (Ley Federal)</option>
+                        <option value="1" <?php echo e(old('minimo_dias_continuos', session('minimo_dias_continuos')) == '1' ? 'selected' : ''); ?>>Sin mínimo obligatorio</option>
+                        <option value="2" <?php echo e(old('minimo_dias_continuos', session('minimo_dias_continuos')) == '2' ? 'selected' : ''); ?>>2 Días mínimos</option>
                     </select>
-                    @error('minimo_dias_continuos')
-                        <div style="color:#b91c1c; font-size:0.85rem; margin-top:6px;">{{ $message }}</div>
-                    @enderror
+                    <?php $__errorArgs = ['minimo_dias_continuos'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?>
+                        <div style="color:#b91c1c; font-size:0.85rem; margin-top:6px;"><?php echo e($message); ?></div>
+                    <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>
                 </div>
             </div>
 
@@ -264,11 +276,18 @@
                         <p>Meses de límite para gastar las vacaciones de un aniversario.</p>
                     </div>
                     <div>
-                        <input type="number" name="meses_caducidad" value="{{ old('meses_caducidad', session('meses_caducidad', 18)) }}" min="1" max="48" class="config-input-num">
+                        <input type="number" name="meses_caducidad" value="<?php echo e(old('meses_caducidad', session('meses_caducidad', 18))); ?>" min="1" max="48" class="config-input-num">
                         <span style="font-size: 0.85rem; color:#64748b; font-weight:600; margin-left:5px;">Meses</span>
-                        @error('meses_caducidad')
-                            <div style="color:#b91c1c; font-size:0.85rem; margin-top:6px;">{{ $message }}</div>
-                        @enderror
+                        <?php $__errorArgs = ['meses_caducidad'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?>
+                            <div style="color:#b91c1c; font-size:0.85rem; margin-top:6px;"><?php echo e($message); ?></div>
+                        <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>
                     </div>
                 </div>
 
@@ -291,13 +310,20 @@
                         <p>Año calendario sobre el que operan los paneles del sistema.</p>
                     </div>
                     <select name="ciclo_actual" class="config-select">
-                        <option value="2026" {{ old('ciclo_actual', session('ciclo_actual')) == '2026' ? 'selected' : '' }}>2026 (Ciclo Actual)</option>
-                        <option value="2025" {{ old('ciclo_actual', session('ciclo_actual')) == '2025' ? 'selected' : '' }}>2025</option>
-                        <option value="2024" {{ old('ciclo_actual', session('ciclo_actual')) == '2024' ? 'selected' : '' }}>2024</option>
+                        <option value="2026" <?php echo e(old('ciclo_actual', session('ciclo_actual')) == '2026' ? 'selected' : ''); ?>>2026 (Ciclo Actual)</option>
+                        <option value="2025" <?php echo e(old('ciclo_actual', session('ciclo_actual')) == '2025' ? 'selected' : ''); ?>>2025</option>
+                        <option value="2024" <?php echo e(old('ciclo_actual', session('ciclo_actual')) == '2024' ? 'selected' : ''); ?>>2024</option>
                     </select>
-                    @error('ciclo_actual')
-                        <div style="color:#b91c1c; font-size:0.85rem; margin-top:6px;">{{ $message }}</div>
-                    @enderror
+                    <?php $__errorArgs = ['ciclo_actual'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?>
+                        <div style="color:#b91c1c; font-size:0.85rem; margin-top:6px;"><?php echo e($message); ?></div>
+                    <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>
                 </div>
 
                 <div class="config-row">
@@ -348,16 +374,16 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @forelse($leyVacaciones as $ley)
+                    <?php $__empty_1 = true; $__currentLoopData = $leyVacaciones; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $ley): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
                         <tr>
-                            <td>{{ $ley->anios_antiguedad }} {{ $ley->anios_antiguedad == 1 ? 'Año' : 'Años' }}</td>
-                            <td><strong>{{ $ley->dias_derecho }} Días</strong></td>
+                            <td><?php echo e($ley->anios_antiguedad); ?> <?php echo e($ley->anios_antiguedad == 1 ? 'Año' : 'Años'); ?></td>
+                            <td><strong><?php echo e($ley->dias_derecho); ?> Días</strong></td>
                         </tr>
-                    @empty
+                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
                         <tr>
                             <td colspan="2" style="text-align: center; color: #64748b; padding: 20px;">No hay registros cargados en la base de datos.</td>
                         </tr>
-                    @endforelse
+                    <?php endif; ?>
                 </tbody>
             </table>
         </div>
@@ -411,4 +437,5 @@
         if (event.target == mFestivos) cerrarModalFestivos();
     }
 </script>
-@endsection
+<?php $__env->stopSection(); ?>
+<?php echo $__env->make('layouts.app', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH C:\Users\becario.tie\Documents\GitHub\SistemasUCO\sistema_descansos\resources\views/configuracion.blade.php ENDPATH**/ ?>
