@@ -568,4 +568,4 @@
     </style>
 
 </body>
-</html><?php /**PATH /var/www/html/resources/views/empleados/pdf.blade.php ENDPATH**/ ?>
+</html><?php /**PATH C:\Users\becario.tie\Documents\GitHub\SistemasUCO\sistema_descansos\resources\views/empleados/pdf.blade.php ENDPATH**/ ?>

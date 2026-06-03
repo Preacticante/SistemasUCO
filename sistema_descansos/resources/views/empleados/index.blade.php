@@ -33,7 +33,8 @@
             <tbody>
                 @foreach($empleados as $emp)
                 <tr id="fila-empleado-{{ $emp->id }}" style="transition: all 0.4s ease;">
-                    <td class="td-id">{{ $emp->id }}</td>
+                   
+                    <td><strong>{{ $loop->iteration }}</strong></td>
                     <td class="td-nombre">{{ $emp->nombre }} {{ $emp->apellido_paterno }} {{ $emp->apellido_materno }}</td>
                     <td class="td-puesto">{{ $emp->puesto->nombre ?? 'Sin Puesto' }}</td>
                     <td>
@@ -48,9 +49,11 @@
                                 <span class="btn-text">Vacaciones</span>
                             </a>
 
-                            <button onclick="eliminarFilaVisual({{ $emp->id }})" class="btn-action btn-delete">
-                                <i class="fa-solid fa-trash"></i> 
-                                <span class="btn-text">Eliminar</span>
+                                                        <button type="button" 
+                                    class="btn-accion btn-eliminar" 
+                                    onclick="ejecutarSoftDelete(this)"
+                                    data-id="{{ $emp->id }}">
+                                <i class="fa-solid fa-trash"></i> Eliminar
                             </button>
                         </div>
                     </td>
@@ -171,16 +174,48 @@
         document.getElementById('modalEditar').classList.remove('show');
     }
 
-    function eliminarFilaVisual(id) {
-        if (confirm('¿Eliminar de la vista?')) {
+   function ejecutarSoftDelete(boton) {
+    const id = boton.getAttribute('data-id');
+    
+    if (!confirm('¿Realmente deseas eliminar a este empleado?')) return;
+
+    // SOLUCIÓN: Declaramos el token localmente de forma segura directamente desde Laravel
+    const tokenSeguro = '{{ csrf_token() }}';
+
+    // Enviamos la petición directamente a la URL '/empleados/ID'
+    fetch(`/empleados/${id}`, {
+        method: 'POST',
+        headers: {
+            'X-CSRF-TOKEN': tokenSeguro, // Usamos el nuevo token seguro
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+        },
+        body: JSON.stringify({ _method: 'DELETE' })
+    })
+    .then(response => {
+        if (!response.ok) {
+            return response.json().then(err => { throw new Error(err.message || 'Error interno del servidor') });
+        }
+        return response.json();
+    })
+    .then(data => {
+        if (data.success) {
+            // Borramos la fila de la pantalla con la animación
             const fila = document.getElementById('fila-empleado-' + id);
             if (fila) {
-                fila.style.opacity = '0';
-                setTimeout(() => fila.style.display = 'none', 300);
+                fila.classList.add('row-fade-out');
+                setTimeout(() => { fila.remove(); }, 500);
             }
+            alert('Empleado eliminado con éxito en la Base de Datos.');
+        } else {
+            alert('El servidor dijo que no pudo eliminar: ' + data.message);
         }
-    }
-
+    })
+    .catch(error => {
+        console.error('Error completo:', error);
+        alert('Error al intentar conectar o procesar en el servidor: ' + error.message);
+    });
+}
     // Cerrar modales al hacer clic fuera de ellos
     window.onclick = function(event) {
         const modalAgregar = document.getElementById('modalAgregar');
