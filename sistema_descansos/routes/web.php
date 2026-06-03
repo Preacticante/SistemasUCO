@@ -39,7 +39,7 @@ Route::post('/reset-password', [ResetPasswordController::class, 'reset'])->name(
 
 // Cerrar Sesión (Unificada por GET para que funcione el botón del menú)
 Route::get('/logout', function () {
-    session()->forget(['logeado', 'nombre']);
+    session()->forget(['logeado', 'user_id', 'nombre', 'email']);
     return redirect()->route('login');
 })->name('logout');
 

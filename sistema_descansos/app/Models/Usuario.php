@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Carbon\Carbon;
 
 class Usuario extends Authenticatable
 {
@@ -20,7 +21,11 @@ class Usuario extends Authenticatable
     protected $fillable = [
         'nombre_completo',
         'correo',
-        'contrasena'
+        'contrasena',
+        'id_acceso', 
+        'departamento', 
+        'fecha_alta', 
+        'ultimo_acceso'
     ];
 
     protected $hidden = [
@@ -32,5 +37,22 @@ class Usuario extends Authenticatable
     public function getAuthPassword()
     {
         return $this->contrasena;
+    }
+
+    protected static function booted()
+    {
+        // Este evento se dispara automáticamente milisegundos antes de insertarse en la BD
+        static::creating(function ($usuario) {
+            $anioActual = Carbon::now()->year;
+
+            $ultimoUsuario = static::where('id_acceso', 'LIKE', "UCO-{$anioActual}-%")
+                                    ->orderBy('id_acceso', 'desc')
+                                    ->first();
+
+            $nuevoNumero = $ultimoUsuario ? ((int) substr($ultimoUsuario->id_acceso, -3)) + 1 : 1;
+            
+            // Asigna el ID automáticamente
+            $usuario->id_acceso = "UCO-{$anioActual}-" . str_pad($nuevoNumero, 3, '0', STR_PAD_LEFT);
+        });
     }
 }

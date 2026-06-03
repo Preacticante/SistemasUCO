@@ -233,7 +233,7 @@
     <div class="profile-card">
         <div class="avatar-section">
             <?php
-                $nombre = session('nombre', 'Administrador');
+                $nombre = $usuario->nombre ?? ($usuario->Nombre ?? session('nombre', 'Administrador'));;
                 $inicial = substr($nombre, 0, 1);
             ?>
             <div class="avatar-circle"><?php echo e($inicial); ?></div>
@@ -297,11 +297,13 @@
                 
                 <div class="stats-grid">
                     <div class="stat-box">
-                        <span class="stat-number">17</span>
+                        <!-- Muestra el conteo real de empleados a cargo -->
+                        <span class="stat-number"><?php echo e($empleadosACargo); ?></span>
                         <span class="stat-label">Empleados a cargo</span>
                     </div>
                     <div class="stat-box">
-                        <span class="stat-number">282</span>
+                        <!-- Muestra la suma real de los días gestionados -->
+                        <span class="stat-number"><?php echo e($diasGestionados); ?></span>
                         <span class="stat-label">Días gestionados</span>
                     </div>
                     <div class="stat-box">
@@ -309,9 +311,11 @@
                         <span class="stat-label">Último acceso</span>
                     </div>
                     <div class="stat-box">
-                        <span class="stat-number">4</span>
+                        <!-- Muestra el conteo real de reportes generados -->
+                        <span class="stat-number"><?php echo e($reportesGenerados); ?></span>
                         <span class="stat-label">Reportes generados</span>
                     </div>
+                </div>
                 </div>
             </div>
         </div>
