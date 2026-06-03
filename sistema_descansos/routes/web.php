@@ -25,11 +25,9 @@ use App\Http\Controllers\EmpleadoController;
 // Librerías
 use Dompdf\Dompdf;
 
-/*
-|--------------------------------------------------------------------------
-| RUTAS DE AUTENTICACIÓN
-|--------------------------------------------------------------------------
-*/
+
+// | RUTAS DE AUTENTICACIÓN
+
 Route::get('/', [LoginController::class, 'showLoginForm'])->name('login');
 Route::post('/login', [LoginController::class, 'login'])->name('login.post');
 
@@ -44,13 +42,9 @@ Route::get('/logout', function () {
     session()->forget(['logeado', 'nombre']);
     return redirect()->route('login');
 })->name('logout');
-Route::get('/empleados/vacaciones/pdf-masivo', [EmpleadoController::class, 'pdfAll'])->name('empleados.vacaciones.pdf-masivo');
 
-/*
-|--------------------------------------------------------------------------
-| RUTAS DEL MENÚ PRINCIPAL (SIDEBAR)
-|--------------------------------------------------------------------------
-*/
+
+// | RUTAS DEL MENÚ PRINCIPAL (SIDEBAR)
 
 // 1. Dashboard
 Route::get('/panel', [DashboardController::class, 'index'])->name('panel');
@@ -66,7 +60,6 @@ Route::get('/directorio-empleados', function () {
 
 // 3. Historial de Vacaciones
 Route::get('/historial', function () {
-
     // Si no está logeado, lo regresa al login
     if (! session('logeado')) {
         return redirect()->route('login');
@@ -80,21 +73,17 @@ Route::get('/historial', function () {
     
 })->name('historial');
 
-// 4. Configuración / Ajustes (ACTUALIZADO PARA PROCESAR EL FORMULARIO)
+// 4. Configuración / Ajustes
 Route::get('/configuracion', [SettingsController::class, 'index'])->name('configuracion');
 Route::post('/configuracion/update', [SettingsController::class, 'update'])->name('configuracion.update');
 
-// 5. Mi Perfil (ACTUALIZADO Y CONECTADO CON LOS MODALES)
+// 5. Mi Perfil
 Route::get('/perfil', [ProfileController::class, 'show'])->name('perfil');
 Route::post('/perfil/update', [ProfileController::class, 'update'])->name('perfil.update');
 Route::post('/perfil/password', [ProfileController::class, 'changePassword'])->name('perfil.password');
 
 
-/*
-|--------------------------------------------------------------------------
-| RUTAS DE LÓGICA DE VACACIONES (INTACTAS)
-|--------------------------------------------------------------------------
-*/
+// | RUTAS DE LÓGICA DE VACACIONES
 
 Route::get('/empleados/{empleado}/vacaciones', function (Empleado $empleado) {
     if (! session('logeado')) return redirect()->route('login');
@@ -156,7 +145,6 @@ Route::post('/empleados/{empleado}/vacaciones', function (Request $request, Empl
             ->withInput();
     }
     
-
     $inicio = Carbon::parse($request->fecha_inicio);
     $fin = Carbon::parse($request->fecha_fin);
 
@@ -268,138 +256,58 @@ Route::get('/empleados/{empleado}/vacaciones/pdf', function (Empleado $empleado)
     ]);
 })->name('empleados.vacaciones.pdf');
 
-/*
-|--------------------------------------------------------------------------
-| RUTAS API PARA CRUD DE PERIODOS VACACIONALES
-|--------------------------------------------------------------------------
-*/
 
-// Obtener datos de un periodo (para modal de edición)
-Route::get('/periodos/{periodo}', function (PeriodoVacacional $periodo) {
-    if (!session('logeado')) {
-        return response()->json(['error' => 'No autorizado'], 401);
-    }
+// | RUTAS AJAX PARA EL HISTORIAL DE VACACIONES (MODAL)
+
+Route::get('/periodos/{id}', function ($id) {
+    if (! session('logeado')) return response()->json(['error' => 'No autorizado'], 401);
+    
+    $periodo = PeriodoVacacional::with('empleado')->find($id);
+    if (!$periodo) return response()->json(['error' => 'Periodo no encontrado'], 404);
 
     return response()->json([
         'id' => $periodo->id,
-        'empleado_id' => $periodo->empleado_id,
         'empleado_nombre' => $periodo->empleado ? $periodo->empleado->nombre . ' ' . $periodo->empleado->apellido_paterno : 'N/A',
         'fecha_inicio' => $periodo->fecha_inicio,
         'fecha_fin' => $periodo->fecha_fin,
-        'dias' => $periodo->dias,
-        'anio_calendario' => $periodo->anio_calendario,
+        'dias' => $periodo->dias
     ]);
-})->name('periodos.show');
+});
 
-// Actualizar un periodo
-Route::put('/periodos/{periodo}', function (Request $request, PeriodoVacacional $periodo) {
-    if (!session('logeado')) {
-        return response()->json(['error' => 'No autorizado'], 401);
-    }
+Route::put('/periodos/{id}', function (Request $request, $id) {
+    if (! session('logeado')) return response()->json(['error' => 'No autorizado'], 401);
+
+    $diasNuevos = $request->input('dias') ?? $request->input('days');
+    $request->merge(['dias_unificados' => $diasNuevos]);
 
     $validator = Validator::make($request->all(), [
         'fecha_inicio' => 'required|date',
         'fecha_fin'    => 'required|date|after_or_equal:fecha_inicio',
-        'dias'         => 'required|integer|min:1',
+        'dias_unificados' => 'required|numeric|min:1',
     ]);
 
-    if ($validator->fails()) {
-        return response()->json(['errors' => $validator->errors()], 422);
-    }
+    if ($validator->fails()) return response()->json(['error' => 'Datos inválidos'], 422);
 
     try {
-        DB::transaction(function () use ($request, $periodo) {
-            $inicio = Carbon::parse($request->fecha_inicio);
-            $fin = Carbon::parse($request->fecha_fin);
-            $nuevosDias = $inicio->diffInDays($fin) + 1;
-
-            // Actualizar RegistroDescanso por mes
-            $diasPorMes = [];
-            for ($fecha = $inicio->copy(); $fecha->lte($fin); $fecha->addDay()) {
-                $mes = $fecha->month;
-                $diasPorMes[$mes] = ($diasPorMes[$mes] ?? 0) + 1;
-            }
-
-            // Restar los días antiguos
-            $inicioViejo = Carbon::parse($periodo->fecha_inicio);
-            $finViejo = Carbon::parse($periodo->fecha_fin);
-            for ($fecha = $inicioViejo->copy(); $fecha->lte($finViejo); $fecha->addDay()) {
-                $mes = $fecha->month;
-                $registro = RegistroDescanso::where('empleado_id', $periodo->empleado_id)
-                    ->where('anio_calendario', $periodo->anio_calendario)
-                    ->where('mes', $mes)
-                    ->first();
-                
-                if ($registro) {
-                    $registro->dias_tomados = max(0, $registro->dias_tomados - 1);
-                    if ($registro->dias_tomados === 0) {
-                        $registro->delete();
-                    } else {
-                        $registro->save();
-                    }
-                }
-            }
-
-            // Agregar los días nuevos
-            foreach ($diasPorMes as $mes => $cantidad) {
-                $registro = RegistroDescanso::firstOrNew([
-                    'empleado_id' => $periodo->empleado_id,
-                    'anio_calendario' => $periodo->anio_calendario,
-                    'mes' => $mes,
-                ]);
-                $registro->dias_tomados = ($registro->dias_tomados ?? 0) + $cantidad;
-                $registro->save();
-            }
-
-            // Actualizar el período
-            $periodo->fecha_inicio = $request->fecha_inicio;
-            $periodo->fecha_fin = $request->fecha_fin;
-            $periodo->dias = $nuevosDias;
-            $periodo->fecha_regreso = $fin->copy()->addDay()->toDateString();
-            $periodo->save();
-        });
-
-        return response()->json(['message' => 'Período actualizado correctamente', 'periodo' => $periodo]);
+        $periodo = PeriodoVacacional::findOrFail($id);
+        $periodo->update([
+            'fecha_inicio'  => $request->fecha_inicio,
+            'fecha_fin'     => $request->fecha_fin,
+            'dias'          => $diasNuevos,
+            'fecha_regreso' => Carbon::parse($request->fecha_fin)->addDay()->toDateString()
+        ]);
+        return response()->json(['success' => true, 'mensaje' => 'Período actualizado']);
     } catch (\Exception $e) {
-        return response()->json(['error' => 'Error al actualizar: ' . $e->getMessage()], 500);
+        return response()->json(['error' => 'Error al actualizar'], 500);
     }
-})->name('periodos.update');
+});
 
-// Eliminar un periodo
-Route::delete('/periodos/{periodo}', function (PeriodoVacacional $periodo) {
-    if (!session('logeado')) {
-        return response()->json(['error' => 'No autorizado'], 401);
-    }
-
+Route::delete('/periodos/{id}', function ($id) {
+    if (! session('logeado')) return response()->json(['error' => 'No autorizado'], 401);
     try {
-        DB::transaction(function () use ($periodo) {
-            // Restar los días del RegistroDescanso
-            $inicio = Carbon::parse($periodo->fecha_inicio);
-            $fin = Carbon::parse($periodo->fecha_fin);
-            
-            for ($fecha = $inicio->copy(); $fecha->lte($fin); $fecha->addDay()) {
-                $mes = $fecha->month;
-                $registro = RegistroDescanso::where('empleado_id', $periodo->empleado_id)
-                    ->where('anio_calendario', $periodo->anio_calendario)
-                    ->where('mes', $mes)
-                    ->first();
-                
-                if ($registro) {
-                    $registro->dias_tomados = max(0, $registro->dias_tomados - 1);
-                    if ($registro->dias_tomados === 0) {
-                        $registro->delete();
-                    } else {
-                        $registro->save();
-                    }
-                }
-            }
-
-            // Eliminar el período
-            $periodo->delete();
-        });
-
-        return response()->json(['message' => 'Período eliminado correctamente']);
+        PeriodoVacacional::findOrFail($id)->delete();
+        return response()->json(['success' => true, 'mensaje' => 'Período eliminado']);
     } catch (\Exception $e) {
-        return response()->json(['error' => 'Error al eliminar: ' . $e->getMessage()], 500);
+        return response()->json(['error' => 'Error al eliminar'], 500);
     }
-})->name('periodos.destroy');
+});
