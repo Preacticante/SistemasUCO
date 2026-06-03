@@ -33,7 +33,8 @@
             <tbody>
                 <?php $__currentLoopData = $empleados; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $emp): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                 <tr id="fila-empleado-<?php echo e($emp->id); ?>" style="transition: all 0.4s ease;">
-                    <td class="td-id"><?php echo e($emp->id); ?></td>
+                   
+                    <td><strong><?php echo e($loop->iteration); ?></strong></td>
                     <td class="td-nombre"><?php echo e($emp->nombre); ?> <?php echo e($emp->apellido_paterno); ?> <?php echo e($emp->apellido_materno); ?></td>
                     <td class="td-puesto"><?php echo e($emp->puesto->nombre ?? 'Sin Puesto'); ?></td>
                     <td>

@@ -33,7 +33,8 @@
             <tbody>
                 @foreach($empleados as $emp)
                 <tr id="fila-empleado-{{ $emp->id }}" style="transition: all 0.4s ease;">
-                    <td class="td-id">{{ $emp->id }}</td>
+                   
+                    <td><strong>{{ $loop->iteration }}</strong></td>
                     <td class="td-nombre">{{ $emp->nombre }} {{ $emp->apellido_paterno }} {{ $emp->apellido_materno }}</td>
                     <td class="td-puesto">{{ $emp->puesto->nombre ?? 'Sin Puesto' }}</td>
                     <td>
