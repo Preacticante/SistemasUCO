@@ -5,19 +5,63 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB; 
 use Illuminate\Support\Facades\Hash;
+use App\Models\Usuario;
+use Carbon\Carbon;
 
 class ProfileController extends Controller
 {
     /**
-     * Muestra la vista del perfil
+     * Muestra la vista del perfil unificada con los contadores en tiempo real
      */
     public function show()
     {
+        // 1. Validamos la sesión personalizada
         if (! session('logeado')) {
             return redirect()->route('login');
         }
         
-        return view('perfil');
+        // 2. Buscamos al usuario por correo
+        $usuario = DB::table('usuario')->where('correo', session('email'))->first();
+
+        if (!$usuario) {
+            session()->forget(['logeado', 'user_id', 'nombre', 'email']);
+            return redirect()->route('login');
+        }
+
+        // Extraemos el ID numérico real del objeto (sea ID o id)
+        $idRealUsuario = $usuario->id ?? ($usuario->ID ?? null);
+
+        // ====================================================================
+        // 3. CÁLCULO DE ESTADÍSTICAS PROTEGIDO CONTRA TABLAS INEXISTENTES
+        // ====================================================================
+        
+        // --- Conteo de Empleados ---
+        try {
+            $empleadosACargo = DB::table('empleados')->count(); 
+        } catch (\Exception $e) {
+            $empleadosACargo = 0; 
+        }
+        
+        // --- Suma de Días Gestionados ---
+        try {
+            // Nota: Veo en tu traza que tu tabla se llama 'periodos_vacacionales' y la columna 'dias'
+            $diasGestionados = DB::table('periodos_vacacionales')->sum('dias'); 
+        } catch (\Exception $e) {
+            $diasGestionados = 0; 
+        }
+        
+        // --- Conteo de Reportes ---
+        try {
+            // Buscamos en la tabla usando el ID numérico correcto del usuario
+            $reportesGenerados = DB::table('reportes')
+                                ->where('usuario_id', $idRealUsuario)
+                                ->count();
+        } catch (\Exception $e) {
+            $reportesGenerados = 0; 
+        }
+
+        // 4. Pasamos las variables a la vista 'perfil'
+        return view('perfil', compact('usuario', 'empleadosACargo', 'diasGestionados', 'reportesGenerados'));
     }
 
     /**
@@ -31,61 +75,58 @@ class ProfileController extends Controller
             'email' => 'required|email|max:255',
         ]);
 
-        $correoActual = session('email');
+        $userCorreo = session('user_id') ?? session('email');
 
-        // 2. ACTUALIZACIÓN EN LA BASE DE DATOS
-        // Aquí cambiamos 'email' por 'correo' basándonos en tu base de datos
-       // 2. ACTUALIZACIÓN EN LA BASE DE DATOS
+        // 2. ACTUALIZACIÓN EN LA BASE DE DATOS usando el correo, que es la clave primaria real
         DB::table('usuario')
-            ->where('correo', $correoActual)
+            ->where('correo', $userCorreo)
             ->update([
-                'nombre_completo' => $request->name, // <-- Cambia esto por el nombre exacto de tu BD
+                'nombre_completo' => $request->name, 
                 'correo' => $request->email,
             ]);
 
-        // 3. Guardamos los nuevos datos en la sesión temporal del navegador
+        // 3. Sincronizamos los nuevos datos en la sesión temporal del navegador
         session([
             'nombre' => $request->name,
-            'email'  => $request->email
+            'email'  => $request->email,
+            'user_id' => $request->email,
         ]);
 
         return redirect()->route('perfil')->with('success', '¡Perfil actualizado correctamente en la base de datos!');
     }
 
     /**
-     * Procesa el cambio de contraseña
-     */
-    /**
-     * Procesa el cambio de contraseña
+     * Procesa el cambio de contraseña con validación de seguridad
      */
     public function changePassword(Request $request)
     {
-        // 1. Validamos que los campos vengan llenos y que la nueva contraseña coincida con su confirmación
+        // 1. Validamos campos y confirmación
         $request->validate([
             'current_password' => 'required',
             'new_password'     => 'required|min:6|confirmed', 
         ]);
 
-        $correoActual = session('email');
+        $userCorreo = session('user_id') ?? session('email');
 
-        // 2. Buscamos los datos actuales del usuario en la base de datos
-        $usuario = DB::table('usuario')->where('correo', $correoActual)->first();
+        // 2. Buscamos al usuario por su correo de sesión
+        $usuario = DB::table('usuario')->where('correo', $userCorreo)->first();
+
+        if (! $usuario) {
+            return back()->withErrors(['current_password' => 'No se encontró el usuario en sesión.']);
+        }
 
         // 3. Verificamos que la contraseña actual ingresada coincida con la encriptada en la BD
-        // OJO: Cambia 'contrasena' por 'password' si así se llama en tu base de datos
-        if (!Hash::check($request->current_password, $usuario->contrasena)) {
-            // Si no coincide, lo regresamos con un error
+        if (! Hash::check($request->current_password, $usuario->contrasena)) {
             return back()->withErrors(['current_password' => 'La contraseña actual ingresada es incorrecta.']);
         }
 
-        // 4. Si todo está correcto, actualizamos la base de datos con la nueva contraseña encriptada
+        // 4. Si todo está correcto, actualizamos la contraseña encriptada
         DB::table('usuario')
-            ->where('correo', $correoActual)
+            ->where('correo', $userCorreo)
             ->update([
-                'contrasena' => Hash::make($request->new_password) // <-- Ojo aquí con el nombre de la columna también
+                'contrasena' => Hash::make($request->new_password)
             ]);
 
-        // 5. Regresamos con el mensaje de éxito
         return redirect()->route('perfil')->with('success', '¡Contraseña actualizada por seguridad!');
     }
 }

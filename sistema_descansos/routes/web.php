@@ -37,7 +37,7 @@ Route::get('/reset-password/{token}', [ResetPasswordController::class, 'showRese
 Route::post('/reset-password', [ResetPasswordController::class, 'reset'])->name('password.update');
 
 Route::get('/logout', function () {
-    session()->forget(['logeado', 'nombre']);
+    session()->forget(['logeado', 'user_id', 'nombre', 'email']);
     return redirect()->route('login');
 })->name('logout');
 

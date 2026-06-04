@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use App\Models\Usuario;
+use Carbon\Carbon; // <--- Importamos Carbon para manejar las fechas de forma nativa
 
 class LoginController extends Controller
 {
@@ -30,12 +31,20 @@ class LoginController extends Controller
         }
 
         if (Hash::check($request->contrasena, $usuario->contrasena)) {
+            
+            // ====================================================================
+            // REGISTRO DEL ÚLTIMO ACCESO
+            // Guarda la fecha y hora exacta actual en la base de datos
+            // ====================================================================
+            $usuario->ultimo_acceso = Carbon::now();
+            $usuario->save(); 
+
             // Guardamos las variables clave en la sesión
             session([
                 'logeado' => true, 
-                'user_id' => $usuario->id, // Guardamos el ID numérico real para los queries
+                'user_id' => $usuario->correo, // Guardamos el correo como identificador único
                 'nombre' => $usuario->nombre_completo,
-                'email' => $usuario->correo // <--- Agregado para que tu perfil sea 100% dinámico
+                'email' => $usuario->correo 
             ]);
             
             return redirect()->route('panel');
