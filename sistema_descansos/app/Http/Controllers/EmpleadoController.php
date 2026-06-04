@@ -5,17 +5,36 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
+use App\Models\Puesto;
 
 class EmpleadoController extends Controller
 {
-    public function index() {
-       $empleados = \App\Models\Empleado::with('puesto')
-                    ->whereNull('deleted_at') 
-                    ->get();
+    
+    public function index(Request $request) 
+    {
+        // 1. Capturar el término de búsqueda
+        $buscar = $request->input('buscar');
 
-    $puestos = \App\Models\Puesto::all();
+        // 2. Iniciar la consulta base y conservar el filtro de deleted_at que tenías antes
+        $query = \App\Models\Empleado::with('puesto')->whereNull('deleted_at');
 
-    return view('empleados.index', compact('empleados', 'puestos'));
+        // 3. Si el usuario escribió algo en el buscador, aplicar los filtros con LIKE
+        if (!empty($buscar)) {
+            $query->where(function($q) use ($buscar) {
+                $q->where('nombre', 'LIKE', "%{$buscar}%")
+                  ->orWhere('apellido_paterno', 'LIKE', "%{$buscar}%")
+                  ->orWhere('apellido_materno', 'LIKE', "%{$buscar}%");
+            });
+        }
+
+        // 4. Paginar los resultados automáticamente (10 por página)
+        $empleados = $query->paginate(10);
+
+        // 5. Traer todos los puestos para los Modales
+        $puestos = \App\Models\Puesto::all();
+
+        // 6. Retornar la vista
+        return view('empleados.index', compact('empleados', 'puestos'));
     }
 
     public function show($id) {
@@ -74,14 +93,11 @@ class EmpleadoController extends Controller
         try {
             $empleado = \App\Models\Empleado::find($id);
             if (! $empleado) {
-                // Si es por AJAX devolvemos un JSON de error con código 404
                 return response()->json(['success' => false, 'message' => 'Empleado no encontrado.'], 404);
             }
 
-            // Actualiza de verdad en la base de datos
             $empleado->update($validated);
             
-            // CAMBIO AQUÍ: Retornamos éxito en formato JSON para que JavaScript cierre el modal y actualice la tabla
             return response()->json([
                 'success' => true,
                 'message' => 'Empleado actualizado correctamente.',
@@ -89,7 +105,6 @@ class EmpleadoController extends Controller
             ]);
 
         } catch (\Exception $e) {
-            // Si algo falla, atrapa el error y mándalo al JavaScript sin romper la web
             return response()->json([
                 'success' => false, 
                 'message' => 'No se pudo actualizar el empleado en la base de datos: ' . $e->getMessage()
@@ -98,39 +113,33 @@ class EmpleadoController extends Controller
     }
 
     public function destroy($id) {
-    try {
-        
-        $empleado = \DB::table('empleados')->where('id', $id)->first();
-        
-        if (!$empleado) {
-            return response()->json(['success' => false, 'message' => 'Empleado no encontrado'], 404);
+        try {
+            $empleado = \DB::table('empleados')->where('id', $id)->first();
+            
+            if (!$empleado) {
+                return response()->json(['success' => false, 'message' => 'Empleado no encontrado'], 404);
+            }
+            
+            \DB::table('empleados')
+                ->where('id', $id)
+                ->update([
+                    'deleted_at' => \Carbon\Carbon::now()
+                ]);
+            
+            return response()->json(['success' => true]);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
         }
-        
-        
-        \DB::table('empleados')
-            ->where('id', $id)
-            ->update([
-                'deleted_at' => \Carbon\Carbon::now()
-            ]);
-        
-        return response()->json(['success' => true]);
-    } catch (\Exception $e) {
-        return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
     }
-}
 
     /**
      * Genera el reporte PDF masivo de vacaciones de todos los empleados
      */
     public function pdfAll(Request $request)
     {
-      // 1. Obtener el año seleccionado desde el formulario (por defecto el año actual)
         $anio = $request->query('anio', \Carbon\Carbon::now()->year);
-
-        // 2. Traer todos los empleados junto con sus puestos asignados
         $empleados = \App\Models\Empleado::with('puesto')->get();
 
-        // 3. Arreglo con los nombres de los meses para las cabeceras de las columnas del PDF
         $meses = [
             1 => 'Ene', 2 => 'Feb', 3 => 'Mar', 4 => 'Abr', 
             5 => 'May', 6 => 'Jun', 7 => 'Jul', 8 => 'Ago', 
@@ -140,7 +149,6 @@ class EmpleadoController extends Controller
         $rows = [];
 
         foreach ($empleados as $emp) {
-            // Validar que exista la fecha de ingreso antes de calcular
             if (!$emp->fecha_ingreso) {
                 continue; 
             }
@@ -148,28 +156,23 @@ class EmpleadoController extends Controller
             $fechaIngreso = \Carbon\Carbon::parse($emp->fecha_ingreso);
             $fechaCierreAnio = \Carbon\Carbon::createFromDate($anio, 12, 31);
             
-            // Antigüedad calculada en años cumplidos al cierre del año seleccionado
             $antiguedad = (int) $fechaIngreso->diffInYears($fechaCierreAnio);
             if ($antiguedad < 1) {
-                $antiguedad = 1; // Ajuste mínimo de base legal si está en su primer año
+                $antiguedad = 1;
             }
 
-            // !!! CONEXIÓN CON TU TABLA DE LEY (Muestra los días de derecho correspondientes) !!!
             $ley = \DB::table('ley_vacaciones')
                         ->where('anios_antiguedad', '<=', $antiguedad)
                         ->orderBy('anios_antiguedad', 'desc')
                         ->first();
 
-            // Si encuentra el registro en tu tabla usa la columna 'dias_derecho', si no, asigna 0 por defecto
             $diasDerecho = $ley ? $ley->dias_derecho : 0;
 
-            // 4. Obtener el desglose mensual del empleado filtrando por la columna 'fecha_inicio'
             $descansos = \DB::table('periodos_vacacionales') 
                         ->where('empleado_id', $emp->id)
                         ->whereYear('fecha_inicio', $anio)
                         ->get();
 
-            // Construir el desglose del mes 1 al 12
             $registroPorMes = [];
             for ($m = 1; $m <= 12; $m++) {
                 $sumaMes = $descansos->filter(function($item) use ($m) {
@@ -179,16 +182,13 @@ class EmpleadoController extends Controller
                 $registroPorMes[$m] = $sumaMes > 0 ? $sumaMes : 0;
             }
 
-            // 5. Calcular días totales tomados usando tus columnas reales 'dias' y 'anio_calendario'
             $diasTomados = \DB::table('periodos_vacacionales')
                         ->where('empleado_id', $emp->id)
                         ->where('anio_calendario', $anio)
                         ->sum('dias') ?? 0;
 
-            // 6. Calcular días restantes (Derecho por antigüedad menos Tomados)
             $diasRestantes = $diasDerecho - $diasTomados;
 
-            // Guardar en la estructura exacta que lee tu archivo Blade
             $rows[] = [
                 'empleado'       => $emp,
                 'antiguedad'     => $antiguedad,
@@ -199,7 +199,6 @@ class EmpleadoController extends Controller
             ];
         }
 
-        // 7. Renderizar la vista PDF masivo aplicando orientación horizontal (landscape)
         $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('empleados.vacaciones_all_pdf', [
             'rows'  => $rows,
             'anio'  => $anio,
