@@ -3,7 +3,6 @@
 @section('title', 'Historial')
 @section('header', 'Directorio de vacaciones')
 
-
 @section('content')
     <div class="panel-principal-header">
         <h2>Historial de Vacaciones</h2>
@@ -11,9 +10,18 @@
     </div>
 
     <div class="table-card-container">
-        <div class="table-card-header">
-            Empleados con menos días restantes
+        <div class="table-card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;">
+            <span><i class="fas fa-list-ul"></i> Registro de Solicitudes</span>
+            
+            <form action="{{ route('historial') }}" method="GET" class="search-form">
+                <input type="text" name="buscar" value="{{ request('buscar') }}" placeholder="Buscar empleado..." class="search-input">
+                <button type="submit" class="btn-search" title="Buscar"><i class="fas fa-search"></i></button>
+                @if(request('buscar'))
+                    <a href="{{ route('historial') }}" class="btn-clear-search" title="Limpiar búsqueda"><i class="fas fa-times"></i></a>
+                @endif
+            </form>
         </div>
+
         <div style="overflow-x: auto;">
             <table class="responsive-table-v2">
                 <thead>
@@ -62,25 +70,35 @@
                                         <i class="fas fa-lock"></i> Completado
                                     </button>
                                 @else
-                                    <button type="button" class="btn-action-edit" onclick="openEditModal({{ $periodo->id }})">
+                                    <button type="button" class="btn-action-edit" onclick="openEditModal({{ $periodo->id }}, {{ $empleado?->id }})">
                                         <i class="fas fa-pencil"></i> Editar
                                     </button>
                                     <button type="button" class="btn-action-delete" onclick="deletePeriodo({{ $periodo->id }})">
                                         <i class="fas fa-trash"></i> Eliminar
                                     </button>
+                                    <a href="/empleados/{{ $empleado?->id }}/vacaciones/pdf" target="_blank" class="btn-action-pdf" title="Descargar comprobante">
+                                        <i class="fas fa-file-pdf"></i> PDF
+                                    </a>
                                 @endif
                             </td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="7" style="text-align:center; padding: 25px 0; color: #5e7087;">
-                                No existen solicitudes de periodos vacacionales en el sistema.
+                            <td colspan="7" style="text-align:center; padding: 40px 0; color: #5e7087;">
+                                <i class="fas fa-folder-open" style="font-size: 2.5rem; color: #cbd5e1; margin-bottom: 15px; display: block;"></i>
+                                No se encontraron registros de vacaciones en el sistema.
                             </td>
                         </tr>
                     @endforelse
                 </tbody>
             </table>
         </div>
+
+        @if($periodosVacacionales->hasPages())
+            <div class="pagination-container">
+                {{ $periodosVacacionales->links('pagination::bootstrap-4') }}
+            </div>
+        @endif
     </div>
 
     <style>
@@ -102,11 +120,11 @@
             left: 0;
             width: 100%;
             height: 4px;
-            background-color: #a87e3b; /* Remate inferior dorado */
+            background-color: #a87e3b; 
         }
         .panel-principal-header h2 {
             margin: 0 0 8px 0;
-            color: #2b0b4d; /* Tipografía Morada Corporativa */
+            color: #2b0b4d; 
             font-size: 1.8rem;
             font-weight: 700;
         }
@@ -116,7 +134,7 @@
             font-size: 0.95rem;
         }
 
-        /* Envoltorio con bordes redondeados para simular tarjetas corporativas */
+        /* Envoltorio de la tabla */
         .table-card-container {
             background: #ffffff;
             border-radius: 24px;
@@ -136,6 +154,86 @@
             letter-spacing: 0.3px;
         }
 
+        /* BUSCADOR ESTILOS */
+        .search-form {
+            display: flex;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50px;
+            padding: 4px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+        .search-input {
+            border: none;
+            background: transparent;
+            color: white;
+            padding: 6px 12px;
+            outline: none;
+            width: 220px;
+            font-size: 0.95rem;
+        }
+        .search-input::placeholder {
+            color: rgba(255, 255, 255, 0.7);
+        }
+        .btn-search, .btn-clear-search {
+            background: #a87e3b;
+            color: white;
+            border: none;
+            border-radius: 50px;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: 0.2s;
+            text-decoration: none;
+        }
+        .btn-search:hover { background: #916b30; }
+        .btn-clear-search { background: #dc2626; margin-left: 5px; }
+        .btn-clear-search:hover { background: #b91c1c; }
+
+        /* PAGINACIÓN ESTILOS */
+        .pagination-container {
+            padding: 20px;
+            display: flex;
+            justify-content: flex-end;
+            border-top: 1px solid #f8fafc;
+            background-color: #ffffff;
+        }
+        .pagination-container nav ul {
+            display: flex;
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            gap: 5px;
+        }
+        .pagination-container nav ul li.page-item .page-link, 
+        .pagination-container nav ul li.page-item span {
+            padding: 8px 14px;
+            border-radius: 6px;
+            border: 1px solid #e2e8f0;
+            color: #124416;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            background-color: white;
+        }
+        .pagination-container nav ul li.page-item .page-link:hover {
+            background-color: #f8fafc;
+            border-color: #cbd5e1;
+        }
+        .pagination-container nav ul li.page-item.active span.page-link {
+            background-color: #124416;
+            color: white;
+            border-color: #124416;
+        }
+        .pagination-container nav ul li.page-item.disabled span.page-link {
+            color: #94a3b8;
+            background-color: #f8fafc;
+        }
+
         /* Estructura general de la tabla */
         .responsive-table-v2 {
             width: 100%;
@@ -149,7 +247,7 @@
         }
         .responsive-table-v2 th {
             padding: 16px 24px;
-            color: #124416; /* Encabezados de columnas color morado */
+            color: #124416; 
             text-align: left;
             font-size: 0.85rem;
             font-weight: 700;
@@ -164,35 +262,9 @@
             border-bottom: none;
         }
 
-        /* Estilos aplicados a los textos de las celdas */
-        .text-employee-name {
-            color: #334155;
-            font-weight: 600;
-        }
-        .text-danger-bold {
-            color: #ef4444; 
-            font-weight: 700;
-        }
-        .text-muted-days {
-            color: #8293a6; 
-            font-weight: 700;
-        }
-
-        /* Botón de acción Ovalado café claro / dorado */
-        .btn-action-ver {
-            display: inline-block;
-            background-color: #a87e3b;
-            color: white;
-            text-decoration: none;
-            padding: 6px 28px;
-            border-radius: 50px;
-            font-size: 0.85rem;
-            font-weight: 600;
-            transition: background-color 0.2s;
-        }
-        .btn-action-ver:hover {
-            background-color: #916b30;
-        }
+        .text-employee-name { color: #334155; font-weight: 600; }
+        .text-danger-bold { color: #ef4444; font-weight: 700; }
+        .text-muted-days { color: #8293a6; font-weight: 700; }
 
         /* Badges e indicadores visuales de estado */
         .badge {
@@ -202,18 +274,11 @@
             font-weight: 500;
             display: inline-block;
         }
-        .badge-success {
-            background-color: #dcfce7;
-            color: #15803d;
-        }
-        .badge-info {
-            background-color: #e0f2fe;
-            color: #0369a1;
-        }
+        .badge-success { background-color: #dcfce7; color: #15803d; }
+        .badge-info { background-color: #e0f2fe; color: #0369a1; }
 
-        /* Estilos para botones de editar y eliminar */
-        .btn-action-edit,
-        .btn-action-delete {
+        /* Estilos para botones de acciones */
+        .btn-action-edit, .btn-action-delete, .btn-action-pdf {
             border: none;
             cursor: pointer;
             padding: 6px 14px;
@@ -228,25 +293,15 @@
             text-decoration: none;
         }
 
-        .btn-action-edit {
-            background-color: #124416;
-        }
+        .btn-action-edit { background-color: #124416; }
+        .btn-action-edit:hover:not(:disabled) { background-color: #0d2e10; transform: translateY(-2px); }
 
-        .btn-action-edit:hover:not(:disabled) {
-            background-color: #0d2e10;
-            transform: translateY(-2px);
-        }
+        .btn-action-delete { background-color: #dc2626; }
+        .btn-action-delete:hover { background-color: #b91c1c; transform: translateY(-2px); }
 
-        .btn-action-delete {
-            background-color: #dc2626;
-        }
+        .btn-action-pdf { background-color: #a87e3b; }
+        .btn-action-pdf:hover { background-color: #8c6827; transform: translateY(-2px); }
 
-        .btn-action-delete:hover {
-            background-color: #b91c1c;
-            transform: translateY(-2px);
-        }
-
-        /* Botón deshabilitado */
         .btn-disabled {
             background-color: #cbd5e1 !important;
             color: #64748b !important;
@@ -268,11 +323,7 @@
             align-items: center;
             justify-content: center;
         }
-
-        .modal-edit.show {
-            display: flex;
-        }
-
+        .modal-edit.show { display: flex; }
         .modal-edit-content {
             background-color: white;
             padding: 30px;
@@ -281,25 +332,9 @@
             max-width: 500px;
             box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
         }
-
-        .modal-edit-content h3 {
-            margin-top: 0;
-            color: #124416;
-            font-size: 1.3rem;
-        }
-
-        .modal-edit-content .form-group {
-            margin-bottom: 15px;
-        }
-
-        .modal-edit-content label {
-            display: block;
-            margin-bottom: 5px;
-            color: #334155;
-            font-weight: 600;
-            font-size: 0.9rem;
-        }
-
+        .modal-edit-content h3 { margin-top: 0; color: #124416; font-size: 1.3rem; }
+        .modal-edit-content .form-group { margin-bottom: 15px; }
+        .modal-edit-content label { display: block; margin-bottom: 5px; color: #334155; font-weight: 600; font-size: 0.9rem; }
         .modal-edit-content input {
             width: 100%;
             padding: 10px;
@@ -308,20 +343,8 @@
             font-size: 0.95rem;
             box-sizing: border-box;
         }
-
-        .modal-edit-content input:focus {
-            outline: none;
-            border-color: #124416;
-            box-shadow: 0 0 0 3px rgba(18, 68, 22, 0.1);
-        }
-
-        .modal-edit-buttons {
-            display: flex;
-            gap: 10px;
-            justify-content: flex-end;
-            margin-top: 20px;
-        }
-
+        .modal-edit-content input:focus { outline: none; border-color: #124416; box-shadow: 0 0 0 3px rgba(18, 68, 22, 0.1); }
+        .modal-edit-buttons { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; }
         .modal-edit-buttons button {
             padding: 10px 20px;
             border: none;
@@ -331,24 +354,10 @@
             cursor: pointer;
             transition: all 0.2s;
         }
-
-        .btn-save {
-            background-color: #124416;
-            color: white;
-        }
-
-        .btn-save:hover {
-            background-color: #0d2e10;
-        }
-
-        .btn-cancel {
-            background-color: #e2e8f0;
-            color: #334155;
-        }
-
-        .btn-cancel:hover {
-            background-color: #cbd5e1;
-        }
+        .btn-save { background-color: #124416; color: white; }
+        .btn-save:hover { background-color: #0d2e10; }
+        .btn-cancel { background-color: #e2e8f0; color: #334155; }
+        .btn-cancel:hover { background-color: #cbd5e1; }
     </style>
 
     <div id="editModal" class="modal-edit">
@@ -368,10 +377,6 @@
                     <label for="editFechaFin">Fecha Fin:</label>
                     <input type="date" id="editFechaFin" required>
                 </div>
-                <div class="form-group">
-                    <label for="editDias">Días:</label>
-                    <input type="number" id="editDias" min="1" required>
-                </div>
                 <div class="modal-edit-buttons">
                     <button type="button" class="btn-cancel" onclick="closeEditModal()">Cancelar</button>
                     <button type="button" class="btn-save" onclick="guardarEdicion()">Guardar</button>
@@ -383,11 +388,13 @@
 
 @push('scripts')
 <script>
-    let csrfTokenHist = document.querySelector('meta[name="csrf-token"]')?.content || '';
+    let csrfTokenHist = "{{ csrf_token() }}";
     let periodoEnEdicion = null;
+    let empleadoEnEdicion = null; 
 
-    function openEditModal(id) {
+    function openEditModal(id, empleadoId) {
         periodoEnEdicion = id;
+        empleadoEnEdicion = empleadoId; 
         
         fetch(`/periodos/${id}`)
             .then(response => {
@@ -395,20 +402,19 @@
                 return response.json();
             })
             .then(data => {
-                // Validación de seguridad en Frontend: comprobar si la fecha fin ya pasó
                 const fechaFinPeriodo = new Date(data.fecha_fin + 'T23:59:59');
                 const hoy = new Date();
 
                 if (fechaFinPeriodo < hoy) {
                     alert('Este período vacacional ya concluyó y no puede modificarse.');
                     periodoEnEdicion = null;
+                    empleadoEnEdicion = null;
                     return;
                 }
 
                 document.getElementById('editEmpleado').value = data.empleado_nombre || 'N/A';
                 document.getElementById('editFechaInicio').value = data.fecha_inicio;
                 document.getElementById('editFechaFin').value = data.fecha_fin;
-                document.getElementById('editDias').value = data.dias;
                 document.getElementById('editModal').classList.add('show');
             })
             .catch(error => {
@@ -420,6 +426,7 @@
     function closeEditModal() {
         document.getElementById('editModal').classList.remove('show');
         periodoEnEdicion = null;
+        empleadoEnEdicion = null;
     }
 
     function guardarEdicion() {
@@ -427,20 +434,28 @@
 
         const fechaInicio = document.getElementById('editFechaInicio').value;
         const fechaFin = document.getElementById('editFechaFin').value;
-        const dias = parseInt(document.getElementById('editDias').value);
 
-        if (!fechaInicio || !fechaFin || !dias) {
-            alert('Por favor completa todos los campos');
+        // VALIDACIÓN FRONTEND: Que las fechas estén llenas
+        if (!fechaInicio || !fechaFin) {
+            alert('Por favor completa las fechas de inicio y fin.');
             return;
         }
 
-        // Doble verificación antes de enviar el formulario por AJAX
+        const fechaInicioObj = new Date(fechaInicio + 'T00:00:00');
         const fechaFinObj = new Date(fechaFin + 'T23:59:59');
+        
+        // VALIDACIÓN FRONTEND: Fecha lógica
+        if (fechaFinObj < fechaInicioObj) {
+            alert('La fecha de fin no puede ser anterior a la fecha de inicio.');
+            return;
+        }
+
         if (fechaFinObj < new Date()) {
             alert('No puedes guardar un período con fechas que marquen el estatus como "Tomado".');
             return;
         }
 
+        // Fíjate que ya NO mandamos la variable "dias", el servidor lo hará por nosotros
         fetch(`/periodos/${periodoEnEdicion}`, {
             method: 'PUT',
             headers: {
@@ -449,28 +464,27 @@
             },
             body: JSON.stringify({
                 fecha_inicio: fechaInicio,
-                fecha_fin: fechaFin,
-                days: dias
+                fecha_fin: fechaFin
             })
         })
-        .then(response => {
-            if (!response.ok) throw new Error('Error updating periodo');
-            return response.json();
+        .then(async response => {
+            const data = await response.json();
+            if (!response.ok) throw new Error(data.error || 'Error del servidor');
+            return data;
         })
         .then(data => {
-            alert('Período actualizado correctamente');
+            alert('¡Período vacacional recalculado y modificado correctamente!');
             closeEditModal();
-            location.reload();
+            location.reload(); 
         })
         .catch(error => {
             console.error('Error:', error);
-            alert('Error al actualizar el período');
+            alert('Error al guardar: ' + error.message);
         });
     }
 
     function deletePeriodo(id) {
-        // En tu controlador o backend también es altamente recomendable bloquear la petición DELETE si el ID pertenece a un registro pasado.
-        if (!confirm('¿Estás seguro de que deseas eliminar este período vacacional?')) {
+        if (!confirm('¿Estás seguro de que deseas eliminar este período vacacional y restaurar los días al empleado?')) {
             return;
         }
 
@@ -480,24 +494,23 @@
                 'X-CSRF-TOKEN': csrfTokenHist
             }
         })
-        .then(response => {
-            if (!response.ok) throw new Error('Error deleting periodo');
-            return response.json();
+        .then(async response => {
+            const data = await response.json();
+            if (!response.ok) throw new Error(data.error || 'Error del servidor');
+            return data;
         })
         .then(data => {
-            alert('Período eliminado correctamente');
+            alert('Período eliminado correctamente. Los días se han restaurado.');
             location.reload();
         })
         .catch(error => {
             console.error('Error:', error);
-            alert('Error al eliminar el período');
+            alert('Error al eliminar: ' + error.message);
         });
     }
 
     document.getElementById('editModal').addEventListener('click', function(e) {
-        if (e.target === this) {
-            closeEditModal();
-        }
+        if (e.target === this) closeEditModal();
     });
 </script>
 @endpush

@@ -171,11 +171,7 @@
                         <i class="fa-solid fa-calendar-check"></i> Historial de Vacaciones
                     </a>
                 </li>
-                <li>
-                    <a href="<?php echo e(route('configuracion')); ?>" class="<?php echo e(request()->routeIs('configuracion') ? 'active' : ''); ?>">
-                        <i class="fa-solid fa-gear"></i> Configuración
-                    </a>
-                </li>
+                
                 <li>
                     <a href="<?php echo e(route('perfil')); ?>" class="<?php echo e(request()->routeIs('perfil') ? 'active' : ''); ?>">
                         <i class="fa-solid fa-user"></i> Mi Perfil
