@@ -235,8 +235,8 @@
     <div class="profile-card">
         <div class="avatar-section">
             @php
-                $nombre = $usuario->nombre ?? ($usuario->Nombre ?? session('nombre', 'Administrador'));;
-                $inicial = substr($nombre, 0, 1);
+                $nombre = $usuario->nombre_completo ?? $usuario->nombre ?? ($usuario->Nombre ?? session('nombre', 'Administrador'));
+                $inicial = $nombre ? substr($nombre, 0, 1) : 'A';
             @endphp
             <div class="avatar-circle">{{ $inicial }}</div>
             <h2 class="user-name">{{ $nombre }}</h2>
@@ -246,12 +246,18 @@
         <div class="info-body">
             <div class="info-group">
                 <div class="info-label">ID de Acceso</div>
-                <div class="info-value">#UCO-2025-001</div>
+                <div class="info-value">{{ $usuario->id_acceso ?? ($usuario->idAcceso ?? '—') }}</div>
             </div>
 
             <div class="info-group">
                 <div class="info-label">Estado de Cuenta</div>
-                <div class="info-value"><span style="color: #124416; font-weight: bold;">● Activa</span></div>
+                <div class="info-value">
+                    @if(isset($usuario->activo))
+                        <span style="color: #124416; font-weight: bold;">● {{ $usuario->activo ? 'Activa' : 'Inactiva' }}</span>
+                    @else
+                        <span style="color: #124416; font-weight: bold;">● Activa</span>
+                    @endif
+                </div>
             </div>
 
             <button type="button" onclick="abrirModalPassword()" class="btn-profile btn-primary">
@@ -273,19 +279,19 @@
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px;">
                     <div class="info-group">
                         <div class="info-label">Nombre Completo</div>
-                        <div class="info-value" id="perfil-nombre-visto">{{ session('nombre', 'Administrador') }}</div>
+                        <div class="info-value" id="perfil-nombre-visto">{{ $usuario->nombre_completo ?? $usuario->nombre ?? ($usuario->Nombre ?? session('nombre', 'Administrador')) }}</div>
                     </div>
                     <div class="info-group">
                         <div class="info-label">Correo Electrónico</div>
-                        <div class="info-value" id="perfil-correo-visto">{{ session('email', 'admin@preparatoria.edu') }}</div>
+                        <div class="info-value" id="perfil-correo-visto">{{ $usuario->correo ?? ($usuario->Correo ?? session('email', 'admin@preparatoria.edu')) }}</div>
                     </div>
                     <div class="info-group">
                         <div class="info-label">Departamento</div>
-                        <div class="info-value">Administración Educativa</div>
+                        <div class="info-value">{{ $usuario->departamento ?? 'Administración Educativa' }}</div>
                     </div>
                     <div class="info-group">
                         <div class="info-label">Fecha de Alta</div>
-                        <div class="info-value">15 de Enero, 2024</div>
+                        <div class="info-value">{{ isset($usuario->fecha_alta) ? \Carbon\Carbon::parse($usuario->fecha_alta)->translatedFormat('j \d\e F, Y') : '—' }}</div>
                     </div>
                 </div>
             </div>
@@ -309,7 +315,7 @@
                         <span class="stat-label">Días gestionados</span>
                     </div>
                     <div class="stat-box">
-                        <span class="stat-number">Hoy</span>
+                        <span class="stat-number">{{ isset($usuario->ultimo_acceso) ? \Carbon\Carbon::parse($usuario->ultimo_acceso)->diffForHumans() : '—' }}</span>
                         <span class="stat-label">Último acceso</span>
                     </div>
                     <div class="stat-box">
@@ -318,14 +324,13 @@
                         <span class="stat-label">Reportes generados</span>
                     </div>
                 </div>
-                </div>
             </div>
         </div>
     </div>
 </div>
 
 <!-- ============================================== -->
-<!-- MODAL 1: CAMBIAR CONTRASEÑA (BLINDADO) -->
+<!-- MODAL 1: CAMBIAR CONTRASEÑA -->
 <!-- ============================================== -->
 <div id="modalPassword" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center; backdrop-filter: blur(4px);">
     <div style="background: white; width: 100%; max-width: 450px; padding: 30px; border-radius: 16px; box-shadow: 0 20px 40px rgba(0,0,0,0.2); position: relative; margin: 20px;">
@@ -355,7 +360,7 @@
 </div>
 
 <!-- ============================================== -->
-<!-- MODAL 2: EDITAR INFORMACIÓN (BLINDADO) -->
+<!-- MODAL 2: EDITAR INFORMACIÓN -->
 <!-- ============================================== -->
 <div id="modalEditar" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center; backdrop-filter: blur(4px);">
     <div style="background: white; width: 100%; max-width: 450px; padding: 30px; border-radius: 16px; box-shadow: 0 20px 40px rgba(0,0,0,0.2); position: relative; margin: 20px;">
@@ -366,11 +371,11 @@
             @csrf
             <div style="margin-bottom: 15px;">
                 <label style="color: #475569; font-weight: 600; font-size: 0.9rem;">Nombre Completo</label>
-                <input type="text" name="name" id="input-edit-nombre" required class="modal-input">
+                <input type="text" name="name" id="input-edit-nombre" required class="modal-input" value="{{ old('name', $usuario->nombre_completo ?? $usuario->nombre ?? '') }}">
             </div>
             <div style="margin-bottom: 25px;">
                 <label style="color: #475569; font-weight: 600; font-size: 0.9rem;">Correo Electrónico</label>
-                <input type="email" name="email" id="input-edit-correo" required class="modal-input">
+                <input type="email" name="email" id="input-edit-correo" required class="modal-input" value="{{ old('email', $usuario->correo ?? '') }}">
             </div>
             <div style="display: flex; justify-content: flex-end; gap: 10px;">
                 <button type="button" onclick="cerrarModalEditar()" style="background: #e2e8f0; color: #475569; border: none; padding: 10px 20px; border-radius: 20px; font-weight: 600; cursor: pointer;">Cancelar</button>
