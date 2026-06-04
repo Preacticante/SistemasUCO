@@ -196,6 +196,8 @@
         
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    
     <?php echo $__env->yieldPushContent('scripts'); ?>
 </body>
 </html><?php /**PATH /var/www/html/resources/views/layouts/app.blade.php ENDPATH**/ ?>

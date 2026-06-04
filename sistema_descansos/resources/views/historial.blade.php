@@ -71,10 +71,10 @@
                                     </button>
                                 @else
                                     <button type="button" class="btn-action-edit" onclick="openEditModal({{ $periodo->id }}, {{ $empleado?->id }})">
-                                        <i class="fas fa-pencil"></i> Editar
+                                        <i class="fas fa-pencil"></i> 
                                     </button>
                                     <button type="button" class="btn-action-delete" onclick="deletePeriodo({{ $periodo->id }})">
-                                        <i class="fas fa-trash"></i> Eliminar
+                                        <i class="fas fa-trash"></i> 
                                     </button>
                                     <a href="/empleados/{{ $empleado?->id }}/vacaciones/pdf" target="_blank" class="btn-action-pdf" title="Descargar comprobante">
                                         <i class="fas fa-file-pdf"></i> PDF
@@ -482,33 +482,50 @@
             alert('Error al guardar: ' + error.message);
         });
     }
-
-    function deletePeriodo(id) {
-        if (!confirm('¿Estás seguro de que deseas eliminar este período vacacional y restaurar los días al empleado?')) {
-            return;
-        }
-
-        fetch(`/periodos/${id}`, {
-            method: 'DELETE',
-            headers: {
-                'X-CSRF-TOKEN': csrfTokenHist
+function deletePeriodo(id) {
+        // Alerta moderna de confirmación con SweetAlert2
+        Swal.fire({
+            title: '¿Estás seguro?',
+            text: "Esta acción eliminará la solicitud y restaurará los días al balance del empleado.",
+            icon: 'warning',
+            borderRadius: '25px',
+            showCancelButton: true,
+            confirmButtonColor: '#dc2626',
+            cancelButtonColor: '#e2e8f0',
+            confirmButtonText: 'Sí, eliminar',
+            cancelButtonText: '<span style="color:#334155">Cancelar</span>'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                // Si el usuario confirma, hacemos la petición a tu servidor
+                fetch(`/periodos/${id}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'X-CSRF-TOKEN': csrfTokenHist
+                    }
+                })
+                .then(async response => {
+                    const data = await response.json();
+                    if (!response.ok) throw new Error(data.error || 'Error del servidor');
+                    return data;
+                })
+                .then(data => {
+                    // Alerta de éxito moderna
+                    Swal.fire({
+                        title: '¡Eliminado!',
+                        text: 'Los días se han restaurado correctamente.',
+                        icon: 'success',
+                        confirmButtonColor: '#124416'
+                    }).then(() => {
+                        location.reload();
+                    });
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    Swal.fire('Error', 'No se pudo eliminar: ' + error.message, 'error');
+                });
             }
-        })
-        .then(async response => {
-            const data = await response.json();
-            if (!response.ok) throw new Error(data.error || 'Error del servidor');
-            return data;
-        })
-        .then(data => {
-            alert('Período eliminado correctamente. Los días se han restaurado.');
-            location.reload();
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            alert('Error al eliminar: ' + error.message);
         });
     }
-
     document.getElementById('editModal').addEventListener('click', function(e) {
         if (e.target === this) closeEditModal();
     });
