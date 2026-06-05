@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Barryvdh\DomPDF\Facade\Pdf;
-use Carbon\Carbon;
+use Illuminate\Support\Carbon;
 use App\Models\Puesto;
 
 class EmpleadoController extends Controller
@@ -12,13 +12,19 @@ class EmpleadoController extends Controller
     
     public function index(Request $request) 
     {
-        // 1. Capturar el término de búsqueda
+        // Verificación de seguridad básica
+        if (! session('logeado')) return redirect()->route('login');
+
+        // 1. Capturar el término de búsqueda y el ID del administrador logeado
         $buscar = $request->input('buscar');
+        $usuarioId = session('user_id');
 
-        // 2. Iniciar la consulta base y conservar el filtro de deleted_at que tenías antes
-        $query = \App\Models\Empleado::with('puesto')->whereNull('deleted_at');
+        // 2. Iniciar la consulta base FILTRANDO ÚNICAMENTE los empleados de este usuario
+        $query = \App\Models\Empleado::with('puesto')
+            ->where('usuario_id', $usuarioId) // <-- PRIVACIDAD DE DATOS
+            ->whereNull('deleted_at');
 
-        // 3. Si el usuario escribió algo en el buscador, aplicar los filtros con LIKE
+        // 3. Si el usuario escribió algo en el buscador, aplicar los filtros con LIKE dentro de su grupo
         if (!empty($buscar)) {
             $query->where(function($q) use ($buscar) {
                 $q->where('nombre', 'LIKE', "%{$buscar}%")
@@ -27,7 +33,7 @@ class EmpleadoController extends Controller
             });
         }
 
-        // 4. Paginar los resultados automáticamente (10 por página)
+        // 4. Paginar los resultados automáticamente (10 por página del subgrupo)
         $empleados = $query->paginate(10);
 
         // 5. Traer todos los puestos para los Modales
@@ -46,6 +52,9 @@ class EmpleadoController extends Controller
     }
 
     public function store(Request $request) {
+        // Verificación de seguridad
+        if (! session('logeado')) return redirect()->route('login');
+
         $validated = $request->validate([
             'nombre' => 'required|string|max:191',
             'apellido_paterno' => 'required|string|max:191',
@@ -61,6 +70,9 @@ class EmpleadoController extends Controller
         ]);
 
         try {
+            // Asignamos automáticamente el ID del usuario en sesión como dueño del registro
+            $validated['usuario_id'] = session('user_id'); // <-- SE VINCULA AL ADMINISTRADOR QUE LO CREÓ
+
             \App\Models\Empleado::create($validated);
             return redirect()->route('empleados.index')->with('success', 'Empleado creado correctamente.');
         } catch (\Exception $e) {
@@ -91,9 +103,12 @@ class EmpleadoController extends Controller
         ]);
 
         try {
-            $empleado = \App\Models\Empleado::find($id);
+            $usuarioId = session('user_id');
+            // Buscamos al empleado asegurándonos de que pertenezca al usuario logeado
+            $empleado = \App\Models\Empleado::where('id', $id)->where('usuario_id', $usuarioId)->first();
+            
             if (! $empleado) {
-                return response()->json(['success' => false, 'message' => 'Empleado no encontrado.'], 404);
+                return response()->json(['success' => false, 'message' => 'Empleado no encontrado o no tienes permisos.'], 404);
             }
 
             $empleado->update($validated);
@@ -114,10 +129,13 @@ class EmpleadoController extends Controller
 
     public function destroy($id) {
         try {
-            $empleado = \DB::table('empleados')->where('id', $id)->first();
+            $usuarioId = session('user_id');
+            
+            // Verificamos que pertenezca al usuario antes de borrar
+            $empleado = \DB::table('empleados')->where('id', $id)->where('usuario_id', $usuarioId)->first();
             
             if (!$empleado) {
-                return response()->json(['success' => false, 'message' => 'Empleado no encontrado'], 404);
+                return response()->json(['success' => false, 'message' => 'Empleado no encontrado o sin autorización.'], 404);
             }
             
             \DB::table('empleados')
@@ -133,12 +151,20 @@ class EmpleadoController extends Controller
     }
 
     /**
-     * Genera el reporte PDF masivo de vacaciones de todos los empleados
+     * Genera el reporte PDF masivo de vacaciones EXCLUSIVO de los empleados del usuario logeado
      */
     public function pdfAll(Request $request)
     {
+        if (! session('logeado')) return redirect()->route('login');
+
         $anio = $request->query('anio', \Carbon\Carbon::now()->year);
-        $empleados = \App\Models\Empleado::with('puesto')->get();
+        $usuarioId = session('user_id');
+
+        // TRAE SOLO los empleados bajo la responsabilidad de este usuario activo
+        $empleados = \App\Models\Empleado::with('puesto')
+            ->where('usuario_id', $usuarioId) // <-- EL PDF SOLO SE CREA CON SUS EMPLEADOS
+            ->whereNull('deleted_at')
+            ->get();
 
         $meses = [
             1 => 'Ene', 2 => 'Feb', 3 => 'Mar', 4 => 'Abr', 

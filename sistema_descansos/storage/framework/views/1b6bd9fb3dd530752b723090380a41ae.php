@@ -24,10 +24,10 @@
             min-height: 100vh;
         }
 
-        /* --- Menú Lateral (Morado UCO) --- */
+        /* --- Menú Lateral (Verde UCO) --- */
         .sidebar {
             width: 260px;
-            background-color: #124416; /* MORADO INSTITUCIONAL */
+            background-color: #124416; /* VERDE INSTITUCIONAL */
             color: white;
             display: flex;
             flex-direction: column;
@@ -88,9 +88,9 @@
             width: calc(100% - 260px);
         }
 
-        /* --- Barra Superior / Topbar (Morado UCO) --- */
+        /* --- Barra Superior / Topbar (Verde UCO) --- */
         .topbar {
-            background-color: #124416; /* MORADO INSTITUCIONAL */
+            background-color: #124416; /* VERDE INSTITUCIONAL */
             padding: 15px 30px;
             display: flex;
             justify-content: space-between;
@@ -172,6 +172,15 @@
                     </a>
                 </li>
                 
+                
+                <?php if(session('email') === 'admin@sistema.com'): ?>
+                <li>
+                    <a href="<?php echo e(route('perfiles.index')); ?>" class="<?php echo e(request()->routeIs('perfiles.*') ? 'active' : ''); ?>">
+                        <i class="fa-solid fa-user-shield"></i> Perfiles
+                    </a>
+                </li>
+                <?php endif; ?>
+
                 <li>
                     <a href="<?php echo e(route('perfil')); ?>" class="<?php echo e(request()->routeIs('perfil') ? 'active' : ''); ?>">
                         <i class="fa-solid fa-user"></i> Mi Perfil
@@ -196,6 +205,8 @@
         
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    
     <?php echo $__env->yieldPushContent('scripts'); ?>
 </body>
 </html><?php /**PATH C:\Users\becario.tie\Documents\GitHub\SistemasUCO\sistema_descansos\resources\views/layouts/app.blade.php ENDPATH**/ ?>

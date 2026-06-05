@@ -21,6 +21,9 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\EmpleadoController;
+use App\Http\Controllers\UsuarioController;
+use App\Http\Controllers\UsuariosController;
+
 
 // Librerías
 use Dompdf\Dompdf;
@@ -75,6 +78,16 @@ Route::get('/configuracion', [SettingsController::class, 'index'])->name('config
 Route::post('/configuracion/update', [SettingsController::class, 'update'])->name('configuracion.update');
 
 Route::get('/perfil', [ProfileController::class, 'show'])->name('perfil');
+// Usuarios: página y endpoints AJAX (Modificado para Cuentas del Sistema)
+Route::get('/perfiles', function () {
+    if (! session('logeado')) return redirect()->route('login');
+    return view('usuarios.index'); // Mantiene la vista lila que ya adaptamos
+})->name('perfiles.index');
+
+Route::get('/perfiles/list', [UsuariosController::class, 'list'])->name('perfiles.list');
+Route::post('/perfiles', [UsuariosController::class, 'store'])->name('perfiles.store');
+Route::put('/perfiles/{id}', [UsuariosController::class, 'update'])->name('perfiles.update');
+Route::delete('/perfiles/{id}', [UsuariosController::class, 'destroy'])->name('perfiles.destroy');
 Route::post('/perfil/update', [ProfileController::class, 'update'])->name('perfil.update');
 Route::post('/perfil/password', [ProfileController::class, 'changePassword'])->name('perfil.password');
 
