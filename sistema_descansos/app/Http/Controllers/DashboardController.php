@@ -19,16 +19,20 @@ class DashboardController extends Controller
             return redirect()->route('login');
         }
 
-        $anioActual = Carbon::now()->year;
+        // --- CLAVE PARA LA INDIVIDUALIZACIÓN ---
+        // Obtener el ID único del usuario administrador que acaba de iniciar sesión
+        $usuarioId = session('user_id');
+        $anioActual = Carbon::now()->year; 
         
-        // 2. Traemos todos los empleados activos y la tabla de leyes (de mayor a menor antigüedad)
-        $empleados = Empleado::all();
+        // 2. Traemos SOLO los empleados que pertenezcan o estén a cargo de este usuario logeado
+        $empleados = Empleado::where('usuario_id', $usuarioId)->get();
         $leyes = LeyVacacion::orderBy('anios_antiguedad', 'desc')->get();
 
         $totalDiasDerecho = 0;
+        $totalDiasTomadosUsuario = 0; // Acumulador para los días que gestionó esta cuenta activa
         $empleadosCalculados = collect(); // Aquí guardaremos temporalmente las matemáticas de cada empleado
 
-        // 3. Recorremos a TODOS los empleados uno por uno para hacer sus cálculos
+        // 3. Recorremos a los empleados asignados a este usuario uno por uno para hacer sus cálculos
         foreach ($empleados as $empleado) {
             
             // Calculamos cuántos años lleva trabajando
@@ -38,13 +42,16 @@ class DashboardController extends Controller
             $ley = $leyes->firstWhere('anios_antiguedad', '<=', $antiguedadAnios);
             $diasDerecho = $ley ? $ley->dias_derecho : 0;
             
-            // Sumamos sus días al Gran Total de la empresa
+            // Sumamos sus días al total de la gestión de este usuario
             $totalDiasDerecho += $diasDerecho;
 
             // Buscamos cuántos días ya pidió este empleado en el año actual
             $diasTomados = RegistroDescanso::where('empleado_id', $empleado->id)
                 ->where('anio_calendario', $anioActual)
                 ->sum('dias_tomados');
+
+            // Sumamos al acumulador de días tomados bajo la gestión de este usuario
+            $totalDiasTomadosUsuario += $diasTomados;
 
             // Calculamos cuántos le sobran
             $diasRestantes = max(0, $diasDerecho - $diasTomados);
@@ -58,19 +65,16 @@ class DashboardController extends Controller
             ]);
         }
 
-        // 4. Cálculos Globales para las 4 Tarjetas Superiores
-        $totalEmpleados = $empleados->count();
+        // 4. Cálculos Individuales para las Tarjetas Superiores del Usuario Logeado
+        $totalEmpleados = $empleados->count(); // Empleados a cargo de esta cuenta
         
-        // Suma total de días tomados por todos en toda la escuela este año
-        $diasTomadosEsteAnio = RegistroDescanso::where('anio_calendario', $anioActual)->sum('dias_tomados');
+        // Días totales gestionados por este usuario este año en sus empleados asignados
+        $diasTomadosEsteAnio = $totalDiasTomadosUsuario; 
         
-        // El gran total de días que la escuela aún debe
+        // Total de días restantes que le quedan pendientes por otorgar exclusivamente a este usuario
         $diasRestantesTotales = max(0, $totalDiasDerecho - $diasTomadosEsteAnio);
 
-        // 5. LÓGICA CORRECTA PARA LA TABLA DE ALERTAS (Empleados con menos días restantes)
-        // - .filter(): Filtra e ignora a los empleados nuevos que tengan 0 días por derecho de ley.
-        // - .sortBy(): Ordena de menor a mayor 'diasRestantes' y, en caso de empate, pone primero al que tenga más 'diasTomados'.
-        // - .take(5): Muestra únicamente el Top 5 crítico.
+        // 5. LÓGICA CORRECTA PARA LA TABLA DE ALERTAS (Filtrado del Top 5 de su propio grupo)
         $empleadosConMenosDias = $empleadosCalculados
             ->filter(function ($emp) {
                 return $emp->diasDerecho > 0;
@@ -81,7 +85,7 @@ class DashboardController extends Controller
             ])
             ->take(5);
 
-        // 6. Enviamos todos los números reales a tu vista 'dashboard.blade.php'
+        // 6. Enviamos todos los números reales segmentados a tu vista 'dashboard.blade.php'
         return view('dashboard', compact(
             'totalEmpleados',
             'totalDiasDerecho',

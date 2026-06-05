@@ -24,10 +24,10 @@
             min-height: 100vh;
         }
 
-        /* --- Menú Lateral (Morado UCO) --- */
+        /* --- Menú Lateral (Verde UCO) --- */
         .sidebar {
             width: 260px;
-            background-color: #124416; /* MORADO INSTITUCIONAL */
+            background-color: #124416; /* VERDE INSTITUCIONAL */
             color: white;
             display: flex;
             flex-direction: column;
@@ -88,9 +88,9 @@
             width: calc(100% - 260px);
         }
 
-        /* --- Barra Superior / Topbar (Morado UCO) --- */
+        /* --- Barra Superior / Topbar (Verde UCO) --- */
         .topbar {
-            background-color: #124416; /* MORADO INSTITUCIONAL */
+            background-color: #124416; /* VERDE INSTITUCIONAL */
             padding: 15px 30px;
             display: flex;
             justify-content: space-between;
@@ -172,6 +172,15 @@
                     </a>
                 </li>
                 
+                {{-- CONDICIONAL: Solo se muestra el botón si el correo en sesión es el del administrador principal --}}
+                @if(session('email') === 'admin@sistema.com')
+                <li>
+                    <a href="{{ route('perfiles.index') }}" class="{{ request()->routeIs('perfiles.*') ? 'active' : '' }}">
+                        <i class="fa-solid fa-user-shield"></i> Perfiles
+                    </a>
+                </li>
+                @endif
+
                 <li>
                     <a href="{{ route('perfil') }}" class="{{ request()->routeIs('perfil') ? 'active' : '' }}">
                         <i class="fa-solid fa-user"></i> Mi Perfil

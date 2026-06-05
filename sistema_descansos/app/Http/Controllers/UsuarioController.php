@@ -1,44 +1,78 @@
 <?php
 
-
 namespace App\Http\Controllers;
+
 use App\Models\Usuario;
 use Carbon\Carbon;
+use Illuminate\Http\Request;
 
-public function store(Request $request) 
+class UsuarioController extends Controller
 {
-    // 1. Obtener el año actual (ej: 2026)
-    $anioActual = Carbon::now()->year; 
-
-    // 2. Buscar el último usuario creado en este año que tenga un ID de acceso válido
-    $ultimoUsuario = Usuario::where('id_acceso', 'LIKE', "UCO-{$anioActual}-%")
-                            ->orderBy('id_acceso', 'desc')
-                            ->first();
-
-    if ($ultimoUsuario) {
-        // Si ya hay usuarios este año, extraemos los últimos 3 dígitos (ej: de 'UCO-2026-015' toma '015')
-        $ultimoNumero = (int) substr($ultimoUsuario->id_acceso, -3);
-        $nuevoNumero = $ultimoNumero + 1;
-    } else {
-        // Si es el primer usuario del año, empezamos en 1
-        $nuevoNumero = 1;
+    // 1. Método para listar los usuarios en la pantalla de forma dinámica
+    public function list() 
+    {
+        $usuarios = Usuario::select('id', 'id_acceso', 'nombre_completo', 'correo', 'departamento')->get();
+        return response()->json($usuarios);
     }
 
-    // 3. Formatear el número para que siempre tenga 3 dígitos (ej: 1 pasa a '001', 12 pasa a '012')
-    $numeroFormateado = str_pad($nuevoNumero, 3, '0', STR_PAD_LEFT);
+    // 2. Tu método store adaptado para responder a FETCH AJAX
+    public function store(Request $request) 
+    {
+        $anioActual = Carbon::now()->year; 
 
-    // 4. Armar el ID final (Ej: UCO-2026-001)
-    $idAccesoUnico = "UCO-{$anioActual}-{$numeroFormateado}";
+        $ultimoUsuario = Usuario::where('id_acceso', 'LIKE', "UCO-{$anioActual}-%")
+                                ->orderBy('id_acceso', 'desc')
+                                ->first();
 
-    // 5. Guardar en la base de datos
-    $usuario = new Usuario();
-    $usuario->id_acceso = $idAccesoUnico;
-    $usuario->nombre_completo = $request->nombre_completo;
-    $usuario->correo = $request->correo;
-    $usuario->contrasena = bcrypt($request->contrasena);
-    $usuario->departamento = $request->departamento;
-    $usuario->fecha_alta = Carbon::now()->format('Y-m-d');
-    $usuario->save();
+        if ($ultimoUsuario) {
+            $ultimoNumero = (int) substr($ultimoUsuario->id_acceso, -3);
+            $nuevoNumero = $ultimoNumero + 1;
+        } else {
+            $nuevoNumero = 1;
+        }
 
-    return redirect()->back()->with('success', 'Usuario creado con el ID: ' . $idAccesoUnico);
+        $numeroFormateado = str_pad($nuevoNumero, 3, '0', STR_PAD_LEFT);
+        $idAccesoUnico = "UCO-{$anioActual}-{$numeroFormateado}";
+
+        $usuario = new Usuario();
+        $usuario->id_acceso = $idAccesoUnico;
+        $usuario->nombre_completo = $request->nombre_completo;
+        $usuario->correo = $request->correo;
+        $usuario->contrasena = bcrypt($request->contrasena);
+        $usuario->departamento = $request->departamento;
+        $usuario->fecha_alta = Carbon::now()->format('Y-m-d');
+        $usuario->save();
+
+        // RETORNO JSON EN LUGAR DE REDIRECT BACK
+        return response()->json([
+            'success' => true,
+            'message' => 'Usuario creado con éxito. ID: ' . $idAccesoUnico
+        ]);
+    }
+
+    // 3. Método opcional para editar/actualizar
+    public function update(Request $request, $id)
+    {
+        $usuario = Usuario::findOrFail($id);
+        $usuario->nombre_completo = $request->nombre_completo;
+        $usuario->correo = $request->correo;
+        $usuario->departamento = $request->departamento;
+        
+        if ($request->filled('contrasena')) {
+            $usuario->contrasena = bcrypt($request->contrasena);
+        }
+        
+        $usuario->save();
+
+        return response()->json(['success' => true, 'message' => 'Usuario actualizado con éxito']);
+    }
+
+    // 4. Método opcional para eliminar
+    public function destroy($id)
+    {
+        $usuario = Usuario::findOrFail($id);
+        $usuario->delete();
+
+        return response()->json(['success' => true, 'message' => 'Usuario eliminado correctamente']);
+    }
 }

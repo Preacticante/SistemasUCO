@@ -42,9 +42,9 @@ class LoginController extends Controller
             // Guardamos las variables clave en la sesión
             session([
                 'logeado' => true, 
-                'user_id' => $usuario->correo, // Guardamos el correo como identificador único
-                'nombre' => $usuario->nombre_completo,
-                'email' => $usuario->correo 
+                'user_id' => $usuario->id, // <-- CORREGIDO: Guardamos el ID numérico real (ej: 1, 2)
+                'nombre'  => $usuario->nombre_completo,
+                'email'   => $usuario->correo 
             ]);
             
             return redirect()->route('panel');

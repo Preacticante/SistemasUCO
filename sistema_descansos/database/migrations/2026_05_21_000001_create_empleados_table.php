@@ -11,6 +11,7 @@ return new class extends Migration {
             $table->id();
             $table->string('nombre_completo');
             $table->date('fecha_ingreso')->nullable();
+            $table->softDeletes();
             $table->unsignedBigInteger('puesto_id')->nullable();
         });
     }
