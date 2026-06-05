@@ -302,22 +302,22 @@
                 <p style="color: #64748b; font-size: 0.9rem; margin-bottom: 20px; margin-top: 0;">Estadísticas de tu actividad dentro del sistema UCO.</p>
                 
                 <div class="stats-grid">
-                    <div class="stat-box">
-                        <!-- Muestra el conteo real de empleados a cargo -->
+                    <a href="<?php echo e(route('empleados.index')); ?>" class="stat-box" style="text-decoration: none; display: block;">
                         <span class="stat-number"><?php echo e($empleadosACargo); ?></span>
                         <span class="stat-label">Empleados a cargo</span>
-                    </div>
+                    </a>
+
                     <div class="stat-box">
-                        <!-- Muestra la suma real de los días gestionados -->
                         <span class="stat-number"><?php echo e($diasGestionados); ?></span>
                         <span class="stat-label">Días gestionados</span>
                     </div>
+                    
                     <div class="stat-box">
                         <span class="stat-number"><?php echo e(isset($usuario->ultimo_acceso) ? \Carbon\Carbon::parse($usuario->ultimo_acceso)->diffForHumans() : '—'); ?></span>
                         <span class="stat-label">Último acceso</span>
                     </div>
+                    
                     <div class="stat-box">
-                        <!-- Muestra el conteo real de reportes generados -->
                         <span class="stat-number"><?php echo e($reportesGenerados); ?></span>
                         <span class="stat-label">Reportes generados</span>
                     </div>
