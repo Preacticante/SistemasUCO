@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes; 
+use App\Models\RegistroDescanso;
 
 class Empleado extends Model
 {
@@ -30,5 +31,10 @@ class Empleado extends Model
 
     public function puesto() {
         return $this->belongsTo(Puesto::class, 'puesto_id');
+    }
+
+    public function registrosDescanso()
+    {
+        return $this->hasMany(RegistroDescanso::class, 'empleado_id');
     }
 }
