@@ -24,7 +24,6 @@ use App\Http\Controllers\EmpleadoController;
 use App\Http\Controllers\UsuarioController;
 use App\Http\Controllers\UsuariosController;
 
-
 // Librerías
 use Dompdf\Dompdf;
 
@@ -78,10 +77,9 @@ Route::get('/configuracion', [SettingsController::class, 'index'])->name('config
 Route::post('/configuracion/update', [SettingsController::class, 'update'])->name('configuracion.update');
 
 Route::get('/perfil', [ProfileController::class, 'show'])->name('perfil');
-// Usuarios: página y endpoints AJAX (Modificado para Cuentas del Sistema)
 Route::get('/perfiles', function () {
     if (! session('logeado')) return redirect()->route('login');
-    return view('usuarios.index'); // Mantiene la vista lila que ya adaptamos
+    return view('usuarios.index'); 
 })->name('perfiles.index');
 
 Route::get('/perfiles/list', [UsuariosController::class, 'list'])->name('perfiles.list');
@@ -92,13 +90,14 @@ Route::post('/perfil/update', [ProfileController::class, 'update'])->name('perfi
 Route::post('/perfil/password', [ProfileController::class, 'changePassword'])->name('perfil.password');
 
 
-// | RUTAS DE LÓGICA DE VACACIONES
+// | RUTAS DE LÓGICA DE VACACIONES (MÓDULO INDIVIDUAL)
 
 Route::get('/empleados/{empleado}/vacaciones', function (Empleado $empleado) {
     if (! session('logeado')) return redirect()->route('login');
 
     $anioActual = Carbon::now()->year;
-    $antiguedadAnios = Carbon::parse($empleado->fecha_ingreso)->diffInYears(Carbon::now());
+    // CORRECCIÓN: Forzamos a que la antigüedad sea un número entero para evitar decimales infinitos
+    $antiguedadAnios = (int) floor(Carbon::parse($empleado->fecha_ingreso)->diffInYears(Carbon::now()));
     $ley = LeyVacacion::where('anios_antiguedad', '<=', $antiguedadAnios)->orderBy('anios_antiguedad', 'desc')->first();
     $diasDerecho = $ley?->dias_derecho ?? 0;
 
@@ -117,20 +116,24 @@ Route::get('/empleados/{empleado}/vacaciones', function (Empleado $empleado) {
         $registroPorMes[$numero] = $registros->firstWhere('mes', $numero)?->dias_tomados ?? 0;
     }
 
-    return view('empleados.vacaciones', compact('empleado', 'anioActual', 'antiguedadAnios', 'diasDerecho', 'diasTomados', 'diasRestantes', 'meses', 'registroPorMes'));
+    // CORRECCIÓN: Buscamos el nombre del puesto para enviarlo a la vista
+    $puestoNombre = $empleado->puesto_id ? Puesto::find($empleado->puesto_id)?->nombre : 'No asignado';
+
+    return view('empleados.vacaciones', compact('empleado', 'anioActual', 'antiguedadAnios', 'diasDerecho', 'diasTomados', 'diasRestantes', 'meses', 'registroPorMes', 'puestoNombre'));
 })->name('empleados.vacaciones');
 
 Route::post('/empleados/{empleado}/vacaciones', function (Request $request, Empleado $empleado) {
     if (! session('logeado')) return redirect()->route('login');
 
     $anioActual = Carbon::now()->year;
-    $antiguedadAnios = Carbon::parse($empleado->fecha_ingreso)->diffInYears(Carbon::now());
+    $antiguedadAnios = (int) floor(Carbon::parse($empleado->fecha_ingreso)->diffInYears(Carbon::now()));
     $ley = LeyVacacion::where('anios_antiguedad', '<=', $antiguedadAnios)->orderBy('anios_antiguedad', 'desc')->first();
     $diasDerecho = $ley?->dias_derecho ?? 0;
 
     $validator = Validator::make($request->all(), [
-        'fecha_inicio' => 'required|date',
-        'fecha_fin'    => 'required|date|after_or_equal:fecha_inicio',
+        'fecha_inicio'     => 'required|date',
+        'fecha_fin'        => 'required|date|after_or_equal:fecha_inicio',
+        'dias_solicitados' => 'required|integer|min:1',
     ]);
 
     if ($validator->fails()) return redirect()->back()->withErrors($validator)->withInput();
@@ -142,17 +145,31 @@ Route::post('/empleados/{empleado}/vacaciones', function (Request $request, Empl
 
     $registroPorMes = RegistroDescanso::where('empleado_id', $empleado->id)->where('anio_calendario', $anioActual)->get();
     $diasTomadosActuales = $registroPorMes->sum('dias_tomados');
-    $diasNuevos = $inicio->diffInDays($fin) + 1;
+    
+    $diasNuevos = (int) $request->input('dias_solicitados');
 
-    if ($diasTomadosActuales + $diasNuevos > $diasDerecho) return back()->withErrors(['fecha_inicio' => "No puedes registrar, aún no cuentas con suficientes días."])->withInput();
-
-    $diasPorMes = [];
-    for ($fecha = $inicio->copy(); $fecha->lte($fin); $fecha->addDay()) {
-        $mes = $fecha->month;
-        $diasPorMes[$mes] = ($diasPorMes[$mes] ?? 0) + 1;
+    if ($diasTomadosActuales + $diasNuevos > $diasDerecho) {
+        return back()->withErrors(['fecha_inicio' => "El empleado no cuenta con suficientes días. Has solicitado {$diasNuevos} días."])->withInput();
     }
 
-    $diasPeriodo = $inicio->diffInDays($fin) + 1;
+    $diasPorMes = [];
+    $mesInicio = $inicio->month;
+    $mesFin = $fin->month;
+
+    if ($mesInicio === $mesFin) {
+        $diasPorMes[$mesInicio] = $diasNuevos;
+    } else {
+        $diasPrimerMesCalendario = $inicio->copy()->endOfMonth()->diffInDays($inicio) + 1;
+        $asignarPrimerMes = min($diasNuevos, $diasPrimerMesCalendario);
+        $diasPorMes[$mesInicio] = $asignarPrimerMes;
+        
+        $sobrante = $diasNuevos - $asignarPrimerMes;
+        if ($sobrante > 0) {
+            $diasPorMes[$mesFin] = $sobrante;
+        }
+    }
+
+    $diasPeriodo = $diasNuevos;
 
     try {
         DB::transaction(function () use ($diasPorMes, $empleado, $anioActual, $inicio, $fin, $request, $diasPeriodo) {
@@ -162,9 +179,12 @@ Route::post('/empleados/{empleado}/vacaciones', function (Request $request, Empl
                 $registro->save();
             }
             PeriodoVacacional::create([
-                'empleado_id' => $empleado->id, 'anio_calendario' => $anioActual,
-                'fecha_inicio' => $request->fecha_inicio, 'fecha_fin' => $request->fecha_fin,
-                'fecha_regreso' => $fin->copy()->addDay()->toDateString(), 'dias' => $diasPeriodo,
+                'empleado_id' => $empleado->id, 
+                'anio_calendario' => $anioActual,
+                'fecha_inicio' => $request->fecha_inicio, 
+                'fecha_fin' => $request->fecha_fin,
+                'fecha_regreso' => $fin->copy()->addDay()->toDateString(), 
+                'dias' => $diasPeriodo, 
             ]);
         });
     } catch (\Exception $e) {
@@ -177,7 +197,7 @@ Route::get('/empleados/{empleado}/vacaciones/pdf', function (Empleado $empleado)
     if (! session('logeado')) return redirect()->route('login');
 
     $anioActual = Carbon::now()->year;
-    $antiguedadAnios = Carbon::parse($empleado->fecha_ingreso)->diffInYears(Carbon::now());
+    $antiguedadAnios = (int) floor(Carbon::parse($empleado->fecha_ingreso)->diffInYears(Carbon::now()));
     $ley = LeyVacacion::where('anios_antiguedad', '<=', $antiguedadAnios)->orderBy('anios_antiguedad', 'desc')->first();
     $diasDerecho = $ley?->dias_derecho ?? 0;
 
@@ -207,6 +227,48 @@ Route::get('/empleados/{empleado}/vacaciones/pdf', function (Empleado $empleado)
         'Content-Disposition' => 'inline; filename="vacaciones_'.str_replace(' ', '_', $empleado->nombre.'_'.$empleado->apellido_paterno.'_'.$empleado->apellido_materno).'_'.$anioActual.'.pdf"',
     ]);
 })->name('empleados.vacaciones.pdf');
+
+// Reporte global en PDF (Panel)
+Route::get('/panel/reporte/pdf', function () {
+    if (! session('logeado')) return redirect()->route('login');
+
+    $anioActual = Carbon::now()->year;
+    $empleados = Empleado::orderBy('nombre')->get();
+    $rows = [];
+
+    foreach ($empleados as $empleado) {
+        $antiguedadAnios = (int) floor(Carbon::parse($empleado->fecha_ingreso)->diffInYears(Carbon::now()));
+        $ley = LeyVacacion::where('anios_antiguedad', '<=', $antiguedadAnios)->orderBy('anios_antiguedad', 'desc')->first();
+        $diasDerecho = $ley?->dias_derecho ?? 0;
+
+        $registros = RegistroDescanso::where('empleado_id', $empleado->id)->where('anio_calendario', $anioActual)->get();
+        $diasTomados = $registros->sum('dias_tomados');
+        $diasAdeuda = max(0, $diasDerecho - $diasTomados);
+
+        $puesto = $empleado->puesto_id ? Puesto::find($empleado->puesto_id) : null;
+
+        $rows[] = [
+            'empleado' => $empleado->nombre . ' ' . $empleado->apellido_paterno . ' ' . $empleado->apellido_materno,
+            'puesto' => $puesto?->nombre ?? null,
+            'fecha_ingreso' => $empleado->fecha_ingreso,
+            'dias_derecho' => $diasDerecho,
+            'dias_tomados' => $diasTomados,
+            'dias_adeuda' => $diasAdeuda,
+        ];
+    }
+
+    $html = view('pdfs.empleados_todos', compact('rows', 'anioActual'))->render();
+
+    $dompdf = new Dompdf;
+    $dompdf->loadHtml($html);
+    $dompdf->setPaper('A4', 'portrait');
+    $dompdf->render();
+
+    return response($dompdf->output(), 200, [
+        'Content-Type' => 'application/pdf',
+        'Content-Disposition' => 'inline; filename="reporte_vacaciones_'.$anioActual.'.pdf"',
+    ]);
+})->name('panel.reporte.pdf');
 
 
 // | RUTAS AJAX PARA EL HISTORIAL DE VACACIONES (MODAL)
@@ -249,10 +311,13 @@ Route::put('/periodos/{id}', function (Request $request, $id) {
                 throw new \Exception("Las fechas editadas deben estar dentro del año {$anioActual}.");
             }
 
-            $diasNuevos = $inicioNuevo->diffInDays($finNuevo) + 1;
+            $diasNuevos = 0;
+            for ($fecha = $inicioNuevo->copy(); $fecha->lte($finNuevo); $fecha->addDay()) {
+                if (!$fecha->isWeekend()) { $diasNuevos++; }
+            }
 
             $empleado = Empleado::find($empleadoId);
-            $antiguedadAnios = Carbon::parse($empleado->fecha_ingreso)->diffInYears(Carbon::now());
+            $antiguedadAnios = (int) floor(Carbon::parse($empleado->fecha_ingreso)->diffInYears(Carbon::now()));
             $ley = LeyVacacion::where('anios_antiguedad', '<=', $antiguedadAnios)->orderBy('anios_antiguedad', 'desc')->first();
             $diasDerecho = $ley ? $ley->dias_derecho : 0;
 
@@ -267,14 +332,18 @@ Route::put('/periodos/{id}', function (Request $request, $id) {
                 throw new \Exception("El empleado solo tiene {$disponibles} día(s) disponible(s). No puedes asignarle {$diasNuevos} días.");
             }
 
-            // 1. REVERTIR DÍAS VIEJOS
             $inicioViejo = Carbon::parse($periodo->fecha_inicio);
             $finViejo = Carbon::parse($periodo->fecha_fin);
-            $diasPorMesViejos = [];
             
+            $diasPorMesViejos = [];
+            $diasARevertir = $periodo->dias;
             for ($fecha = $inicioViejo->copy(); $fecha->lte($finViejo); $fecha->addDay()) {
-                $mes = $fecha->month;
-                $diasPorMesViejos[$mes] = ($diasPorMesViejos[$mes] ?? 0) + 1;
+                if ($diasARevertir <= 0) break;
+                if (!$fecha->isWeekend()) {
+                    $mes = $fecha->month;
+                    $diasPorMesViejos[$mes] = ($diasPorMesViejos[$mes] ?? 0) + 1;
+                    $diasARevertir--;
+                }
             }
 
             foreach ($diasPorMesViejos as $mes => $cantidad) {
@@ -286,11 +355,17 @@ Route::put('/periodos/{id}', function (Request $request, $id) {
                 }
             }
 
-            // 2. APLICAR DÍAS NUEVOS
             $diasPorMesNuevos = [];
-            for ($fecha = $inicioNuevo->copy(); $fecha->lte($finNuevo); $fecha->addDay()) {
-                $mes = $fecha->month;
-                $diasPorMesNuevos[$mes] = ($diasPorMesNuevos[$mes] ?? 0) + 1;
+            $mesInicio = $inicioNuevo->month;
+            $mesFin = $finNuevo->month;
+
+            if ($mesInicio === $mesFin) {
+                $diasPorMesNuevos[$mesInicio] = $diasNuevos;
+            } else {
+                $asignarPrimerMes = min($diasNuevos, clone $inicioNuevo->endOfMonth()->diffInDays($inicioNuevo) + 1);
+                $diasPorMesNuevos[$mesInicio] = $asignarPrimerMes;
+                $sobrante = $diasNuevos - $asignarPrimerMes;
+                if ($sobrante > 0) { $diasPorMesNuevos[$mesFin] = $sobrante; }
             }
 
             foreach ($diasPorMesNuevos as $mes => $cantidad) {
@@ -299,7 +374,6 @@ Route::put('/periodos/{id}', function (Request $request, $id) {
                 $registro->save();
             }
 
-            // 3. ACTUALIZAR EL PERIODO
             $periodo->fecha_inicio = $request->fecha_inicio;
             $periodo->fecha_fin = $request->fecha_fin;
             $periodo->dias = $diasNuevos;
@@ -324,11 +398,18 @@ Route::delete('/periodos/{id}', function ($id) {
             
             $inicio = Carbon::parse($periodo->fecha_inicio);
             $fin = Carbon::parse($periodo->fecha_fin);
+            
             $diasPorMes = [];
+            $mesInicio = $inicio->month;
+            $mesFin = $fin->month;
 
-            for ($fecha = $inicio->copy(); $fecha->lte($fin); $fecha->addDay()) {
-                $mes = $fecha->month;
-                $diasPorMes[$mes] = ($diasPorMes[$mes] ?? 0) + 1;
+            if ($mesInicio === $mesFin) {
+                $diasPorMes[$mesInicio] = $periodo->dias;
+            } else {
+                $asignarPrimerMes = min($periodo->dias, clone $inicio->endOfMonth()->diffInDays($inicio) + 1);
+                $diasPorMes[$mesInicio] = $asignarPrimerMes;
+                $sobrante = $periodo->dias - $asignarPrimerMes;
+                if ($sobrante > 0) { $diasPorMes[$mesFin] = $sobrante; }
             }
 
             foreach ($diasPorMes as $mes => $cantidad) {

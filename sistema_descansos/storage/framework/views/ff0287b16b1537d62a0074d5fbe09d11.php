@@ -182,4 +182,4 @@
             text-align: left;
             border: 1px solid #fecaca;
         }
-    </style><?php /**PATH C:\Users\becario.tie\Documents\GitHub\SistemasUCO\sistema_descansos\resources\views/auth/login.blade.php ENDPATH**/ ?>
+    </style><?php /**PATH /var/www/html/resources/views/auth/login.blade.php ENDPATH**/ ?>

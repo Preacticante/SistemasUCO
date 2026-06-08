@@ -209,4 +209,4 @@
     
     <?php echo $__env->yieldPushContent('scripts'); ?>
 </body>
-</html><?php /**PATH C:\Users\becario.tie\Documents\GitHub\SistemasUCO\sistema_descansos\resources\views/layouts/app.blade.php ENDPATH**/ ?>
+</html><?php /**PATH /var/www/html/resources/views/layouts/app.blade.php ENDPATH**/ ?>

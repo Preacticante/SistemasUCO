@@ -44,4 +44,4 @@
         </ul>
     </nav>
 <?php endif; ?>
-<?php /**PATH C:\Users\becario.tie\Documents\GitHub\SistemasUCO\sistema_descansos\vendor\laravel\framework\src\Illuminate\Pagination/resources/views/bootstrap-4.blade.php ENDPATH**/ ?>
+<?php /**PATH /var/www/html/vendor/laravel/framework/src/Illuminate/Pagination/resources/views/bootstrap-4.blade.php ENDPATH**/ ?>

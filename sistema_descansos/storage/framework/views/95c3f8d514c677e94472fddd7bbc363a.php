@@ -64,7 +64,8 @@
                     <i class="fa-solid fa-user-gear"></i> Información del empleado
                 </div>
                 <div class="meta-row">
-                    <span class="meta-pill">Ingreso: <strong><?php echo e($empleado->fecha_ingreso); ?></strong></span>
+                    <span class="meta-pill">Puesto: <strong><?php echo e($puestoNombre); ?></strong></span>
+                    <span class="meta-pill">Ingreso: <strong><?php echo e(\Carbon\Carbon::parse($empleado->fecha_ingreso)->format('d/m/Y')); ?></strong></span>
                     <span class="meta-pill">Antigüedad: <strong><?php echo e($antiguedadAnios); ?> años</strong></span>
                     <span class="meta-pill status-derecho">Derecho anual: <strong><?php echo e($diasDerecho); ?> días</strong></span>
                 </div>
@@ -89,20 +90,23 @@
                     <?php echo csrf_field(); ?>
                     <div class="form-group">
                         <label for="fecha_inicio">Fecha de inicio</label>
-                        <input type="date" id="fecha_inicio" name="fecha_inicio" value="<?php echo e(old('fecha_inicio')); ?>" />
+                        <input type="date" id="fecha_inicio" name="fecha_inicio" value="<?php echo e(old('fecha_inicio')); ?>" required />
                     </div>
 
                     <div class="form-group">
                         <label for="fecha_fin">Fecha de fin</label>
-                        <input type="date" id="fecha_fin" name="fecha_fin" value="<?php echo e(old('fecha_fin')); ?>" />
+                        <input type="date" id="fecha_fin" name="fecha_fin" value="<?php echo e(old('fecha_fin')); ?>" required />
                     </div>
 
-                    <div class="form-instruction">
-                        Ajusta el rango y revisa la proyección antes de guardar.
+                    <div class="form-group">
+                        <label for="dias_solicitados">Días a descontar</label>
+                        <input type="number" id="dias_solicitados" name="dias_solicitados" value="<?php echo e(old('dias_solicitados')); ?>" min="1" step="1" required />
+                        <div class="form-instruction" style="margin-top: 5px;">
+                            * El sistema sugiere un cálculo, pero puedes modificarlo manualmente si los turnos varían.
+                        </div>
                     </div>
 
                     <div class="meta-row" style="margin-bottom: 1.5rem;">
-                        <span class="meta-pill">Días seleccionados: <strong id="dias-seleccionados" style="color: #340C51;">0</strong></span>
                         <span class="meta-pill">Restantes estimados: <strong id="preview-restantes" style="color: #124416;"><?php echo e(max(0, $diasRestantes)); ?></strong></span>
                     </div>
 
@@ -146,34 +150,47 @@
         const diasRestantes = <?php echo e($diasRestantes); ?>;
         const fechaInicio = document.getElementById('fecha_inicio');
         const fechaFin = document.getElementById('fecha_fin');
-        const diasSeleccionados = document.getElementById('dias-seleccionados');
+        const inputDias = document.getElementById('dias_solicitados');
         const previewRestantes = document.getElementById('preview-restantes');
 
-        function calcularDias() {
-            const inicio = fechaInicio.value ? new Date(fechaInicio.value) : null;
-            const fin = fechaFin.value ? new Date(fechaFin.value) : null;
+        // Función 1: Sugerir días automáticamente basados en el calendario
+        function sugerirDias() {
+            const inicio = fechaInicio.value ? new Date(fechaInicio.value + 'T00:00:00') : null;
+            const fin = fechaFin.value ? new Date(fechaFin.value + 'T00:00:00') : null;
 
             if (!inicio || !fin || fin < inicio) {
-                diasSeleccionados.textContent = 0;
-                previewRestantes.textContent = diasRestantes;
+                inputDias.value = '';
+                actualizarRestantes();
                 return;
             }
 
             const diff = Math.floor((fin - inicio) / (1000 * 60 * 60 * 24)) + 1;
-            const diffDays = isNaN(diff) ? 0 : diff;
-            diasSeleccionados.textContent = diffDays;
-            previewRestantes.textContent = Math.max(0, diasRestantes - diffDays);
+            inputDias.value = isNaN(diff) ? 0 : diff;
+            actualizarRestantes();
+        }
+
+        // Función 2: Actualizar la pastilla visual si la administradora teclea un número diferente
+        function actualizarRestantes() {
+            const descontar = parseInt(inputDias.value) || 0;
+            previewRestantes.textContent = Math.max(0, diasRestantes - descontar);
         }
 
         fechaInicio.addEventListener('change', () => {
             if (fechaFin.value && fechaFin.value < fechaInicio.value) {
                 fechaFin.value = fechaInicio.value;
             }
-            calcularDias();
+            sugerirDias();
         });
 
-        fechaFin.addEventListener('change', calcularDias);
-        calcularDias();
+        fechaFin.addEventListener('change', sugerirDias);
+        inputDias.addEventListener('input', actualizarRestantes);
+
+        // Al cargar la página
+        if(fechaInicio.value && fechaFin.value && !inputDias.value) {
+            sugerirDias();
+        } else {
+            actualizarRestantes();
+        }
     </script>
 </body>
 </html>
@@ -455,7 +472,7 @@
         font-weight: 600;
     }
 
-    input[type="date"] {
+    input[type="date"], input[type="number"] {
         width: 100%;
         padding: 0.8rem 1rem;
         border-radius: 12px;
@@ -468,7 +485,7 @@
         outline: none;
     }
 
-    input[type="date"]:focus {
+    input[type="date"]:focus, input[type="number"]:focus {
         border-color: var(--dorado-uco);
         box-shadow: 0 0 0 3px rgba(170, 127, 49, 0.15);
         background: #ffffff;
@@ -626,7 +643,7 @@
             font-size: 0.85rem;
         }
 
-        input[type="date"] {
+        input[type="date"], input[type="number"] {
             padding: 0.7rem;
             font-size: 0.9rem;
         }
@@ -719,4 +736,4 @@
             margin-bottom: 1rem;
         }
     }
-</style><?php /**PATH C:\Users\becario.tie\Documents\GitHub\SistemasUCO\sistema_descansos\resources\views/empleados/vacaciones.blade.php ENDPATH**/ ?>
+</style><?php /**PATH /var/www/html/resources/views/empleados/vacaciones.blade.php ENDPATH**/ ?>

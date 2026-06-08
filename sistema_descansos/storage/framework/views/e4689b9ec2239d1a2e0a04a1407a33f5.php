@@ -8,29 +8,16 @@
     </div>
 
     <div class="table-card-container">
-        
-        <div class="table-card-header custom-header-grid">
+        <div class="table-card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;">
+            <span><i class="fas fa-list-ul"></i> Registro de Solicitudes</span>
             
-            <div class="header-left">
-                <span><i class="fas fa-list-ul"></i> Registro de Solicitudes</span>
-            </div>
-
-            <div class="header-center">
-                <form action="<?php echo e(route('historial')); ?>" method="GET" class="search-form">
-                    <input type="text" name="buscar" value="<?php echo e(request('buscar')); ?>" placeholder="Buscar empleado..." class="search-input">
-                    <button type="submit" class="btn-search" title="Buscar"><i class="fas fa-search"></i></button>
-                    <?php if(request('buscar')): ?>
-                        <a href="<?php echo e(route('historial')); ?>" class="btn-clear-search" title="Limpiar búsqueda"><i class="fas fa-times"></i></a>
-                    <?php endif; ?>
-                </form>
-            </div>
-
-            <div class="header-right">
-                <a href="<?php echo e(route('panel.reporte.pdf')); ?>" target="_blank" class="btn-action-pdf-global" title="Descargar reporte general PDF">
-                    <i class="fas fa-file-pdf"></i> Descargar PDF
-                </a>
-            </div>
-
+            <form action="<?php echo e(route('historial')); ?>" method="GET" class="search-form">
+                <input type="text" name="buscar" value="<?php echo e(request('buscar')); ?>" placeholder="Buscar empleado..." class="search-input">
+                <button type="submit" class="btn-search" title="Buscar"><i class="fas fa-search"></i></button>
+                <?php if(request('buscar')): ?>
+                    <a href="<?php echo e(route('historial')); ?>" class="btn-clear-search" title="Limpiar búsqueda"><i class="fas fa-times"></i></a>
+                <?php endif; ?>
+            </form>
         </div>
 
         <div style="overflow-x: auto;">
@@ -92,7 +79,7 @@
                                     <button type="button" class="btn-action-delete" onclick="deletePeriodo(<?php echo e($periodo->id); ?>)">
                                         <i class="fas fa-trash"></i> 
                                     </button>
-                                    <a href="/empleados/<?php echo e($empleado?->id); ?>/vacaciones/pdf" target="_blank" class="btn-action-pdf-small" title="Descargar comprobante">
+                                    <a href="/empleados/<?php echo e($empleado?->id); ?>/vacaciones/pdf" target="_blank" class="btn-action-pdf" title="Descargar comprobante">
                                         <i class="fas fa-file-pdf"></i> PDF
                                     </a>
                                 <?php endif; ?>
@@ -110,7 +97,7 @@
             </table>
         </div>
 
-        <?php if($periodosVacacionales instanceof \Illuminate\Pagination\AbstractPaginator && $periodosVacacionales->hasPages()): ?>
+        <?php if($periodosVacacionales->hasPages()): ?>
             <div class="pagination-container">
                 <?php echo e($periodosVacacionales->links('pagination::bootstrap-4')); ?>
 
@@ -165,34 +152,10 @@
         .table-card-header {
             background-color: #124416;
             color: white;
-            padding: 14px 24px;
+            padding: 18px 24px;
             font-size: 1.1rem;
             font-weight: 700;
             letter-spacing: 0.3px;
-        }
-
-        /* ESTRUCTURA GRID PARA CENTRADO PERFECTO */
-        .custom-header-grid {
-            display: grid;
-            grid-template-columns: 1fr auto 1fr;
-            align-items: center;
-            gap: 15px;
-        }
-
-        .header-left {
-            display: flex;
-            justify-content: flex-start;
-            align-items: center;
-        }
-
-        .header-center {
-            display: flex;
-            justify-content: center;
-        }
-
-        .header-right {
-            display: flex;
-            justify-content: flex-end;
         }
 
         /* BUSCADOR ESTILOS */
@@ -210,7 +173,7 @@
             color: white;
             padding: 6px 12px;
             outline: none;
-            width: 280px; /* Buscador más ancho */
+            width: 220px;
             font-size: 0.95rem;
         }
         .search-input::placeholder {
@@ -233,27 +196,6 @@
         .btn-search:hover { background: #916b30; }
         .btn-clear-search { background: #dc2626; margin-left: 5px; }
         .btn-clear-search:hover { background: #b91c1c; }
-
-        /* Estilo del Botón PDF Global (Derecha) */
-        .btn-action-pdf-global {
-            background-color: #a87e3b;
-            color: white;
-            text-decoration: none;
-            padding: 8px 18px;
-            border-radius: 6px;
-            font-weight: 600;
-            font-size: 0.95rem;
-            transition: all 0.2s ease;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
-        }
-
-        .btn-action-pdf-global:hover {
-            background-color: #8c6827;
-            transform: translateY(-2px);
-        }
 
         /* PAGINACIÓN ESTILOS */
         .pagination-container {
@@ -339,8 +281,8 @@
         .badge-success { background-color: #dcfce7; color: #15803d; }
         .badge-info { background-color: #e0f2fe; color: #0369a1; }
 
-        /* Estilos para botones de acciones en la tabla */
-        .btn-action-edit, .btn-action-delete, .btn-action-pdf-small {
+        /* Estilos para botones de acciones */
+        .btn-action-edit, .btn-action-delete, .btn-action-pdf {
             border: none;
             cursor: pointer;
             padding: 6px 14px;
@@ -361,8 +303,8 @@
         .btn-action-delete { background-color: #dc2626; }
         .btn-action-delete:hover { background-color: #b91c1c; transform: translateY(-2px); }
 
-        .btn-action-pdf-small { background-color: #a87e3b; }
-        .btn-action-pdf-small:hover { background-color: #8c6827; transform: translateY(-2px); }
+        .btn-action-pdf { background-color: #a87e3b; }
+        .btn-action-pdf:hover { background-color: #8c6827; transform: translateY(-2px); }
 
         .btn-disabled {
             background-color: #cbd5e1 !important;
@@ -497,6 +439,7 @@
         const fechaInicio = document.getElementById('editFechaInicio').value;
         const fechaFin = document.getElementById('editFechaFin').value;
 
+        // VALIDACIÓN FRONTEND: Que las fechas estén llenas
         if (!fechaInicio || !fechaFin) {
             alert('Por favor completa las fechas de inicio y fin.');
             return;
@@ -505,6 +448,7 @@
         const fechaInicioObj = new Date(fechaInicio + 'T00:00:00');
         const fechaFinObj = new Date(fechaFin + 'T23:59:59');
         
+        // VALIDACIÓN FRONTEND: Fecha lógica
         if (fechaFinObj < fechaInicioObj) {
             alert('La fecha de fin no puede ser anterior a la fecha de inicio.');
             return;
@@ -515,6 +459,7 @@
             return;
         }
 
+        // Fíjate que ya NO mandamos la variable "dias", el servidor lo hará por nosotros
         fetch(`/periodos/${periodoEnEdicion}`, {
             method: 'PUT',
             headers: {
@@ -541,8 +486,8 @@
             alert('Error al guardar: ' + error.message);
         });
     }
-
-    function deletePeriodo(id) {
+function deletePeriodo(id) {
+        // Alerta moderna de confirmación con SweetAlert2
         Swal.fire({
             title: '¿Estás seguro?',
             text: "Esta acción eliminará la solicitud y restaurará los días al balance del empleado.",
@@ -555,6 +500,7 @@
             cancelButtonText: '<span style="color:#334155">Cancelar</span>'
         }).then((result) => {
             if (result.isConfirmed) {
+                // Si el usuario confirma, hacemos la petición a tu servidor
                 fetch(`/periodos/${id}`, {
                     method: 'DELETE',
                     headers: {
@@ -567,6 +513,7 @@
                     return data;
                 })
                 .then(data => {
+                    // Alerta de éxito moderna
                     Swal.fire({
                         title: '¡Eliminado!',
                         text: 'Los días se han restaurado correctamente.',
@@ -583,7 +530,6 @@
             }
         });
     }
-
     document.getElementById('editModal').addEventListener('click', function(e) {
         if (e.target === this) closeEditModal();
     });
