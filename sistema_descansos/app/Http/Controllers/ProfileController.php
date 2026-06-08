@@ -37,7 +37,9 @@ class ProfileController extends Controller
         
         // --- Conteo de Empleados ---
         try {
-            $empleadosACargo = DB::table('empleados')->count(); 
+            $empleadosACargo = DB::table('empleados')
+                                ->whereNull('deleted_at')
+                                ->count(); 
         } catch (\Exception $e) {
             $empleadosACargo = 0; 
         }

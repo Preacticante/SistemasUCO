@@ -41,13 +41,13 @@
             </thead>
             <tbody>
                 <?php $__empty_1 = true; $__currentLoopData = $empleados; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $emp): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
-             <tr id="fila-empleado-<?php echo e($emp->id); ?>" style="transition: all 0.4s ease;">
-    
-    <td><strong><?php echo e(($empleados->currentPage() - 1) * $empleados->perPage() + $loop->iteration); ?></strong></td>
-    <td class="td-nombre"><?php echo e($emp->nombre); ?> <?php echo e($emp->apellido_paterno); ?> <?php echo e($emp->apellido_materno); ?></td>
-    <td class="td-puesto"><?php echo e($emp->puesto->nombre ?? 'Sin Puesto'); ?></td>
-    
-    
+                <tr id="fila-empleado-<?php echo e($emp->id); ?>" style="transition: all 0.4s ease;">
+                    
+                    <td><strong><?php echo e(($empleados->currentPage() - 1) * $empleados->perPage() + $loop->iteration); ?></strong></td>
+                    <td class="td-nombre"><?php echo e($emp->nombre); ?> <?php echo e($emp->apellido_paterno); ?> <?php echo e($emp->apellido_materno); ?></td>
+                    <td class="td-puesto"><?php echo e($emp->puesto->nombre ?? 'Sin Puesto'); ?></td>
+                    
+                    
                     <td style="text-align: left;">
                         <div class="contenedor-acciones">
 
@@ -62,8 +62,6 @@
                                 <i class="fa-solid fa-pen-to-square"></i> 
                                 <span class="btn-text"></span>
                             </button>
-
-                            
 
                             
                             <button type="button" class="btn-accion btn-eliminar" onclick="ejecutarSoftDelete(this)" data-id="<?php echo e($emp->id); ?>">
@@ -178,6 +176,9 @@
 
 
 <?php $__env->startPush('scripts'); ?>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
 <script>
     function abrirModal() {
         document.getElementById('modalAgregar').classList.add('show');
@@ -204,43 +205,69 @@
         document.getElementById('modalEditar').classList.remove('show');
     }
 
+    
     function ejecutarSoftDelete(boton) {
         const id = boton.getAttribute('data-id');
-        
-        if (!confirm('¿Realmente deseas eliminar a este empleado?')) return;
-
         const tokenSeguro = '<?php echo e(csrf_token()); ?>';
 
-        fetch(`/empleados/${id}`, {
-            method: 'POST',
-            headers: {
-                'X-CSRF-TOKEN': tokenSeguro,
-                'Content-Type': 'application/json',
-                'Accept': 'application/json'
-            },
-            body: JSON.stringify({ _method: 'DELETE' })
-        })
-        .then(response => {
-            if (!response.ok) {
-                return response.json().then(err => { throw new Error(err.message || 'Error interno del servidor') });
+        // Alerta moderna de confirmación con SweetAlert2
+        Swal.fire({
+            title: '¿Estás seguro?',
+            text: "Esta acción eliminara al empleado.",
+            icon: 'warning',
+            borderRadius: '25px',
+            showCancelButton: true,
+            confirmButtonColor: '#dc2626',
+            cancelButtonColor: '#e2e8f0',
+            confirmButtonText: 'Sí, eliminar',
+            cancelButtonText: '<span style="color:#334155">Cancelar</span>'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                
+                // Si el usuario confirma, hacemos la petición Fetch
+                fetch(`/empleados/${id}`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': tokenSeguro,
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({ _method: 'DELETE' })
+                })
+                .then(async response => {
+                    const data = await response.json();
+                    if (!response.ok) throw new Error(data.message || 'Error del servidor');
+                    return data;
+                })
+                .then(data => {
+                    if (data.success) {
+                        // Animación de salida de la fila
+                        const fila = document.getElementById('fila-empleado-' + id);
+                        if (fila) {
+                            fila.classList.add('row-fade-out');
+                            setTimeout(() => { fila.remove(); }, 500);
+                        }
+
+                        // Alerta de éxito moderna estilo SweetAlert2
+                        Swal.fire({
+                            title: '¡Eliminado!',
+                            text: 'El empleado ha sido dado de baja de forma correcta.',
+                            icon: 'success',
+                            borderRadius: '25px',
+                            confirmButtonColor: '#124416'
+                        }).then(() => {
+                            // Fuerza el F5 automático al cerrar el aviso para actualizar el contador
+                            window.location.reload();
+                        });
+                    } else {
+                        Swal.fire('Error', 'El servidor no pudo eliminar: ' + data.message, 'error');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error completo:', error);
+                    Swal.fire('Error', 'No se pudo conectar o procesar en el servidor: ' + error.message, 'error');
+                });
             }
-            return response.json();
-        })
-        .then(data => {
-            if (data.success) {
-                const fila = document.getElementById('fila-empleado-' + id);
-                if (fila) {
-                    fila.classList.add('row-fade-out');
-                    setTimeout(() => { fila.remove(); }, 500);
-                }
-                alert('Empleado eliminado con éxito.');
-            } else {
-                alert('El servidor dijo que no pudo eliminar: ' + data.message);
-            }
-        })
-        .catch(error => {
-            console.error('Error completo:', error);
-            alert('Error al intentar conectar o procesar en el servidor: ' + error.message);
         });
     }
 
@@ -436,8 +463,6 @@
         justify-content: center;
         align-items: center;
         flex-wrap: wrap;
-        
-        
     }
 
     .btn-accion {
@@ -454,8 +479,7 @@
         transition: all 0.2s ease;
     }
     
-    
-    .btn-edit { background-color: #AA7F31; color: white; gap 20px; }
+    .btn-edit { background-color: #AA7F31; color: white; gap: 20px; }
     .btn-edit:hover { background-color: #8c6827; transform: translateY(-1px); }
     .btn-edit .btn-text { display: none;}
 
@@ -472,13 +496,11 @@
         transition: all 0.5s ease;
     }
 
-    /* ==========================================================================
-       PAGINACIÓN: CORREGIDA AL EXTREMO INFERIOR IZQUIERDO (flex-start)
-       ========================================================================== */
+    /* Paginación */
     .custom-pagination-container {
         margin-top: 2rem;
         display: flex;
-        justify-content: right; /* Forzar alineación a la izquierda */
+        justify-content: right;
     }
 
     .custom-pagination-container .pagination {
