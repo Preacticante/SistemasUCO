@@ -10,10 +10,13 @@ class Empleado extends Model
     use SoftDeletes;
 
     protected $table = 'empleados';
-    public $timestamps = false; // Mantienes esto falso
+    
+    public $timestamps = false;
 
     // 1. OBLIGATORIO: Indica a Laravel que trate a deleted_at como una fecha/timestamp
-    protected $dates = ['deleted_at']; 
+    protected $dates = ['deleted_at'=> 'datetime']; 
+
+    const DELETED_AT = 'deleted_at';
 
     protected $fillable = [
         'nombre', 
@@ -21,6 +24,7 @@ class Empleado extends Model
         'apellido_materno', 
         'fecha_ingreso', 
         'puesto_id',
+        'usuario_id',
         'deleted_at'
     ];
 

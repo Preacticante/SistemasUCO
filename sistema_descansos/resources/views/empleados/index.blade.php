@@ -233,6 +233,8 @@
                     setTimeout(() => { fila.remove(); }, 500);
                 }
                 alert('Empleado eliminado con éxito.');
+
+                window.location.reload();
             } else {
                 alert('El servidor dijo que no pudo eliminar: ' + data.message);
             }

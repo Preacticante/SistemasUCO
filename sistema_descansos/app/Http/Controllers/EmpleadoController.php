@@ -128,27 +128,31 @@ class EmpleadoController extends Controller
     }
 
     public function destroy($id) {
-        try {
-            $usuarioId = session('user_id');
-            
-            // Verificamos que pertenezca al usuario antes de borrar
-            $empleado = \DB::table('empleados')->where('id', $id)->where('usuario_id', $usuarioId)->first();
-            
-            if (!$empleado) {
-                return response()->json(['success' => false, 'message' => 'Empleado no encontrado o sin autorización.'], 404);
-            }
-            
-            \DB::table('empleados')
-                ->where('id', $id)
-                ->update([
-                    'deleted_at' => \Carbon\Carbon::now()
-                ]);
-            
-            return response()->json(['success' => true]);
-        } catch (\Exception $e) {
-            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+    try {
+        $usuarioId = session('user_id');
+        
+        // 1. Buscamos al empleado para asegurarnos de que existe y le pertenece al usuario logueado
+        $empleado = \DB::table('empleados')
+            ->where('id', $id)
+            ->where('usuario_id', $usuarioId)
+            ->first();
+        
+        if (!$empleado) {
+            return response()->json(['success' => false, 'message' => 'Empleado no encontrado o sin autorización.'], 404);
         }
+        
+        // 2. Si todo está bien, lo marcamos como eliminado (Soft Delete)
+        \DB::table('empleados')
+            ->where('id', $id)
+            ->update([
+                'deleted_at' => \Carbon\Carbon::now()
+            ]);
+        
+        return response()->json(['success' => true]);
+    } catch (\Exception $e) {
+        return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
     }
+}
 
     /**
      * Genera el reporte PDF masivo de vacaciones EXCLUSIVO de los empleados del usuario logeado
