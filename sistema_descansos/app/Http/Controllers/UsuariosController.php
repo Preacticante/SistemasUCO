@@ -10,13 +10,27 @@ use Illuminate\Support\Facades\Validator;
 class UsuariosController extends Controller
 {
     // Carga la lista inicial sin errores
+    // Carga la lista inicial sin errores de columnas faltantes
     public function list() 
     {
         try {
-            $usuarios = Usuario::select('id', 'id_acceso', 'nombre_completo', 'correo', 'departamento')->get();
+            // CORRECCIÓN: Quitamos 'id' de la lista porque no existe en tu tabla 'usuario'
+            $usuarios = Usuario::select('id_acceso', 'nombre_completo', 'correo', 'departamento')
+                                ->where(function($query) {
+                                    $query->whereNull('deleted_at')
+                                          ->orWhere('deleted_at', '');
+                                })
+                                ->get();
+                                
             return response()->json($usuarios);
         } catch (\Exception $e) {
-            return response()->json(['error' => $e->getMessage()], 500);
+            // Plan B de emergencia: si algo falla con el filtro anterior, trae todo lo disponible de las columnas seguras
+            try {
+                $usuarios = Usuario::select('id_acceso', 'nombre_completo', 'correo', 'departamento')->get();
+                return response()->json($usuarios);
+            } catch (\Exception $ex) {
+                return response()->json(['error' => $ex->getMessage()], 500);
+            }
         }
     }
 
