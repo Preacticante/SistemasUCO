@@ -9,75 +9,120 @@ use Illuminate\Support\Facades\Validator;
 
 class UsuariosController extends Controller
 {
-    // Carga la lista inicial sin errores
+    // 1. LISTAR: Trae todos los usuarios y simula el "id" con "id_acceso" para no romper el JS
     public function list() 
     {
         try {
-            $usuarios = Usuario::select('id', 'id_acceso', 'nombre_completo', 'correo', 'departamento')->get();
+            // Traemos todos los registros de tu tabla
+            $usuariosRaw = Usuario::select('id_acceso', 'nombre_completo', 'correo', 'departamento')->get();
+            
+            // Transformación de compatibilidad para el JavaScript de tu vista
+            $usuarios = $usuariosRaw->map(function($u) {
+                return [
+                    'id'              => $u->id_acceso, // El JS lo usará como identificador en los formularios
+                    'id_acceso'       => $u->id_acceso,
+                    'nombre_completo' => $u->nombre_completo,
+                    'correo'          => $u->correo,
+                    'departamento'    => $u->departamento
+                ];
+            });
+                                
             return response()->json($usuarios);
         } catch (\Exception $e) {
             return response()->json(['error' => $e->getMessage()], 500);
         }
     }
 
-    // Guarda el usuario de manera limpia procesando el AJAX
+    // 2. CREAR: Creación limpia confiando en el Folio Automático de tu modelo
     public function store(Request $request) 
     {
-        // Forzamos la validación con los campos exactos del formulario
+        $validator = Validator::make($request->all(), [
+            'nombre_completo' => 'required|string|max:255',
+            'correo'          => 'required|email|unique:usuario,correo',
+            'departamento'    => 'required|string|max:255',
+            'contrasena'      => 'required|min:4',
+        ], [
+            'correo.unique' => 'Este correo electrónico ya está registrado.',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['success' => false, 'errors' => $validator->errors()], 422);
+        }
+
+        try {
+            $usuario = new Usuario();
+            $usuario->nombre_completo = $request->nombre_completo;
+            $usuario->correo          = $request->correo;
+            $usuario->contrasena      = bcrypt($request->contrasena);
+            $usuario->departamento    = $request->departamento;
+            $usuario->fecha_alta      = Carbon::now()->format('Y-m-d');
+            
+            // Tu modelo ejecutará el evento static::creating() aquí y asignará el id_acceso solo
+            $usuario->save(); 
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Usuario registrado con éxito.'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+        }
+    }
+
+    // 3. EDITAR / ACTUALIZAR: Busca de forma segura por el folio 'id_acceso'
+    public function update(Request $request, $id_acceso)
+    {
         $validator = Validator::make($request->all(), [
             'nombre_completo' => 'required|string|max:255',
             'correo'          => 'required|email',
             'departamento'    => 'required|string|max:255',
-            'contrasena'      => 'required|min:4',
-        ], [
-            'nombre_completo.required' => 'El nombre completo es requerido.',
-            'correo.required'          => 'El correo electrónico es requerido.',
-            'departamento.required'    => 'El departamento es requerido.',
-            'contrasena.required'      => 'La contraseña es requerida.',
+            'contrasena'      => 'nullable|min:4',
         ]);
 
         if ($validator->fails()) {
-            return response()->json([
-                'success' => false,
-                'errors'  => $validator->errors()
-            ], 422);
+            return response()->json(['success' => false, 'errors' => $validator->errors()], 422);
         }
 
-        // 1. Obtener el año actual
-        $anioActual = Carbon::now()->year; 
+        try {
+            // Buscamos al usuario por su folio único institucional
+            $usuario = Usuario::where('id_acceso', $id_acceso)->first();
 
-        // 2. Buscar el último usuario creado en este año
-        $ultimoUsuario = Usuario::where('id_acceso', 'LIKE', "UCO-{$anioActual}-%")
-                                ->orderBy('id_acceso', 'desc')
-                                ->first();
+            if (!$usuario) {
+                return response()->json(['success' => false, 'message' => 'Usuario no encontrado.'], 404);
+            }
 
-        if ($ultimoUsuario) {
-            $ultimoNumero = (int) substr($ultimoUsuario->id_acceso, -3);
-            $nuevoNumero = $ultimoNumero + 1;
-        } else {
-            $nuevoNumero = 1;
+            $usuario->nombre_completo = $request->nombre_completo;
+            $usuario->correo          = $request->correo;
+            $usuario->departamento    = $request->departamento;
+
+            if ($request->filled('contrasena')) {
+                $usuario->contrasena = bcrypt($request->contrasena);
+            }
+
+            $usuario->save();
+
+            return response()->json(['success' => true, 'message' => 'Usuario actualizado correctamente.']);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
         }
+    }
 
-        // 3. Formatear número a 3 dígitos (Ej: 001)
-        $numeroFormateado = str_pad($nuevoNumero, 3, '0', STR_PAD_LEFT);
+    // 4. ELIMINAR: Borrado físico directo para evitar errores de columnas faltantes
+    public function destroy($id_acceso)
+    {
+        try {
+            $usuario = Usuario::where('id_acceso', $id_acceso)->first();
 
-        // 4. Armar el ID único
-        $idAccesoUnico = "UCO-{$anioActual}-{$numeroFormateado}";
+            if (!$usuario) {
+                return response()->json(['success' => false, 'message' => 'Usuario no encontrado.'], 404);
+            }
 
-        // 5. Guardar en la base de datos
-        $usuario = new Usuario();
-        $usuario->id_acceso      = $idAccesoUnico;
-        $usuario->nombre_completo = $request->nombre_completo;
-        $usuario->correo          = $request->correo;
-        $usuario->contrasena      = bcrypt($request->contrasena);
-        $usuario->departamento    = $request->departamento;
-        $usuario->fecha_alta      = Carbon::now()->format('Y-m-d');
-        $usuario->save();
+            // Eliminación física real de la base de datos
+            $usuario->delete();
 
-        // Retornamos JSON de éxito directo al JavaScript
-        return response()->json([
-            'success' => true,
-            'message' => 'Usuario creado con éxito con el ID: ' . $idAccesoUnico
-        ]);
+            return response()->json(['success' => true, 'message' => 'Usuario eliminado correctamente.']);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+        }
     }
 }
