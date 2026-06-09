@@ -287,6 +287,19 @@ Route::get('/periodos/{id}', function ($id) {
         'dias' => $periodo->dias
     ]);
 });
+Route::get('/api/eventos-vacaciones', function () {
+    return \App\Models\PeriodoVacacional::with('empleado')->get()->map(function ($p) {
+        return [
+            'title' => $p->empleado->nombre . ' ' . substr($p->empleado->apellido_paterno, 0, 1) . '.',
+            'start' => $p->fecha_inicio,
+            'end'   => \Illuminate\Support\Carbon::parse($p->fecha_fin)->addDay()->toDateString(),
+            'backgroundColor' => '#124416', // Verde UCO
+            'borderColor'     => '#124416',
+            'textColor'       => '#ffffff',
+            'classNames'      => ['evento-moderno'] // Clase para estilo extra
+        ];
+    });
+});
 
 Route::put('/periodos/{id}', function (Request $request, $id) {
     if (! session('logeado')) return response()->json(['error' => 'No autorizado'], 401);
