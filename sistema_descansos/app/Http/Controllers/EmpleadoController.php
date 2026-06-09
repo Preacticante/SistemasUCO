@@ -87,7 +87,12 @@ class EmpleadoController extends Controller
     /**
      * ACTUALIZACIÓN ADAPTADA PARA PETICIONES EMERGENTES (AJAX / FETCH)
      */
-    public function update(Request $request, $id) {
+    /**
+     * ACTUALIZACIÓN ADAPTADA PARA REDIRECCIÓN ESTÁNDAR
+     */
+    public function update(Request $request, $id) 
+    {
+        // 1. Validación de los datos
         $validated = $request->validate([
             'nombre' => 'required|string|max:191',
             'apellido_paterno' => 'required|string|max:191',
@@ -104,26 +109,28 @@ class EmpleadoController extends Controller
 
         try {
             $usuarioId = session('user_id');
-            // Buscamos al empleado asegurándonos de que pertenezca al usuario logeado
-            $empleado = \App\Models\Empleado::where('id', $id)->where('usuario_id', $usuarioId)->first();
+            
+            // 2. Buscamos al empleado asegurándonos de que pertenezca al usuario logeado
+            $empleado = \App\Models\Empleado::where('id', $id)
+                                          ->where('usuario_id', $usuarioId)
+                                          ->first();
             
             if (! $empleado) {
-                return response()->json(['success' => false, 'message' => 'Empleado no encontrado o no tienes permisos.'], 404);
+                return redirect()->route('empleados.index')
+                                 ->withErrors(['error' => 'Empleado no encontrado o no tienes permisos.']);
             }
 
+            // 3. Realizamos la actualización
             $empleado->update($validated);
             
-            return response()->json([
-                'success' => true,
-                'message' => 'Empleado actualizado correctamente.',
-                'id' => $empleado->id
-            ]);
+            // 4. REDIRECCIÓN EXITOSA: Regresa a la lista de empleados con mensaje
+            return redirect()->route('empleados.index')
+                             ->with('success', 'Empleado actualizado correctamente.');
 
         } catch (\Exception $e) {
-            return response()->json([
-                'success' => false, 
-                'message' => 'No se pudo actualizar el empleado en la base de datos: ' . $e->getMessage()
-            ], 500);
+            // 5. En caso de error, regresamos al formulario con el mensaje
+            return back()->withInput()
+                         ->withErrors(['error' => 'No se pudo actualizar el empleado: ' . $e->getMessage()]);
         }
     }
 
