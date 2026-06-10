@@ -388,146 +388,267 @@
 
 @push('scripts')
 <script>
-    let csrfTokenHist = "{{ csrf_token() }}";
-    let periodoEnEdicion = null;
-    let empleadoEnEdicion = null; 
 
-    function openEditModal(id, empleadoId) {
-        periodoEnEdicion = id;
-        empleadoEnEdicion = empleadoId; 
-        
-        fetch(`/periodos/${id}`)
-            .then(response => {
-                if (!response.ok) throw new Error('Error fetching periodo');
-                return response.json();
-            })
-            .then(data => {
-                const fechaFinPeriodo = new Date(data.fecha_fin + 'T23:59:59');
-                const hoy = new Date();
+let csrfTokenHist = "{{ csrf_token() }}";
+let periodoEnEdicion = null;
+let empleadoEnEdicion = null;
 
-                if (fechaFinPeriodo < hoy) {
-                    alert('Este período vacacional ya concluyó y no puede modificarse.');
-                    periodoEnEdicion = null;
-                    empleadoEnEdicion = null;
-                    return;
-                }
+function openEditModal(id, empleadoId) {
 
-                document.getElementById('editEmpleado').value = data.empleado_nombre || 'N/A';
-                document.getElementById('editFechaInicio').value = data.fecha_inicio;
-                document.getElementById('editFechaFin').value = data.fecha_fin;
-                document.getElementById('editModal').classList.add('show');
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('No se pudo cargar el período');
-            });
-    }
+    periodoEnEdicion = id;
+    empleadoEnEdicion = empleadoId;
 
-    function closeEditModal() {
-        document.getElementById('editModal').classList.remove('show');
-        periodoEnEdicion = null;
-        empleadoEnEdicion = null;
-    }
-
-    function guardarEdicion() {
-        if (!periodoEnEdicion) return;
-
-        const fechaInicio = document.getElementById('editFechaInicio').value;
-        const fechaFin = document.getElementById('editFechaFin').value;
-
-        // VALIDACIÓN FRONTEND: Que las fechas estén llenas
-        if (!fechaInicio || !fechaFin) {
-            alert('Por favor completa las fechas de inicio y fin.');
-            return;
+    Swal.fire({
+        title: 'Cargando...',
+        text: 'Obteniendo información del período',
+        allowOutsideClick: false,
+        allowEscapeKey: false,
+        borderRadius: '25px',
+        didOpen: () => {
+            Swal.showLoading();
         }
+    });
 
-        const fechaInicioObj = new Date(fechaInicio + 'T00:00:00');
-        const fechaFinObj = new Date(fechaFin + 'T23:59:59');
-        
-        // VALIDACIÓN FRONTEND: Fecha lógica
-        if (fechaFinObj < fechaInicioObj) {
-            alert('La fecha de fin no puede ser anterior a la fecha de inicio.');
-            return;
-        }
-
-        if (fechaFinObj < new Date()) {
-            alert('No puedes guardar un período con fechas que marquen el estatus como "Tomado".');
-            return;
-        }
-
-        // Fíjate que ya NO mandamos la variable "dias", el servidor lo hará por nosotros
-        fetch(`/periodos/${periodoEnEdicion}`, {
-            method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': csrfTokenHist
-            },
-            body: JSON.stringify({
-                fecha_inicio: fechaInicio,
-                fecha_fin: fechaFin
-            })
-        })
-        .then(async response => {
-            const data = await response.json();
-            if (!response.ok) throw new Error(data.error || 'Error del servidor');
-            return data;
+    fetch(`/periodos/${id}`)
+        .then(response => {
+            if (!response.ok) throw new Error('Error fetching periodo');
+            return response.json();
         })
         .then(data => {
-            alert('¡Período vacacional recalculado y modificado correctamente!');
-            closeEditModal();
-            location.reload(); 
+
+            Swal.close();
+
+            const fechaFinPeriodo = new Date(data.fecha_fin + 'T23:59:59');
+            const hoy = new Date();
+
+            if (fechaFinPeriodo < hoy) {
+
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Período finalizado',
+                    text: 'Este período vacacional ya concluyó y no puede modificarse.',
+                    confirmButtonColor: '#124416',
+                    borderRadius: '25px'
+                });
+
+                periodoEnEdicion = null;
+                empleadoEnEdicion = null;
+                return;
+            }
+
+            document.getElementById('editEmpleado').value = data.empleado_nombre || 'N/A';
+            document.getElementById('editFechaInicio').value = data.fecha_inicio;
+            document.getElementById('editFechaFin').value = data.fecha_fin;
+
+            document.getElementById('editModal').classList.add('show');
         })
         .catch(error => {
+
             console.error('Error:', error);
-            alert('Error al guardar: ' + error.message);
+
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'No se pudo cargar el período.',
+                confirmButtonColor: '#dc2626',
+                borderRadius: '25px'
+            });
         });
-    }
-function deletePeriodo(id) {
-        // Alerta moderna de confirmación con SweetAlert2
+}
+
+function closeEditModal() {
+
+    document.getElementById('editModal').classList.remove('show');
+    periodoEnEdicion = null;
+    empleadoEnEdicion = null;
+}
+
+function guardarEdicion() {
+
+    if (!periodoEnEdicion) return;
+
+    const fechaInicio = document.getElementById('editFechaInicio').value;
+    const fechaFin = document.getElementById('editFechaFin').value;
+
+    if (!fechaInicio || !fechaFin) {
+
         Swal.fire({
-            title: '¿Estás seguro?',
-            text: "Esta acción eliminará la solicitud y restaurará los días al balance del empleado.",
             icon: 'warning',
-            borderRadius: '25px',
-            showCancelButton: true,
-            confirmButtonColor: '#dc2626',
-            cancelButtonColor: '#e2e8f0',
-            confirmButtonText: 'Sí, eliminar',
-            cancelButtonText: '<span style="color:#334155">Cancelar</span>'
-        }).then((result) => {
-            if (result.isConfirmed) {
-                // Si el usuario confirma, hacemos la petición a tu servidor
-                fetch(`/periodos/${id}`, {
-                    method: 'DELETE',
-                    headers: {
-                        'X-CSRF-TOKEN': csrfTokenHist
-                    }
-                })
-                .then(async response => {
-                    const data = await response.json();
-                    if (!response.ok) throw new Error(data.error || 'Error del servidor');
-                    return data;
-                })
-                .then(data => {
-                    // Alerta de éxito moderna
-                    Swal.fire({
-                        title: '¡Eliminado!',
-                        text: 'Los días se han restaurado correctamente.',
-                        icon: 'success',
-                        confirmButtonColor: '#124416'
-                    }).then(() => {
-                        location.reload();
-                    });
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    Swal.fire('Error', 'No se pudo eliminar: ' + error.message, 'error');
-                });
-            }
+            title: 'Campos incompletos',
+            text: 'Por favor completa las fechas de inicio y fin.',
+            confirmButtonColor: '#124416',
+            borderRadius: '25px'
         });
+
+        return;
     }
-    document.getElementById('editModal').addEventListener('click', function(e) {
-        if (e.target === this) closeEditModal();
+
+    const fechaInicioObj = new Date(fechaInicio + 'T00:00:00');
+    const fechaFinObj = new Date(fechaFin + 'T23:59:59');
+
+    if (fechaFinObj < fechaInicioObj) {
+
+        Swal.fire({
+            icon: 'warning',
+            title: 'Fechas inválidas',
+            text: 'La fecha de fin no puede ser anterior a la fecha de inicio.',
+            confirmButtonColor: '#124416',
+            borderRadius: '25px'
+        });
+
+        return;
+    }
+
+    if (fechaFinObj < new Date()) {
+
+        Swal.fire({
+            icon: 'warning',
+            title: 'Período inválido',
+            text: 'No puedes guardar un período con fechas que marquen el estatus como "Tomado".',
+            confirmButtonColor: '#124416',
+            borderRadius: '25px'
+        });
+
+        return;
+    }
+
+    Swal.fire({
+        title: 'Guardando cambios...',
+        text: 'Por favor espera',
+        allowOutsideClick: false,
+        allowEscapeKey: false,
+        borderRadius: '25px',
+        didOpen: () => {
+            Swal.showLoading();
+        }
     });
+
+    fetch(`/periodos/${periodoEnEdicion}`, {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': csrfTokenHist
+        },
+        body: JSON.stringify({
+            fecha_inicio: fechaInicio,
+            fecha_fin: fechaFin
+        })
+    })
+    .then(async response => {
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(data.error || 'Error del servidor');
+        }
+
+        return data;
+    })
+    .then(data => {
+
+        Swal.fire({
+            icon: 'success',
+            title: '¡Actualizado!',
+            text: 'El período vacacional fue recalculado y modificado correctamente.',
+            confirmButtonColor: '#124416',
+            borderRadius: '25px'
+        }).then(() => {
+
+            closeEditModal();
+            location.reload();
+        });
+    })
+    .catch(error => {
+
+        console.error('Error:', error);
+
+        Swal.fire({
+            icon: 'error',
+            title: 'Error al guardar',
+            text: error.message,
+            confirmButtonColor: '#dc2626',
+            borderRadius: '25px'
+        });
+    });
+}
+
+function deletePeriodo(id) {
+
+    Swal.fire({
+        title: '¿Estás seguro?',
+        text: 'Esta acción eliminará la solicitud y restaurará los días al balance del empleado.',
+        icon: 'warning',
+        borderRadius: '25px',
+        showCancelButton: true,
+        confirmButtonColor: '#dc2626',
+        cancelButtonColor: '#e2e8f0',
+        confirmButtonText: 'Sí, eliminar',
+        cancelButtonText: '<span style="color:#334155">Cancelar</span>'
+    }).then((result) => {
+
+        if (result.isConfirmed) {
+
+            Swal.fire({
+                title: 'Eliminando...',
+                text: 'Por favor espera',
+                allowOutsideClick: false,
+                allowEscapeKey: false,
+                borderRadius: '25px',
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+
+            fetch(`/periodos/${id}`, {
+                method: 'DELETE',
+                headers: {
+                    'X-CSRF-TOKEN': csrfTokenHist
+                }
+            })
+            .then(async response => {
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.error || 'Error del servidor');
+                }
+
+                return data;
+            })
+            .then(data => {
+
+                Swal.fire({
+                    title: '¡Eliminado!',
+                    text: 'Los días se han restaurado correctamente.',
+                    icon: 'success',
+                    confirmButtonColor: '#124416',
+                    borderRadius: '25px'
+                }).then(() => {
+                    location.reload();
+                });
+            })
+            .catch(error => {
+
+                console.error('Error:', error);
+
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'No se pudo eliminar: ' + error.message,
+                    confirmButtonColor: '#dc2626',
+                    borderRadius: '25px'
+                });
+            });
+        }
+    });
+}
+
+document.getElementById('editModal').addEventListener('click', function(e) {
+
+    if (e.target === this) {
+        closeEditModal();
+    }
+});
+
 </script>
 @endpush

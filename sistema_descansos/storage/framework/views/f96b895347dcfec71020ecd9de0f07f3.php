@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="es">
 
@@ -164,6 +165,19 @@
                 <?php echo e(session('status')); ?>
 
             </div>
+=======
+<?php $__env->startSection('title', 'Olvidé mi contraseña'); ?>
+
+
+
+<?php $__env->startSection('content'); ?>
+    <div class="card">
+        <h1>¿Olvidaste tu contraseña?</h1>
+        <p>Escribe tu correo institucional y te enviaremos un enlace para restablecerla.</p>
+
+        <?php if(session('status')): ?>
+            <div class="alert"><?php echo e(session('status')); ?></div>
+>>>>>>> 0fdfa8ba69636c5113fc88f37c4eda87b241d3d5
         <?php endif; ?>
 
         <?php if($errors->any()): ?>

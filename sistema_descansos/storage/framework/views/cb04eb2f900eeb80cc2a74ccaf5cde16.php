@@ -124,7 +124,6 @@
 .list-body { max-height: 480px; overflow-y: auto; padding: 20px; }
 .empty { text-align: center; color: #64748b; padding: 20px; font-style: italic; }
 
-/* Tarjetas individuales estilo Lila de tu Resumen de Gestión */
 .usuario-item { 
     display: flex; 
     justify-content: space-between; 
@@ -240,6 +239,8 @@
 <?php $__env->stopPush(); ?>
 
 <?php $__env->startPush('scripts'); ?>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
 <script>
 (function(){
     const token = '<?php echo e(csrf_token()); ?>';
@@ -251,10 +252,13 @@
     // Carga los usuarios mediante fetch
     async function loadUsuarios(){
         try {
-            const res = await fetch('/perfiles/list'); // Puedes mapear esta URL a tu controlador
+            const res = await fetch('/perfiles/list');
             usuarios = await res.json();
             render();
-        } catch(e){ console.error(e); qs('lista-usuarios').innerHTML = '<div class="empty">Error cargando usuarios</div>'; }
+        } catch(e){ 
+            console.error(e); 
+            qs('lista-usuarios').innerHTML = '<div class="empty">Error cargando usuarios</div>'; 
+        }
     }
 
     function render(){
@@ -301,15 +305,55 @@
         qs('contrasena').required = true; 
     }
 
-    async function eliminar(id){ 
-        if (!confirm('¿Seguro que deseas eliminar este usuario? Perderá el acceso de inmediato.')) return; 
-        try{ 
-            const res = await fetch('/perfiles/'+id,{ method:'DELETE', headers:{ 'X-CSRF-TOKEN': token, 'Accept':'application/json' } }); 
-            const data = await res.json(); 
-            if (res.ok && data.success){ loadUsuarios(); alert('Usuario eliminado con éxito'); } else alert(data.message||'Error'); 
-        } catch(e){ console.error(e); alert('Error'); } 
+    // ELIMINAR: Integrado con SweetAlert2 elegante y adaptado a tus estilos institucionales
+    function eliminar(id){ 
+        Swal.fire({
+            title: '¿Estás seguro?',
+            text: "Esta acción eliminará la cuenta de usuario. Perderá el acceso de inmediato.",
+            icon: 'warning',
+            borderRadius: '25px',
+            showCancelButton: true,
+            confirmButtonColor: '#dc2626',
+            cancelButtonColor: '#e2e8f0',
+            confirmButtonText: 'Sí, eliminar',
+            cancelButtonText: '<span style="color:#334155">Cancelar</span>'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                fetch('/perfiles/' + id, { 
+                    method: 'DELETE', 
+                    headers: { 
+                        'X-CSRF-TOKEN': token, 
+                        'Accept': 'application/json' 
+                    } 
+                })
+                .then(async res => {
+                    const data = await res.json();
+                    if (!res.ok) throw new Error(data.message || 'Error del servidor');
+                    return data;
+                })
+                .then(data => {
+                    if(data.success) {
+                        Swal.fire({
+                            title: '¡Eliminado!',
+                            text: 'El usuario ha sido removido del sistema con éxito.',
+                            icon: 'success',
+                            confirmButtonColor: '#11431c',
+                            borderRadius: '25px'
+                        });
+                        loadUsuarios();
+                    } else {
+                        Swal.fire('Error', data.message || 'No se pudo completar la acción', 'error');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    Swal.fire('Error', 'No se pudo eliminar: ' + error.message, 'error');
+                });
+            }
+        });
     }
 
+    // GUARDAR / ACTUALIZAR: Integrado con SweetAlert2 para mostrar respuestas claras
     async function submit(e){ 
         e.preventDefault(); 
         const id = qs('usuario_id').value; 
@@ -320,25 +364,53 @@
             contrasena: qs('contrasena').value
         }; 
         
-        const method = id? 'PUT' : 'POST'; 
-        const url = id? '/perfiles/'+id : '/perfiles'; 
+        const method = id ? 'PUT' : 'POST'; 
+        const url = id ? '/perfiles/' + id : '/perfiles'; 
         
-        try{ 
-            const res = await fetch(url,{ method, headers:{ 'X-CSRF-TOKEN': token, 'Content-Type':'application/json', 'Accept':'application/json' }, body: JSON.stringify(payload) }); 
+        try { 
+            const res = await fetch(url, { 
+                method, 
+                headers: { 
+                    'X-CSRF-TOKEN': token, 
+                    'Content-Type': 'application/json', 
+                    'Accept': 'application/json' 
+                }, 
+                body: JSON.stringify(payload) 
+            }); 
             const data = await res.json(); 
+            
             if (res.ok && data.success){ 
                 resetForm(); 
                 loadUsuarios(); 
-                alert(data.message || 'Operación realizada con éxito'); 
+                Swal.fire({
+                    title: '¡Éxito!',
+                    text: data.message || 'Operación realizada correctamente.',
+                    icon: 'success',
+                    confirmButtonColor: '#11431c',
+                    borderRadius: '25px'
+                });
             } else if (data.errors){ 
-                alert(Object.values(data.errors).flat().join('\n')); 
+                Swal.fire({
+                    title: 'Validación',
+                    text: Object.values(data.errors).flat().join('\n'),
+                    icon: 'error',
+                    confirmButtonColor: '#11431c',
+                    borderRadius: '25px'
+                });
             } else {
-                alert(data.message||'Error'); 
+                Swal.fire('Error', data.message || 'Ocurrió un error inesperado', 'error');
             }
-        } catch(e){ console.error(e); alert('Error de red'); } 
+        } catch(e){ 
+            console.error(e); 
+            Swal.fire('Error', 'Error de red al conectar con el servidor', 'error');
+        } 
     }
 
-    document.addEventListener('DOMContentLoaded', function(){ loadUsuarios(); qs('formUsuario').addEventListener('submit', submit); qs('cancelUsuario').addEventListener('click', resetForm); });
+    document.addEventListener('DOMContentLoaded', function(){ 
+        loadUsuarios(); 
+        qs('formUsuario').addEventListener('submit', submit); 
+        qs('cancelUsuario').addEventListener('click', resetForm); 
+    });
 })();
 </script>
 <?php $__env->stopPush(); ?>
