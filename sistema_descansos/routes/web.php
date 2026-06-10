@@ -131,6 +131,7 @@ Route::post('/empleados/{empleado}/vacaciones', function (Request $request, Empl
     $diasDerecho = $ley?->dias_derecho ?? 0;
 
     $validator = Validator::make($request->all(), [
+        'multiple_dates'   => 'required|string',
         'fecha_inicio'     => 'required|date',
         'fecha_fin'        => 'required|date|after_or_equal:fecha_inicio',
         'dias_solicitados' => 'required|integer|min:1',
@@ -138,35 +139,35 @@ Route::post('/empleados/{empleado}/vacaciones', function (Request $request, Empl
 
     if ($validator->fails()) return redirect()->back()->withErrors($validator)->withInput();
     
-    $inicio = Carbon::parse($request->fecha_inicio);
-    $fin = Carbon::parse($request->fecha_fin);
+    $selectedDates = array_filter(array_map('trim', explode(',', $request->input('multiple_dates'))));
+    if (empty($selectedDates)) {
+        return back()->withErrors(['multiple_dates' => 'Selecciona al menos un día en el calendario.'])->withInput();
+    }
+
+    sort($selectedDates);
+    $inicio = Carbon::parse($selectedDates[0]);
+    $fin = Carbon::parse(end($selectedDates));
 
     if ($inicio->year !== $anioActual || $fin->year !== $anioActual) return back()->withErrors(['fecha_inicio' => "Las fechas deben estar dentro del año {$anioActual}."])->withInput();
 
     $registroPorMes = RegistroDescanso::where('empleado_id', $empleado->id)->where('anio_calendario', $anioActual)->get();
     $diasTomadosActuales = $registroPorMes->sum('dias_tomados');
     
-    $diasNuevos = (int) $request->input('dias_solicitados');
+    $diasNuevos = count($selectedDates);
 
     if ($diasTomadosActuales + $diasNuevos > $diasDerecho) {
         return back()->withErrors(['fecha_inicio' => "El empleado no cuenta con suficientes días. Has solicitado {$diasNuevos} días."])->withInput();
     }
 
     $diasPorMes = [];
-    $mesInicio = $inicio->month;
-    $mesFin = $fin->month;
-
-    if ($mesInicio === $mesFin) {
-        $diasPorMes[$mesInicio] = $diasNuevos;
-    } else {
-        $diasPrimerMesCalendario = $inicio->copy()->endOfMonth()->diffInDays($inicio) + 1;
-        $asignarPrimerMes = min($diasNuevos, $diasPrimerMesCalendario);
-        $diasPorMes[$mesInicio] = $asignarPrimerMes;
-        
-        $sobrante = $diasNuevos - $asignarPrimerMes;
-        if ($sobrante > 0) {
-            $diasPorMes[$mesFin] = $sobrante;
+    foreach ($selectedDates as $selectedDate) {
+        $fecha = Carbon::parse($selectedDate);
+        if ($fecha->year !== $anioActual) {
+            return back()->withErrors(['fecha_inicio' => "Las fechas deben estar dentro del año {$anioActual}."])->withInput();
         }
+
+        $mes = $fecha->month;
+        $diasPorMes[$mes] = ($diasPorMes[$mes] ?? 0) + 1;
     }
 
     $diasPeriodo = $diasNuevos;
@@ -208,7 +209,7 @@ Route::get('/empleados/{empleado}/vacaciones/pdf', function (Empleado $empleado)
     $periodosVacacionales = PeriodoVacacional::where('empleado_id', $empleado->id)->orderBy('fecha_inicio')->get();
 
     $meses = [
-        1 => 'Enero', 2 => 'Febrero', 3 => 'Marzo', 4 => 'Abril', 5 => 'Mayo', 6 => 'Junio', 
+        1 => 'Enero', 2 => 'Febrero', 3 => 'Marzo', 4 => 'Abril', 5 => 'Mayo', 6 => 'Junio',
         7 => 'Julio', 8 => 'Agosto', 9 => 'Septiembre', 10 => 'Octubre', 11 => 'Noviembre', 12 => 'Diciembre',
     ];
 
@@ -293,7 +294,7 @@ Route::get('/api/eventos-vacaciones', function () {
             'title' => $p->empleado->nombre . ' ' . substr($p->empleado->apellido_paterno, 0, 1) . '.',
             'start' => $p->fecha_inicio,
             'end'   => \Illuminate\Support\Carbon::parse($p->fecha_fin)->addDay()->toDateString(),
-            'backgroundColor' => '#124416', // Verde UCO
+            'backgroundColor' => '#124416',
             'borderColor'     => '#124416',
             'textColor'       => '#ffffff',
             'classNames'      => ['evento-moderno'] // Clase para estilo extra

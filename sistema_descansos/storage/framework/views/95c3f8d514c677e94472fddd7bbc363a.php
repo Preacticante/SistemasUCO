@@ -6,6 +6,8 @@
     <title>Vacaciones | <?php echo e($empleado->nombre); ?> <?php echo e($empleado->apellido_paterno); ?> <?php echo e($empleado->apellido_materno); ?></title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
 </head>
 <body>
     <main class="page-shell">
@@ -88,21 +90,21 @@
                 <h2><i class="fa-solid fa-calendar-plus" style="color: #124416;"></i> Registrar vacaciones</h2>
                 <form action="<?php echo e(route('empleados.vacaciones.guardar', $empleado->id)); ?>" method="POST">
                     <?php echo csrf_field(); ?>
+                    
+                    <input type="hidden" id="multiple_dates" name="multiple_dates" value="<?php echo e(old('multiple_dates')); ?>">
+                    <input type="hidden" id="fecha_inicio" name="fecha_inicio" value="<?php echo e(old('fecha_inicio')); ?>">
+                    <input type="hidden" id="fecha_fin" name="fecha_fin" value="<?php echo e(old('fecha_fin')); ?>">
+
                     <div class="form-group">
-                        <label for="fecha_inicio">Fecha de inicio</label>
-                        <input type="date" id="fecha_inicio" name="fecha_inicio" value="<?php echo e(old('fecha_inicio')); ?>" required />
+                        <label for="calendar-inline">Selecciona los días en el calendario</label>
+                        <div id="calendar-inline"></div>
                     </div>
 
                     <div class="form-group">
-                        <label for="fecha_fin">Fecha de fin</label>
-                        <input type="date" id="fecha_fin" name="fecha_fin" value="<?php echo e(old('fecha_fin')); ?>" required />
-                    </div>
-
-                    <div class="form-group">
-                        <label for="dias_solicitados">Días a descontar</label>
-                        <input type="number" id="dias_solicitados" name="dias_solicitados" value="<?php echo e(old('dias_solicitados')); ?>" min="1" step="1" required />
+                        <label for="dias_solicitados">Días seleccionados a descontar</label>
+                        <input type="number" id="dias_solicitados" name="dias_solicitados" value="<?php echo e(old('dias_solicitados', 0)); ?>" min="0" step="1" readonly required />
                         <div class="form-instruction" style="margin-top: 5px;">
-                            * El sistema sugiere un cálculo, pero puedes modificarlo manualmente si los turnos varían.
+                            * El sistema calcula los días contando de manera exacta cada fecha marcada en color morado.
                         </div>
                     </div>
 
@@ -146,51 +148,35 @@
         </section>
     </main>
 
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/es.js"></script>
     <script>
         const diasRestantes = <?php echo e($diasRestantes); ?>;
-        const fechaInicio = document.getElementById('fecha_inicio');
-        const fechaFin = document.getElementById('fecha_fin');
+        const inputHiddenDates = document.getElementById('multiple_dates');
+        const inputFechaInicio = document.getElementById('fecha_inicio');
+        const inputFechaFin = document.getElementById('fecha_fin');
         const inputDias = document.getElementById('dias_solicitados');
         const previewRestantes = document.getElementById('preview-restantes');
 
-        // Función 1: Sugerir días automáticamente basados en el calendario
-        function sugerirDias() {
-            const inicio = fechaInicio.value ? new Date(fechaInicio.value + 'T00:00:00') : null;
-            const fin = fechaFin.value ? new Date(fechaFin.value + 'T00:00:00') : null;
+        // Inicialización de Flatpickr en modo incrustado e interactivo múltiple
+        const fp = flatpickr("#calendar-inline", {
+            inline: true,
+            mode: "multiple",
+            locale: "es",
+            dateFormat: "Y-m-d",
+            conjunction: ",",
+            defaultDate: inputHiddenDates.value ? inputHiddenDates.value.split(",") : [],
+            onChange: function(selectedDates, dateStr, instance) {
+                const sortedDates = selectedDates.slice().sort((a, b) => a - b);
+                const dateStrings = sortedDates.map(date => instance.formatDate(date, "Y-m-d"));
 
-            if (!inicio || !fin || fin < inicio) {
-                inputDias.value = '';
-                actualizarRestantes();
-                return;
+                inputHiddenDates.value = dateStrings.join(",");
+                inputDias.value = dateStrings.length;
+                inputFechaInicio.value = dateStrings.length ? dateStrings[0] : '';
+                inputFechaFin.value = dateStrings.length ? dateStrings[dateStrings.length - 1] : '';
+                previewRestantes.textContent = Math.max(0, diasRestantes - dateStrings.length);
             }
-
-            const diff = Math.floor((fin - inicio) / (1000 * 60 * 60 * 24)) + 1;
-            inputDias.value = isNaN(diff) ? 0 : diff;
-            actualizarRestantes();
-        }
-
-        // Función 2: Actualizar la pastilla visual si la administradora teclea un número diferente
-        function actualizarRestantes() {
-            const descontar = parseInt(inputDias.value) || 0;
-            previewRestantes.textContent = Math.max(0, diasRestantes - descontar);
-        }
-
-        fechaInicio.addEventListener('change', () => {
-            if (fechaFin.value && fechaFin.value < fechaInicio.value) {
-                fechaFin.value = fechaInicio.value;
-            }
-            sugerirDias();
         });
-
-        fechaFin.addEventListener('change', sugerirDias);
-        inputDias.addEventListener('input', actualizarRestantes);
-
-        // Al cargar la página
-        if(fechaInicio.value && fechaFin.value && !inputDias.value) {
-            sugerirDias();
-        } else {
-            actualizarRestantes();
-        }
     </script>
 </body>
 </html>
@@ -239,7 +225,6 @@
         object-fit: contain;
     }
 
-    /* --- ENCABEZADO ESTILO CONTROL DE EMPLEADOS --- */
     .topbar {
         display: flex;
         justify-content: space-between;
@@ -291,7 +276,6 @@
         font-size: 0.98rem;
     }
 
-    /* --- BOTONES DE ACCIÓN --- */
     .button-link {
         border: none;
         border-radius: 20px;
@@ -321,7 +305,6 @@
         font-size: 0.95rem;
     }
 
-    /* Botón Guardar */
     .button-primary {
         width: 100%;
         padding: 0.9rem;
@@ -346,7 +329,6 @@
         box-shadow: 0 6px 18px rgba(18, 68, 22, 0.35);
     }
 
-    /* Botón Reporte PDF */
     .button-secondary {
         background: #ffffff;
         color: var(--dorado-uco);
@@ -369,7 +351,17 @@
         box-shadow: 0 4px 12px rgba(170, 127, 49, 0.2);
     }
 
-    /* --- TARJETAS (ESTILO PANEL PRINCIPAL) --- */
+    .flatpickr-day.selected, .flatpickr-day.startRange, .flatpickr-day.endRange {
+        background: var(--morado-uco) !important;
+        border-color: var(--morado-uco) !important;
+        color: white !important;
+    }
+
+    .flatpickr-day.selected.inRange {
+        background: rgba(52, 12, 81, 0.15) !important;
+        color: var(--morado-uco) !important;
+    }
+
     .summary-grid {
         display: grid;
         gap: 1.5rem;
@@ -412,7 +404,6 @@
         grid-template-columns: 1.2fr 1fr;
     }
 
-    /* --- PÍLDORAS INFORMATIVAS (SEMÁNTICA) --- */
     .meta-row {
         display: flex;
         flex-wrap: wrap;
@@ -433,7 +424,6 @@
         display: inline;
     }
 
-    /* Colores dinámicos del Panel Principal */
     .status-derecho {
         background: rgba(18, 68, 22, 0.05);
         border-color: rgba(18, 68, 22, 0.15);
@@ -452,7 +442,6 @@
     }
     .status-restantes strong { color: #124416; font-size: 1rem; }
 
-    /* --- FORMULARIOS --- */
     .form-group {
         margin-bottom: 1.25rem;
     }
@@ -472,26 +461,62 @@
         font-weight: 600;
     }
 
-    input[type="date"], input[type="number"] {
+    input[type="number"] {
         width: 100%;
         padding: 0.8rem 1rem;
         border-radius: 12px;
         border: 1px solid #cbd5e1;
-        background: #f8fafc;
+        background: #e2e8f0; /* Color grisáceo para indicar que se calcula solo */
         color: #1e293b;
         font-size: 0.95rem;
         font-family: inherit;
-        transition: all 0.3s ease;
         outline: none;
     }
 
-    input[type="date"]:focus, input[type="number"]:focus {
-        border-color: var(--dorado-uco);
-        box-shadow: 0 0 0 3px rgba(170, 127, 49, 0.15);
-        background: #ffffff;
+    /* --- PERSONALIZACIÓN EXCLUSIVA DE FLATPICKR (COLOR MORADO UCO) --- */
+    .flatpickr-calendar {
+        width: 100% !important;
+        max-width: 350px;
+        margin: 0 auto;
+        box-shadow: none !important;
+        border: 1px solid #e2e8f0 !important;
+        border-radius: 16px !important;
+        padding: 8px;
     }
 
-    /* --- TABLA ESTILO SISTEMA UCO --- */
+    .flatpickr-day.selected, 
+    .flatpickr-day.selected:hover, 
+    .flatpickr-day.selected:focus {
+        background: var(--morado-uco) !important;
+        border-color: var(--morado-uco) !important;
+        color: #ffffff !important;
+        font-weight: 600;
+        border-radius: 8px !important;
+    }
+
+    .flatpickr-day:hover {
+        background: rgba(52, 12, 81, 0.1) !important;
+    }
+
+    .flatpickr-months .flatpickr-month {
+        color: var(--verde-uco) !important;
+        fill: var(--verde-uco) !important;
+    }
+
+    .flatpickr-current-month .flatpickr-monthDropdown-months {
+        font-weight: 700 !important;
+    }
+
+    .flatpickr-weekdays {
+        background: transparent !important;
+    }
+
+    span.flatpickr-weekday {
+        color: var(--text-muted) !important;
+        font-weight: 600 !important;
+    }
+
+    /* --- TABLA --- */
     .table-wrapper {
         overflow-x: auto;
         border-radius: 12px;
@@ -516,32 +541,16 @@
         letter-spacing: 0.02em;
     }
 
-    th:first-child { border-top-left-radius: 4px; }
-    th:last-child { border-top-right-radius: 4px; }
-
     td {
         border-bottom: 1px solid #f1f5f9;
         color: #334155;
     }
 
-    tr:last-child td {
-        border-bottom: none;
-    }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background-color: #f8fafc; }
+    .td-mes { font-weight: 500; }
+    .dias-count-table { color: var(--morado-uco); font-size: 0.95rem; }
 
-    tr:hover td {
-        background-color: #f8fafc;
-    }
-
-    .td-mes {
-        font-weight: 500;
-    }
-
-    .dias-count-table {
-        color: var(--morado-uco);
-        font-size: 0.95rem;
-    }
-
-    /* --- ALERTAS DE NOTIFICACIÓN --- */
     .status {
         border-radius: 12px;
         padding: 1rem 1.5rem;
@@ -551,189 +560,26 @@
         display: flex;
         align-items: center;
         gap: 10px;
-        box-shadow: 0 4px 10px rgba(0,0,0,0.02);
     }
 
-    .status.success {
-        background: #ecfdf5;
-        color: #065f46;
-        border: 1px solid #a7f3d0;
-    }
+    .status.success { background: #ecfdf5; color: #065f46; border: 1px solid #a7f3d0; }
+    .status.error { background: #fef2f2; color: #991b1b; border: 1px solid #fecaca; }
 
-    .status.error {
-        background: #fef2f2;
-        color: #991b1b;
-        border: 1px solid #fecaca;
-    }
-
-    /* --- RESPONSIVO --- */
+    /* --- MEDIA QUERIES --- */
     @media (max-width: 1024px) {
-        .page-shell {
-            width: 100%;
-            padding: 1rem;
-        }
-
-        .summary-grid,
-        .card-columns {
-            grid-template-columns: 1fr;
-        }
-
-        .card {
-            padding: 1.5rem;
-        }
+        .page-shell { width: 100%; padding: 1rem; }
+        .summary-grid, .card-columns { grid-template-columns: 1fr; }
+        .card { padding: 1.5rem; }
     }
 
     @media (max-width: 768px) {
-        .page-shell {
-            margin: 0 auto 1rem;
-            padding: 1rem;
-        }
-
-        .topbar {
-            flex-direction: column;
-            align-items: flex-start;
-            padding: 1.2rem;
-            gap: 1rem;
-        }
-
-        .topbar-title {
-            flex-direction: column;
-            gap: 0.5rem;
-        }
-
-        .topbar h1 {
-            font-size: 1.4rem;
-        }
-
-        .topbar p {
-            font-size: 0.85rem;
-        }
-
-        .button-link {
-            width: 100%;
-        }
-
-        .logo-outer-container {
-            justify-content: center;
-            padding-left: 0;
-        }
-        
-        .logo-outside {
-            height: 80px;
-        }
-
-        .meta-row {
-            flex-direction: column;
-            gap: 0.5rem;
-        }
-
-        .meta-pill {
-            width: 100%;
-        }
-
-        .card {
-            padding: 1.2rem;
-        }
-
-        .form-group {
-            margin-bottom: 1rem;
-        }
-
-        label {
-            font-size: 0.85rem;
-        }
-
-        input[type="date"], input[type="number"] {
-            padding: 0.7rem;
-            font-size: 0.9rem;
-        }
-
-        table {
-            font-size: 0.8rem;
-        }
-
-        th, td {
-            padding: 0.7rem 0.8rem;
-        }
-
-        .button-primary {
-            padding: 0.8rem;
-            font-size: 0.9rem;
-        }
-
-        .button-secondary {
-            padding: 0.5rem 1rem;
-            font-size: 0.8rem;
-        }
-    }
-
-    @media (max-width: 480px) {
-        .page-shell {
-            width: 100%;
-            margin: 0;
-            padding: 0.5rem;
-        }
-
-        .topbar {
-            border-radius: 12px;
-            padding: 1rem;
-        }
-
-        .topbar h1 {
-            font-size: 1.1rem;
-        }
-
-        .page-label {
-            font-size: 0.65rem;
-            padding: 0.3rem 0.8rem;
-        }
-
-        .topbar p {
-            font-size: 0.75rem;
-            margin-top: 0.5rem;
-        }
-
-        .card {
-            border-radius: 12px;
-            padding: 1rem;
-            margin-bottom: 1rem;
-        }
-
-        .card h2 {
-            font-size: 1rem;
-        }
-
-        .meta-pill {
-            font-size: 0.8rem;
-            padding: 0.5rem 0.8rem;
-        }
-
-        table {
-            font-size: 0.75rem;
-        }
-
-        th, td {
-            padding: 0.5rem;
-        }
-
-        .button-primary {
-            padding: 0.6rem;
-            font-size: 0.85rem;
-            gap: 4px;
-        }
-
-        .button-primary i {
-            font-size: 0.8rem;
-        }
-
-        .table-wrapper {
-            border-radius: 8px;
-        }
-
-        .status {
-            padding: 0.8rem 1rem;
-            font-size: 0.85rem;
-            margin-bottom: 1rem;
-        }
+        .topbar { flex-direction: column; align-items: flex-start; padding: 1.2rem; gap: 1rem; }
+        .topbar-title { flex-direction: column; gap: 0.5rem; }
+        .topbar h1 { font-size: 1.4rem; }
+        .button-link { width: 100%; }
+        .logo-outer-container { justify-content: center; padding-left: 0; }
+        .logo-outside { height: 80px; }
+        .meta-row { flex-direction: column; gap: 0.5rem; }
+        .meta-pill { width: 100%; }
     }
 </style><?php /**PATH /var/www/html/resources/views/empleados/vacaciones.blade.php ENDPATH**/ ?>
