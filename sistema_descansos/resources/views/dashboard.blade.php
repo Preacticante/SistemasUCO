@@ -190,9 +190,7 @@
     .fc .fc-col-header-cell-cushion, .fc .fc-daygrid-day-number { font-size: 0.85rem !important; }
     .fc .fc-event-title { font-size: 0.75rem !important; }
 
-    /* ==========================================================================
-       MEDIA QUERIES (RESPONSIVE)
-       ========================================================================== */
+    
     @media (max-width: 1024px) {
         .dashboard-main-content {
             grid-template-columns: 1fr; 
