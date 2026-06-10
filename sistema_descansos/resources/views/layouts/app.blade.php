@@ -148,6 +148,7 @@
 
     <div class="app-container">
         
+        @unless(View::hasSection('hideLayout'))
         <aside class="sidebar">
             <div class="sidebar-header">
                 <div style="padding: 0; margin-bottom: 45px; display: flex; justify-content: center;">
@@ -189,8 +190,10 @@
                 </li>
             </ul>
         </aside>
+        @endunless
 
         <main class="main-content">
+            @unless(View::hasSection('hideLayout'))
             <header class="topbar">
                 <div>@yield('header')</div>
                 <div class="topbar-user">
@@ -198,6 +201,7 @@
                     <a href="{{ route('logout') }}"><i class="fa-solid fa-right-from-bracket"></i> Cerrar Sesión</a>
                 </div>
             </header>
+            @endunless
             
             <div class="content-area">
                 @yield('content')

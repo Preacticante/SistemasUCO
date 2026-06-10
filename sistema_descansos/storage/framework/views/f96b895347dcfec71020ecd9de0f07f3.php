@@ -159,24 +159,25 @@
             Escribe tu correo institucional y te enviaremos un enlace para restablecerla.
         </p>
 
-        @if(session('status'))
+        <?php if(session('status')): ?>
             <div class="alert">
-                {{ session('status') }}
-            </div>
-        @endif
+                <?php echo e(session('status')); ?>
 
-        @if($errors->any())
+            </div>
+        <?php endif; ?>
+
+        <?php if($errors->any()): ?>
             <div class="error-list">
                 <ul>
-                    @foreach($errors->all() as $error)
-                        <li>{{ $error }}</li>
-                    @endforeach
+                    <?php $__currentLoopData = $errors->all(); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $error): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                        <li><?php echo e($error); ?></li>
+                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                 </ul>
             </div>
-        @endif
+        <?php endif; ?>
 
-        <form action="{{ route('password.email') }}" method="POST">
-            @csrf
+        <form action="<?php echo e(route('password.email')); ?>" method="POST">
+            <?php echo csrf_field(); ?>
 
             <label for="correo">Correo electrónico</label>
 
@@ -184,7 +185,7 @@
                 id="correo"
                 type="email"
                 name="correo"
-                value="{{ old('correo') }}"
+                value="<?php echo e(old('correo')); ?>"
                 placeholder="admin@preparatoria.edu"
                 required
             >
@@ -196,7 +197,7 @@
 
         <p class="footer-link">
             ¿Ya recuerdas tu contraseña?
-            <a href="{{ route('login') }}">
+            <a href="<?php echo e(route('login')); ?>">
                 Inicia sesión
             </a>
         </p>
@@ -204,4 +205,4 @@
     </div>
 
 </body>
-</html>
+</html><?php /**PATH /var/www/html/resources/views/auth/forgot-password.blade.php ENDPATH**/ ?>

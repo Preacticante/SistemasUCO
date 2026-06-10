@@ -148,6 +148,7 @@
 
     <div class="app-container">
         
+        <?php if (! (View::hasSection('hideLayout'))): ?>
         <aside class="sidebar">
             <div class="sidebar-header">
                 <div style="padding: 0; margin-bottom: 45px; display: flex; justify-content: center;">
@@ -189,8 +190,10 @@
                 </li>
             </ul>
         </aside>
+        <?php endif; ?>
 
         <main class="main-content">
+            <?php if (! (View::hasSection('hideLayout'))): ?>
             <header class="topbar">
                 <div><?php echo $__env->yieldContent('header'); ?></div>
                 <div class="topbar-user">
@@ -198,6 +201,7 @@
                     <a href="<?php echo e(route('logout')); ?>"><i class="fa-solid fa-right-from-bracket"></i> Cerrar Sesión</a>
                 </div>
             </header>
+            <?php endif; ?>
             
             <div class="content-area">
                 <?php echo $__env->yieldContent('content'); ?>
