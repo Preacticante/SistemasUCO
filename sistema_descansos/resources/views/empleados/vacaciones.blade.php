@@ -142,9 +142,12 @@
                     </table>
                 </div>
 
-                <div style="margin-top: 1.5rem; display: flex; justify-content: flex-end;">
+                <div style="margin-top: 1.5rem; display: flex; justify-content: flex-end; gap: 8px; flex-wrap: wrap;">
                     <a href="{{ route('empleados.vacaciones.pdf', $empleado->id) }}" target="_blank" rel="noopener noreferrer" class="button-secondary">
                         <i class="fa-solid fa-file-pdf"></i> Reporte PDF
+                    </a>
+                    <a href="{{ route('empleados.vacaciones.historial.pdf', $empleado->id) }}" target="_blank" rel="noopener noreferrer" class="button-secondary">
+                        <i class="fa-solid fa-clock-rotate-left"></i> Historial
                     </a>
                 </div>
             </article>

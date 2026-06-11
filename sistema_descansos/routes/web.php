@@ -242,6 +242,62 @@ Route::get('/empleados/{empleado}/vacaciones/pdf', function (Request $request, E
     ]);
 })->name('empleados.vacaciones.pdf');
 
+Route::get('/empleados/{empleado}/vacaciones/historial/pdf', function (Empleado $empleado) {
+    if (! session('logeado')) return redirect()->route('login');
+
+    $anioActual = Carbon::now()->year;
+    $antiguedadAnios = (int) floor(Carbon::parse($empleado->fecha_ingreso)->diffInYears(Carbon::now()));
+    $ley = LeyVacacion::where('anios_antiguedad', '<=', $antiguedadAnios)->orderBy('anios_antiguedad', 'desc')->first();
+    $diasDerecho = $ley?->dias_derecho ?? 0;
+
+    $registros = RegistroDescanso::where('empleado_id', $empleado->id)
+        ->where('anio_calendario', $anioActual)
+        ->orderBy('mes')
+        ->get();
+    $diasTomados = $registros->sum('dias_tomados');
+    $diasRestantes = max(0, $diasDerecho - $diasTomados);
+
+    $periodosVacacionales = PeriodoVacacional::where('empleado_id', $empleado->id)
+        ->where('anio_calendario', $anioActual)
+        ->orderBy('fecha_inicio', 'asc')
+        ->get();
+
+    $totalDiasSolicitados = $periodosVacacionales->sum('dias');
+
+    $meses = [
+        1 => 'Enero', 2 => 'Febrero', 3 => 'Marzo', 4 => 'Abril', 5 => 'Mayo', 6 => 'Junio',
+        7 => 'Julio', 8 => 'Agosto', 9 => 'Septiembre', 10 => 'Octubre', 11 => 'Noviembre', 12 => 'Diciembre',
+    ];
+
+    $puesto = $empleado->puesto_id ? Puesto::find($empleado->puesto_id) : null;
+    $fecha = Carbon::now();
+
+    $html = view('empleados.pdf_historial', compact(
+        'empleado',
+        'anioActual',
+        'antiguedadAnios',
+        'diasDerecho',
+        'diasTomados',
+        'diasRestantes',
+        'registros',
+        'periodosVacacionales',
+        'totalDiasSolicitados',
+        'meses',
+        'puesto',
+        'fecha'
+    ))->render();
+
+    $dompdf = new Dompdf;
+    $dompdf->loadHtml($html);
+    $dompdf->setPaper('A4', 'portrait');
+    $dompdf->render();
+
+    return response($dompdf->output(), 200, [
+        'Content-Type' => 'application/pdf',
+        'Content-Disposition' => 'inline; filename="historial_vacaciones_'.str_replace(' ', '_', $empleado->nombre.'_'.$empleado->apellido_paterno.'_'.$empleado->apellido_materno).'_'.$anioActual.'.pdf"',
+    ]);
+})->name('empleados.vacaciones.historial.pdf');
+
 // Reporte global en PDF (Panel)
 Route::get('/panel/reporte/pdf', function () {
     if (! session('logeado')) return redirect()->route('login');
