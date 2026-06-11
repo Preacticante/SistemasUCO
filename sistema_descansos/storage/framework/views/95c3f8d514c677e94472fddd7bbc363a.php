@@ -107,6 +107,10 @@
                             * El sistema calcula los días contando de manera exacta cada fecha marcada en color morado.
                         </div>
                     </div>
+                    <div class="form-group" style="margin-top: 1.5rem;">
+                        <label for="observaciones">Observaciones / Motivo</label>
+                        <textarea id="observaciones" name="observaciones" rows="3" placeholder="Escribe aquí algún comentario u observación sobre este período (opcional)..." class="form-textarea"><?php echo e(old('observaciones')); ?></textarea>
+                    </div>
 
                     <div class="meta-row" style="margin-bottom: 1.5rem;">
                         <span class="meta-pill">Restantes estimados: <strong id="preview-restantes" style="color: #124416;"><?php echo e(max(0, $diasRestantes)); ?></strong></span>
@@ -560,6 +564,25 @@
         display: flex;
         align-items: center;
         gap: 10px;
+    }
+
+    textarea.form-textarea {
+    width: 100%;
+    padding: 0.8rem 1rem;
+    border-radius: 12px;
+    border: 1px solid #cbd5e1;
+    background: #ffffff;
+    color: #1e293b;
+    font-size: 0.95rem;
+    font-family: inherit;
+    outline: none;
+    resize: vertical;
+    transition: border-color 0.3s ease;
+    }
+
+    textarea.form-textarea:focus {
+    border-color: var(--verde-uco);
+    box-shadow: 0 0 0 3px rgba(18, 68, 22, 0.1);
     }
 
     .status.success { background: #ecfdf5; color: #065f46; border: 1px solid #a7f3d0; }

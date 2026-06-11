@@ -85,7 +85,6 @@
         </thead>
         <tbody>
             <?php
-                // Obtenemos directamente el último registro de la colección si existe
                 $ultimoPeriodo = $periodosVacacionales instanceof \Illuminate\Support\Collection 
                     ? $periodosVacacionales->last() 
                     : (is_array($periodosVacacionales) ? end($periodosVacacionales) : null);
@@ -134,11 +133,16 @@
     </table>
 
     <div class="observations-title">Observaciones:</div>
-    <div class="observations-box"></div>
+    <div class="observations-box">
+        <?php echo e($ultimoPeriodo && $ultimoPeriodo->observaciones ? $ultimoPeriodo->observaciones : 'Ninguna.'); ?>
+
+    </div>
 
     <div class="disclaimer">
         * Quedando de conformidad que no se me adeuda ningún día de vacaciones adicionales a los indicados.
     </div>
+
+    <div class="spacer-firmas"></div>
 
     <div class="signatures-container">
         <div class="signatures-row">
@@ -156,13 +160,13 @@
         </div>
         
         <div class="vobo-row">
-            <div class="signature-space" style="width: 30%;"></div>
+            <div class="signature-space-vobo"></div>
             <div class="vobo-col">
-                <div class="signature-line">V.º B.º</div>
+                <div class="signature-line">reviso y autorizo</div>
                 <div class="signature-details">L.C. Diana Sánchez Espino</div>
                 <div class="signature-details" style="color: #555;">Contralora Corporativa</div>
             </div>
-            <div class="signature-space" style="width: 30%;"></div>
+            <div class="signature-space-vobo"></div>
         </div>
     </div>
 
@@ -304,27 +308,38 @@
     .observations-box {
         width: 100%;
         border: 1px solid #000;
-        height: 55px;
+        min-height: 55px;
         margin: 6px 0 12px 0;
+        padding: 6px 10px;
+        text-align: left;
+        font-size: 10px;
+        white-space: pre-wrap;
+        word-wrap: break-word;
     }
 
     .disclaimer {
         width: 100%;
-        margin: 0 0 35px 0;
+        margin: 0;
         font-size: 9px;
         text-align: justify;
     }
 
+    /* CAMBIO RELEVANTE: Añadimos un bloque vacío con altura específica para obligar el empuje */
+    .spacer-firmas {
+        width: 100%;
+        height: 140px; /* <--- Controla la distancia de la flecha roja. Súbelo si quieres más abajo o bájalo si se crea otra página */
+    }
+
     .signatures-container {
         width: 100%;
-        margin-top: 20px;
+        margin-top: 10px; 
     }
 
     .signatures-row {
         display: table;
         width: 100%;
         table-layout: fixed;
-        margin: 0 auto 35px auto;
+        margin: 0 auto 55px auto; 
     }
 
     .signature-col {
@@ -344,6 +359,7 @@
         padding-top: 4px;
         font-weight: bold;
         font-size: 10px;
+        text-transform: uppercase;
     }
 
     .signature-details {
@@ -362,6 +378,11 @@
         display: table-cell;
         width: 40%;
         text-align: center;
+    }
+
+    .signature-space-vobo {
+        width: 30%;
+        display: table-cell;
     }
 </style>
 

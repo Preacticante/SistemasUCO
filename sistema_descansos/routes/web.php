@@ -135,6 +135,7 @@ Route::post('/empleados/{empleado}/vacaciones', function (Request $request, Empl
         'fecha_inicio'     => 'required|date',
         'fecha_fin'        => 'required|date|after_or_equal:fecha_inicio',
         'dias_solicitados' => 'required|integer|min:1',
+        'observaciones'    => 'nullable|string|max:1000', // <-- ADICIONADO EN LA VALIDACIÓN
     ]);
 
     if ($validator->fails()) return redirect()->back()->withErrors($validator)->withInput();
@@ -186,6 +187,7 @@ Route::post('/empleados/{empleado}/vacaciones', function (Request $request, Empl
                 'fecha_fin' => $request->fecha_fin,
                 'fecha_regreso' => $fin->copy()->addDay()->toDateString(), 
                 'dias' => $diasPeriodo, 
+                'observaciones' => $request->input('observaciones'), // <-- ADICIONADO AQUÍ PARA GUARDAR EN LA BD
             ]);
         });
     } catch (\Exception $e) {
@@ -206,7 +208,9 @@ Route::get('/empleados/{empleado}/vacaciones/pdf', function (Empleado $empleado)
     $diasTomados = $registros->sum('dias_tomados');
     $diasRestantes = max(0, $diasDerecho - $diasTomados);
 
-    $periodosVacacionales = PeriodoVacacional::where('empleado_id', $empleado->id)->orderBy('fecha_inicio')->get();
+    $periodosVacacionales = PeriodoVacacional::where('empleado_id', $empleado->id)
+    ->orderBy('id', 'asc') // Al ordenarlos por ID ascendente, el .last() en Blade será el último creado
+    ->get();
 
     $meses = [
         1 => 'Enero', 2 => 'Febrero', 3 => 'Marzo', 4 => 'Abril', 5 => 'Mayo', 6 => 'Junio',
