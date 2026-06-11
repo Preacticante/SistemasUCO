@@ -3,209 +3,6 @@
 <head>
     <meta charset="UTF-8">
     <title>Constancia de Periodo Vacacional</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
-            font-size: 11px;
-            color: #000;
-            line-height: 1.3;
-            background-color: #fff;
-        }
-
-        /* Cambiamos el contenedor a un porcentaje fijo para asegurar el centrado en PDF */
-        .container {
-            width: 92%;
-            margin: 0 auto;
-            padding-top: 20px;
-            text-align: center;
-        }
-
-        /* Forzamos a que todas las tablas ocupen exactamente el 100% del contenedor centrado */
-        .header-table, .info-table, .balances-table, .vacation-table {
-            width: 100% !important;
-            border-collapse: collapse;
-            margin-top: 12px !important;
-            margin-bottom: 12px !important;
-            margin-left: 0 !important;
-            margin-right: 0 !important;
-        }
-
-        .header-table td {
-            border: none;
-            padding: 0;
-            vertical-align: bottom;
-        }
-
-        .logo-area { width: 30%; }
-        .logo-main { font-size: 26px; font-weight: 900; color: #4A148C; letter-spacing: -1px; line-height: 1; }
-        .logo-sub { font-size: 8px; font-weight: bold; color: #E65100; letter-spacing: 0.5px; margin-top: -2px; }
-        .logo-slogan { font-size: 6px; color: #757575; font-style: italic; }
-
-        .title-area {
-            width: 40%;
-            text-align: center;
-            font-size: 14px;
-            font-weight: bold;
-            letter-spacing: 0.5px;
-            padding-bottom: 5px;
-        }
-
-        .date-area {
-            width: 30%;
-            text-align: right;
-            font-size: 10px;
-        }
-
-        .date-box {
-            display: inline-block;
-            border-bottom: 1px solid #000;
-            width: 100px;
-            text-align: center;
-            font-weight: bold;
-        }
-
-        .date-format {
-            font-size: 8px;
-            color: #9e9e9e;
-            padding-right: 25px;
-            margin-top: 2px;
-        }
-
-        /* Alineamos el bloque de texto con los bordes de las tablas */
-        .intro-text {
-            width: 100%;
-            margin: 15px 0;
-            font-size: 10.5px;
-            text-align: justify;
-        }
-
-        .info-table td {
-            border: 1px solid #000;
-            padding: 6px 8px;
-            font-size: 10.5px;
-            text-align: left;
-        }
-
-        .info-table td.label {
-            width: 15%;
-            font-weight: bold;
-        }
-
-        .info-table td.value {
-            width: 85%;
-        }
-
-        .balances-table td {
-            border: none;
-            padding: 5px 0;
-            vertical-align: middle;
-            font-size: 10.5px;
-            text-align: left;
-        }
-
-        .cell-inline-border {
-            border: 1px solid #000 !important;
-            text-align: center !important;
-            font-weight: bold;
-            padding: 4px 8px !important;
-        }
-
-        .vacation-section-title {
-            font-weight: bold;
-            margin: 15px auto 5px auto;
-            font-size: 10.5px;
-            text-align: center;
-        }
-
-        .vacation-table th, 
-        .vacation-table td {
-            border: 1px solid #000;
-            padding: 5px 2px;
-            text-align: center;
-            font-size: 10px;
-        }
-
-        .vacation-table th {
-            font-weight: bold;
-            background-color: #fff;
-        }
-
-        .observations-title {
-            font-weight: bold;
-            margin-top: 15px;
-            font-size: 10.5px;
-            text-align: center;
-        }
-
-        .observations-box {
-            width: 100%;
-            border: 1px solid #000;
-            height: 55px;
-            margin: 6px 0 12px 0;
-        }
-
-        .disclaimer {
-            width: 100%;
-            margin: 0 0 35px 0;
-            font-size: 9px;
-            text-align: justify;
-        }
-
-        .signatures-container {
-            width: 100%;
-            margin-top: 20px;
-        }
-
-        .signatures-row {
-            display: table;
-            width: 100%;
-            table-layout: fixed;
-            margin: 0 auto 35px auto;
-        }
-
-        .signature-col {
-            display: table-cell;
-            width: 40%;
-            text-align: center;
-            vertical-align: top;
-        }
-
-        .signature-space {
-            width: 20%;
-            display: table-cell;
-        }
-
-        .signature-line {
-            border-top: 1px solid #000;
-            padding-top: 4px;
-            font-weight: bold;
-            font-size: 10px;
-        }
-
-        .signature-details {
-            font-size: 9.5px;
-            margin-top: 2px;
-        }
-
-        .vobo-row {
-            display: table;
-            width: 100%;
-            table-layout: fixed;
-            margin: 0 auto;
-        }
-
-        .vobo-col {
-            display: table-cell;
-            width: 40%;
-            text-align: center;
-        }
-    </style>
 </head>
 <body>
 
@@ -263,7 +60,7 @@
         </tr>
     </table>
 
-    <div class="vacation-section-title">Días a disfrutar:</div>
+    <div class="vacation-section-title">Último periodo vacacional disfrutado:</div>
     
     <table class="vacation-table">
         <thead>
@@ -287,21 +84,27 @@
             </tr>
         </thead>
         <tbody>
-            @forelse($periodosVacacionales as $periodo)
+            @php
+                $ultimoPeriodo = $periodoSeleccionado ?? ($periodosVacacionales instanceof \Illuminate\Support\Collection 
+                    ? $periodosVacacionales->first() 
+                    : (is_array($periodosVacacionales) ? reset($periodosVacacionales) : null));
+            @endphp
+
+            @if($ultimoPeriodo)
                 <tr>
                     <td>{{ $anioActual }}</td>
-                    <td style="font-weight: bold;">{{ \Carbon\Carbon::parse($periodo->fecha_inicio)->diffInDays(\Carbon\Carbon::parse($periodo->fecha_fin)) + 1 }}</td>
-                    <td>{{ \Carbon\Carbon::parse($periodo->fecha_inicio)->format('d') }}</td>
-                    <td>{{ \Carbon\Carbon::parse($periodo->fecha_inicio)->format('m') }}</td>
-                    <td>{{ \Carbon\Carbon::parse($periodo->fecha_inicio)->format('Y') }}</td>
-                    <td>{{ \Carbon\Carbon::parse($periodo->fecha_fin)->format('d') }}</td>
-                    <td>{{ \Carbon\Carbon::parse($periodo->fecha_fin)->format('m') }}</td>
-                    <td>{{ \Carbon\Carbon::parse($periodo->fecha_fin)->format('Y') }}</td>
-                    <td>{{ \Carbon\Carbon::parse($periodo->fecha_regreso)->format('d') }}</td>
-                    <td>{{ \Carbon\Carbon::parse($periodo->fecha_regreso)->format('m') }}</td>
-                    <td>{{ \Carbon\Carbon::parse($periodo->fecha_regreso)->format('Y') }}</td>
+                    <td style="font-weight: bold;">{{ \Carbon\Carbon::parse($ultimoPeriodo->fecha_inicio)->diffInDays(\Carbon\Carbon::parse($ultimoPeriodo->fecha_fin)) + 1 }}</td>
+                    <td>{{ \Carbon\Carbon::parse($ultimoPeriodo->fecha_inicio)->format('d') }}</td>
+                    <td>{{ \Carbon\Carbon::parse($ultimoPeriodo->fecha_inicio)->format('m') }}</td>
+                    <td>{{ \Carbon\Carbon::parse($ultimoPeriodo->fecha_inicio)->format('Y') }}</td>
+                    <td>{{ \Carbon\Carbon::parse($ultimoPeriodo->fecha_fin)->format('d') }}</td>
+                    <td>{{ \Carbon\Carbon::parse($ultimoPeriodo->fecha_fin)->format('m') }}</td>
+                    <td>{{ \Carbon\Carbon::parse($ultimoPeriodo->fecha_fin)->format('Y') }}</td>
+                    <td>{{ \Carbon\Carbon::parse($ultimoPeriodo->fecha_regreso)->format('d') }}</td>
+                    <td>{{ \Carbon\Carbon::parse($ultimoPeriodo->fecha_regreso)->format('m') }}</td>
+                    <td>{{ \Carbon\Carbon::parse($ultimoPeriodo->fecha_regreso)->format('Y') }}</td>
                 </tr>
-            @empty
+            @else
                 <tr>
                     <td>{{ $anioActual }}</td>
                     <td style="font-weight: bold;">{{ $diasTomados }}</td>
@@ -315,7 +118,7 @@
                     <td>--</td>
                     <td>--</td>
                 </tr>
-            @endforelse
+            @endif
         </tbody>
     </table>
 
@@ -330,11 +133,15 @@
     </table>
 
     <div class="observations-title">Observaciones:</div>
-    <div class="observations-box"></div>
+    <div class="observations-box">
+        {{ $ultimoPeriodo && $ultimoPeriodo->observaciones ? $ultimoPeriodo->observaciones : 'Ninguna.' }}
+    </div>
 
     <div class="disclaimer">
         * Quedando de conformidad que no se me adeuda ningún día de vacaciones adicionales a los indicados.
     </div>
+
+    <div class="spacer-firmas"></div>
 
     <div class="signatures-container">
         <div class="signatures-row">
@@ -352,220 +159,231 @@
         </div>
         
         <div class="vobo-row">
-            <div class="signature-space" style="width: 30%;"></div>
+            <div class="signature-space-vobo"></div>
             <div class="vobo-col">
-                <div class="signature-line">VoBo</div>
+                <div class="signature-line">reviso y autorizo</div>
                 <div class="signature-details">L.C. Diana Sánchez Espino</div>
                 <div class="signature-details" style="color: #555;">Contralora Corporativa</div>
             </div>
-            <div class="signature-space" style="width: 30%;"></div>
+            <div class="signature-space-vobo"></div>
         </div>
     </div>
 
 </div>
- <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
 
-        body {
-            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
-            font-size: 11px;
-            color: #000;
-            line-height: 1.3;
-            background-color: #fff;
-        }
+<style>
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
 
-        /* Cambiamos el contenedor a un porcentaje fijo para asegurar el centrado en PDF */
-        .container {
-            width: 92%;
-            margin: 0 auto;
-            padding-top: 20px;
-            text-align: center;
-        }
+    body {
+        font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+        font-size: 11px;
+        color: #000;
+        line-height: 1.3;
+        background-color: #fff;
+    }
 
-        /* Forzamos a que todas las tablas ocupen exactamente el 100% del contenedor centrado */
-        .header-table, .info-table, .balances-table, .vacation-table {
-            width: 100% !important;
-            border-collapse: collapse;
-            margin-top: 12px !important;
-            margin-bottom: 12px !important;
-            margin-left: 0 !important;
-            margin-right: 0 !important;
-        }
+    .container {
+        width: 92%;
+        margin: 0 auto;
+        padding-top: 20px;
+        text-align: center;
+    }
 
-        .header-table td {
-            border: none;
-            padding: 0;
-            vertical-align: bottom;
-        }
+    .header-table, .info-table, .balances-table, .vacation-table {
+        width: 100% !important;
+        border-collapse: collapse;
+        margin-top: 12px !important;
+        margin-bottom: 12px !important;
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+    }
 
-        .logo-area { width: 30%; }
-        .logo-main { font-size: 26px; font-weight: 900; color: #4A148C; letter-spacing: -1px; line-height: 1; }
-        .logo-sub { font-size: 8px; font-weight: bold; color: #E65100; letter-spacing: 0.5px; margin-top: -2px; }
-        .logo-slogan { font-size: 6px; color: #757575; font-style: italic; }
+    .header-table td {
+        border: none;
+        padding: 0;
+        vertical-align: bottom;
+    }
 
-        .title-area {
-            width: 40%;
-            text-align: center;
-            font-size: 14px;
-            font-weight: bold;
-            letter-spacing: 0.5px;
-            padding-bottom: 5px;
-        }
+    .logo-area { width: 30%; }
+    .title-area {
+        width: 40%;
+        text-align: center;
+        font-size: 14px;
+        font-weight: bold;
+        letter-spacing: 0.5px;
+        padding-bottom: 5px;
+    }
 
-        .date-area {
-            width: 30%;
-            text-align: right;
-            font-size: 10px;
-        }
+    .date-area {
+        width: 30%;
+        text-align: right;
+        font-size: 10px;
+    }
 
-        .date-box {
-            display: inline-block;
-            border-bottom: 1px solid #000;
-            width: 100px;
-            text-align: center;
-            font-weight: bold;
-        }
+    .date-box {
+        display: inline-block;
+        border-bottom: 1px solid #000;
+        width: 100px;
+        text-align: center;
+        font-weight: bold;
+    }
 
-        .date-format {
-            font-size: 8px;
-            color: #9e9e9e;
-            padding-right: 25px;
-            margin-top: 2px;
-        }
+    .date-format {
+        font-size: 8px;
+        color: #9e9e9e;
+        padding-right: 25px;
+        margin-top: 2px;
+    }
 
-        /* Alineamos el bloque de texto con los bordes de las tablas */
-        .intro-text {
-            width: 100%;
-            margin: 15px 0;
-            font-size: 10.5px;
-            text-align: justify;
-        }
+    .intro-text {
+        width: 100%;
+        margin: 15px 0;
+        font-size: 10.5px;
+        text-align: justify;
+    }
 
-        .info-table td {
-            border: 1px solid #000;
-            padding: 6px 8px;
-            font-size: 10.5px;
-            text-align: left;
-        }
+    .info-table td {
+        border: 1px solid #000;
+        padding: 6px 8px;
+        font-size: 10.5px;
+        text-align: left;
+    }
 
-        .info-table td.label {
-            width: 15%;
-            font-weight: bold;
-        }
+    .info-table td.label {
+        width: 15%;
+        font-weight: bold;
+    }
 
-        .info-table td.value {
-            width: 85%;
-        }
+    .info-table td.value {
+        width: 85%;
+    }
 
-        .balances-table td {
-            border: none;
-            padding: 5px 0;
-            vertical-align: middle;
-            font-size: 10.5px;
-            text-align: left;
-        }
+    .balances-table td {
+        border: none;
+        padding: 5px 0;
+        vertical-align: middle;
+        font-size: 10.5px;
+        text-align: left;
+    }
 
-        .cell-inline-border {
-            border: 1px solid #000 !important;
-            text-align: center !important;
-            font-weight: bold;
-            padding: 4px 8px !important;
-        }
+    .cell-inline-border {
+        border: 1px solid #000 !important;
+        text-align: center !important;
+        font-weight: bold;
+        padding: 4px 8px !important;
+    }
 
-        .vacation-section-title {
-            font-weight: bold;
-            margin: 15px auto 5px auto;
-            font-size: 10.5px;
-            text-align: center;
-        }
+    .vacation-section-title {
+        font-weight: bold;
+        margin: 15px auto 5px auto;
+        font-size: 10.5px;
+        text-align: center;
+    }
 
-        .vacation-table th, 
-        .vacation-table td {
-            border: 1px solid #000;
-            padding: 5px 2px;
-            text-align: center;
-            font-size: 10px;
-        }
+    .vacation-table th, 
+    .vacation-table td {
+        border: 1px solid #000;
+        padding: 5px 2px;
+        text-align: center;
+        font-size: 10px;
+    }
 
-        .vacation-table th {
-            font-weight: bold;
-            background-color: #fff;
-        }
+    .vacation-table th {
+        font-weight: bold;
+        background-color: #fff;
+    }
 
-        .observations-title {
-            font-weight: bold;
-            margin-top: 15px;
-            font-size: 10.5px;
-            text-align: center;
-        }
+    .observations-title {
+        font-weight: bold;
+        margin-top: 15px;
+        font-size: 10.5px;
+        text-align: center;
+    }
 
-        .observations-box {
-            width: 100%;
-            border: 1px solid #000;
-            height: 55px;
-            margin: 6px 0 12px 0;
-        }
+    .observations-box {
+        width: 100%;
+        border: 1px solid #000;
+        min-height: 55px;
+        margin: 6px 0 12px 0;
+        padding: 6px 10px;
+        text-align: left;
+        font-size: 10px;
+        white-space: pre-wrap;
+        word-wrap: break-word;
+    }
 
-        .disclaimer {
-            width: 100%;
-            margin: 0 0 35px 0;
-            font-size: 9px;
-            text-align: justify;
-        }
+    .disclaimer {
+        width: 100%;
+        margin: 0;
+        font-size: 9px;
+        text-align: justify;
+    }
 
-        .signatures-container {
-            width: 100%;
-            margin-top: 20px;
-        }
+    /* CAMBIO RELEVANTE: Añadimos un bloque vacío con altura específica para obligar el empuje */
+    .spacer-firmas {
+        width: 100%;
+        height: 140px; /* <--- Controla la distancia de la flecha roja. Súbelo si quieres más abajo o bájalo si se crea otra página */
+    }
 
-        .signatures-row {
-            display: table;
-            width: 100%;
-            table-layout: fixed;
-            margin: 0 auto 35px auto;
-        }
+    .signatures-container {
+        width: 100%;
+        margin-top: 10px; 
+    }
 
-        .signature-col {
-            display: table-cell;
-            width: 40%;
-            text-align: center;
-            vertical-align: top;
-        }
+    .signatures-row {
+        display: table;
+        width: 100%;
+        table-layout: fixed;
+        margin: 0 auto 55px auto; 
+    }
 
-        .signature-space {
-            width: 20%;
-            display: table-cell;
-        }
+    .signature-col {
+        display: table-cell;
+        width: 40%;
+        text-align: center;
+        vertical-align: top;
+    }
 
-        .signature-line {
-            border-top: 1px solid #000;
-            padding-top: 4px;
-            font-weight: bold;
-            font-size: 10px;
-        }
+    .signature-space {
+        width: 20%;
+        display: table-cell;
+    }
 
-        .signature-details {
-            font-size: 9.5px;
-            margin-top: 2px;
-        }
+    .signature-line {
+        border-top: 1px solid #000;
+        padding-top: 4px;
+        font-weight: bold;
+        font-size: 10px;
+        text-transform: uppercase;
+    }
 
-        .vobo-row {
-            display: table;
-            width: 100%;
-            table-layout: fixed;
-            margin: 0 auto;
-        }
+    .signature-details {
+        font-size: 9.5px;
+        margin-top: 2px;
+    }
 
-        .vobo-col {
-            display: table-cell;
-            width: 40%;
-            text-align: center;
-        }
-    </style>
+    .vobo-row {
+        display: table;
+        width: 100%;
+        table-layout: fixed;
+        margin: 0 auto;
+    }
+
+    .vobo-col {
+        display: table-cell;
+        width: 40%;
+        text-align: center;
+    }
+
+    .signature-space-vobo {
+        width: 30%;
+        display: table-cell;
+    }
+</style>
 
 </body>
 </html>
