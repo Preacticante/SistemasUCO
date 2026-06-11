@@ -86,7 +86,7 @@
                                         <button type="button" class="btn-action-delete" onclick="deletePeriodo(<?php echo e($periodo->id); ?>)">
                                             <i class="fas fa-trash"></i>
                                         </button>
-                                        <a href="/empleados/<?php echo e($empleado?->id); ?>/vacaciones/pdf" target="_blank" class="btn-action-pdf" title="Descargar comprobante">
+                                        <a href="/empleados/<?php echo e($empleado?->id); ?>/vacaciones/pdf?periodo_id=<?php echo e($periodo->id); ?>" target="_blank" class="btn-action-pdf" title="Descargar comprobante">
                                             <i class="fas fa-file-pdf"></i> PDF
                                         </a>
                                     <?php else: ?>
