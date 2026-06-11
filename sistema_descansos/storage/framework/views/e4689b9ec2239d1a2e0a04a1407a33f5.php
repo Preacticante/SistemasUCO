@@ -1,3 +1,5 @@
+﻿
+
 <?php $__env->startSection('title', 'Historial'); ?>
 <?php $__env->startSection('header', 'Directorio de vacaciones'); ?>
 
@@ -79,7 +81,7 @@
                                     <button type="button" class="btn-action-delete" onclick="deletePeriodo(<?php echo e($periodo->id); ?>)">
                                         <i class="fas fa-trash"></i> 
                                     </button>
-                                    <a href="/empleados/<?php echo e($empleado?->id); ?>/vacaciones/pdf" target="_blank" class="btn-action-pdf" title="Descargar comprobante">
+                                    <a href="<?php echo e(route('empleados.vacaciones.pdf', ['empleado' => $empleado?->id, 'periodo_id' => $periodo->id])); ?>" target="_blank" class="btn-action-pdf" title="Descargar comprobante">
                                         <i class="fas fa-file-pdf"></i> PDF
                                     </a>
                                 <?php endif; ?>
@@ -106,7 +108,6 @@
     </div>
 
     <style>
-        /* Contenedor de la cabecera superior */
         .panel-principal-header {
             background: white; 
             padding: 24px 30px; 
@@ -138,7 +139,6 @@
             font-size: 0.95rem;
         }
 
-        /* Envoltorio de la tabla */
         .table-card-container {
             background: #ffffff;
             border-radius: 24px;
@@ -148,7 +148,6 @@
             border: 1px solid #f1f5f9;
         }
 
-        /* Banner de encabezado morado en la tabla */
         .table-card-header {
             background-color: #124416;
             color: white;
@@ -158,7 +157,6 @@
             letter-spacing: 0.3px;
         }
 
-        /* BUSCADOR ESTILOS */
         .search-form {
             display: flex;
             align-items: center;
@@ -197,7 +195,6 @@
         .btn-clear-search { background: #dc2626; margin-left: 5px; }
         .btn-clear-search:hover { background: #b91c1c; }
 
-        /* PAGINACIÓN ESTILOS */
         .pagination-container {
             padding: 20px;
             display: flex;
@@ -238,7 +235,6 @@
             background-color: #f8fafc;
         }
 
-        /* Estructura general de la tabla */
         .responsive-table-v2 {
             width: 100%;
             border-collapse: collapse;
@@ -270,7 +266,6 @@
         .text-danger-bold { color: #ef4444; font-weight: 700; }
         .text-muted-days { color: #8293a6; font-weight: 700; }
 
-        /* Badges e indicadores visuales de estado */
         .badge {
             padding: 6px 12px;
             border-radius: 50px;
@@ -281,7 +276,6 @@
         .badge-success { background-color: #dcfce7; color: #15803d; }
         .badge-info { background-color: #e0f2fe; color: #0369a1; }
 
-        /* Estilos para botones de acciones */
         .btn-action-edit, .btn-action-delete, .btn-action-pdf {
             border: none;
             cursor: pointer;
@@ -299,10 +293,8 @@
 
         .btn-action-edit { background-color: #124416; }
         .btn-action-edit:hover:not(:disabled) { background-color: #0d2e10; transform: translateY(-2px); }
-
         .btn-action-delete { background-color: #dc2626; }
         .btn-action-delete:hover { background-color: #b91c1c; transform: translateY(-2px); }
-
         .btn-action-pdf { background-color: #a87e3b; }
         .btn-action-pdf:hover { background-color: #8c6827; transform: translateY(-2px); }
 
@@ -314,7 +306,6 @@
             box-shadow: none !important;
         }
 
-        /* Modal de edición */
         .modal-edit {
             display: none;
             position: fixed;
@@ -326,33 +317,54 @@
             background-color: rgba(0, 0, 0, 0.5);
             align-items: center;
             justify-content: center;
+            backdrop-filter: blur(3px);
         }
         .modal-edit.show { display: flex; }
         .modal-edit-content {
             background-color: white;
             padding: 30px;
-            border-radius: 12px;
+            border-radius: 16px;
             width: 90%;
             max-width: 500px;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+            border: 1px solid #e2e8f0;
         }
-        .modal-edit-content h3 { margin-top: 0; color: #124416; font-size: 1.3rem; }
-        .modal-edit-content .form-group { margin-bottom: 15px; }
-        .modal-edit-content label { display: block; margin-bottom: 5px; color: #334155; font-weight: 600; font-size: 0.9rem; }
-        .modal-edit-content input {
+        .modal-edit-content h3 { margin-top: 0; color: #124416; font-size: 1.4rem; font-weight: 700; margin-bottom: 20px; }
+        .modal-edit-content .form-group { margin-bottom: 18px; }
+        .modal-edit-content label { display: block; margin-bottom: 6px; color: #334155; font-weight: 600; font-size: 0.9rem; }
+        .modal-edit-content input[type="text"],
+        .modal-edit-content input[type="date"],
+        .modal-edit-content textarea {
             width: 100%;
-            padding: 10px;
+            padding: 11px 14px;
             border: 1px solid #cbd5e1;
-            border-radius: 6px;
+            border-radius: 8px;
             font-size: 0.95rem;
+            color: #334155;
             box-sizing: border-box;
+            font-family: inherit;
+            background-color: #f8fafc;
         }
-        .modal-edit-content input:focus { outline: none; border-color: #124416; box-shadow: 0 0 0 3px rgba(18, 68, 22, 0.1); }
-        .modal-edit-buttons { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; }
+        .modal-edit-content input[type="date"] {
+            cursor: pointer;
+            font-weight: 500;
+        }
+        .modal-edit-content input:focus,
+        .modal-edit-content textarea:focus { 
+            outline: none; 
+            border-color: #124416; 
+            background-color: #fff;
+            box-shadow: 0 0 0 3px rgba(18, 68, 22, 0.15); 
+        }
+        .modal-edit-content textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+        .modal-edit-buttons { display: flex; gap: 12px; justify-content: flex-end; margin-top: 25px; }
         .modal-edit-buttons button {
-            padding: 10px 20px;
+            padding: 11px 22px;
             border: none;
-            border-radius: 6px;
+            border-radius: 8px;
             font-size: 0.95rem;
             font-weight: 600;
             cursor: pointer;
@@ -360,8 +372,10 @@
         }
         .btn-save { background-color: #124416; color: white; }
         .btn-save:hover { background-color: #0d2e10; }
-        .btn-cancel { background-color: #e2e8f0; color: #334155; }
+        .btn-cancel { background-color: #f1f5f9; color: #475569; }
         .btn-cancel:hover { background-color: #cbd5e1; }
+        .modal-edit-content #calendar-edit { margin-top: 10px; }
+        .modal-edit-content .form-group textarea { min-height: 100px; }
     </style>
 
     <div id="editModal" class="modal-edit">
@@ -374,12 +388,16 @@
                     <input type="text" id="editEmpleado" readonly>
                 </div>
                 <div class="form-group">
-                    <label for="editFechaInicio">Fecha Inicio:</label>
-                    <input type="date" id="editFechaInicio" required>
+                    <label for="calendar-edit">Selecciona los días en el calendario</label>
+                    <div id="calendar-edit"></div>
+                    <input type="hidden" id="edit_multiple_dates" name="edit_multiple_dates" value="">
+                    <input type="hidden" id="edit_fecha_inicio" name="edit_fecha_inicio" value="">
+                    <input type="hidden" id="edit_fecha_fin" name="edit_fecha_fin" value="">
+                    <input type="hidden" id="edit_dias" name="edit_dias" value="0">
                 </div>
                 <div class="form-group">
-                    <label for="editFechaFin">Fecha Fin:</label>
-                    <input type="date" id="editFechaFin" required>
+                    <label for="editObservaciones">Observaciones:</label>
+                    <textarea id="editObservaciones" placeholder="Escribe aquí notas u observaciones internas..."></textarea>
                 </div>
                 <div class="modal-edit-buttons">
                     <button type="button" class="btn-cancel" onclick="closeEditModal()">Cancelar</button>
@@ -390,15 +408,70 @@
     </div>
 <?php $__env->stopSection(); ?>
 
-<?php $__env->startPush('scripts'); ?>
-<script>
+<?php $__env->startPush('styles'); ?>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<style>
+    .flatpickr-calendar {
+        font-family: 'Inter', system-ui, -apple-system, sans-serif;
+        border-radius: 14px;
+        border: 1px solid #e2e8f0;
+        box-shadow: 0 10px 40px rgba(15, 23, 42, 0.08);
+    }
+    .flatpickr-current-month .flatpickr-months {
+        background-color: #f8fafc;
+        border-bottom: 1px solid #e2e8f0;
+        border-radius: 14px 14px 0 0;
+    }
+    .flatpickr-weekday {
+        color: #334155;
+        font-weight: 600;
+    }
+    .flatpickr-day.selected,
+    .flatpickr-day.startRange,
+    .flatpickr-day.endRange {
+        background: #124416;
+        color: white;
+    }
+    .flatpickr-day.today {
+        border-color: #124416;
+    }
+    .flatpickr-day:hover {
+        background: #d1fae5;
+        color: #0f172a;
+    }
+</style>
+<?php $__env->stopPush(); ?>
 
+<?php $__env->startPush('scripts'); ?>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/es.js"></script>
+<script>
 let csrfTokenHist = "<?php echo e(csrf_token()); ?>";
 let periodoEnEdicion = null;
 let empleadoEnEdicion = null;
+let fpEdit = null;
+
+function initEditFlatpickr() {
+    if (fpEdit) return;
+    fpEdit = flatpickr("#calendar-edit", {
+        inline: true,
+        mode: "multiple",
+        locale: "es",
+        dateFormat: "Y-m-d",
+        conjunction: ",",
+        defaultDate: [],
+        onChange: function(selectedDates, dateStr, instance) {
+            const sortedDates = selectedDates.slice().sort((a, b) => a - b);
+            const dateStrings = sortedDates.map(d => instance.formatDate(d, "Y-m-d"));
+            document.getElementById('edit_multiple_dates').value = dateStrings.join(',');
+            document.getElementById('edit_fecha_inicio').value = dateStrings.length ? dateStrings[0] : '';
+            document.getElementById('edit_fecha_fin').value = dateStrings.length ? dateStrings[dateStrings.length - 1] : '';
+            document.getElementById('edit_dias').value = dateStrings.length;
+        }
+    });
+}
 
 function openEditModal(id, empleadoId) {
-
     periodoEnEdicion = id;
     empleadoEnEdicion = empleadoId;
 
@@ -408,25 +481,20 @@ function openEditModal(id, empleadoId) {
         allowOutsideClick: false,
         allowEscapeKey: false,
         borderRadius: '25px',
-        didOpen: () => {
-            Swal.showLoading();
-        }
+        didOpen: () => Swal.showLoading()
     });
 
-    fetch(`/periodos/${id}`)
+    fetch(`/periodos/${id}`, { credentials: 'same-origin' })
         .then(response => {
             if (!response.ok) throw new Error('Error fetching periodo');
             return response.json();
         })
         .then(data => {
-
             Swal.close();
 
             const fechaFinPeriodo = new Date(data.fecha_fin + 'T23:59:59');
             const hoy = new Date();
-
             if (fechaFinPeriodo < hoy) {
-
                 Swal.fire({
                     icon: 'warning',
                     title: 'Período finalizado',
@@ -434,22 +502,32 @@ function openEditModal(id, empleadoId) {
                     confirmButtonColor: '#124416',
                     borderRadius: '25px'
                 });
-
                 periodoEnEdicion = null;
                 empleadoEnEdicion = null;
                 return;
             }
 
             document.getElementById('editEmpleado').value = data.empleado_nombre || 'N/A';
-            document.getElementById('editFechaInicio').value = data.fecha_inicio;
-            document.getElementById('editFechaFin').value = data.fecha_fin;
+            if (!fpEdit) initEditFlatpickr();
 
+            const start = new Date(data.fecha_inicio + 'T00:00:00');
+            const end = new Date(data.fecha_fin + 'T00:00:00');
+            const datesToSelect = [];
+            for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+                datesToSelect.push(new Date(d));
+            }
+            fpEdit.setDate(datesToSelect);
+
+            const initialSortedStrings = datesToSelect.map(d => d.toISOString().split('T')[0]);
+            document.getElementById('edit_multiple_dates').value = initialSortedStrings.join(',');
+            document.getElementById('edit_fecha_inicio').value = data.fecha_inicio;
+            document.getElementById('edit_fecha_fin').value = data.fecha_fin;
+            document.getElementById('edit_dias').value = initialSortedStrings.length;
+            document.getElementById('editObservaciones').value = data.observaciones || '';
             document.getElementById('editModal').classList.add('show');
         })
         .catch(error => {
-
             console.error('Error:', error);
-
             Swal.fire({
                 icon: 'error',
                 title: 'Error',
@@ -461,29 +539,27 @@ function openEditModal(id, empleadoId) {
 }
 
 function closeEditModal() {
-
     document.getElementById('editModal').classList.remove('show');
     periodoEnEdicion = null;
     empleadoEnEdicion = null;
 }
 
 function guardarEdicion() {
-
     if (!periodoEnEdicion) return;
 
-    const fechaInicio = document.getElementById('editFechaInicio').value;
-    const fechaFin = document.getElementById('editFechaFin').value;
+    const multipleDates = document.getElementById('edit_multiple_dates').value;
+    const fechaInicio = document.getElementById('edit_fecha_inicio').value;
+    const fechaFin = document.getElementById('edit_fecha_fin').value;
+    const observaciones = document.getElementById('editObservaciones').value;
 
-    if (!fechaInicio || !fechaFin) {
-
+    if (!multipleDates || !fechaInicio || !fechaFin) {
         Swal.fire({
             icon: 'warning',
             title: 'Campos incompletos',
-            text: 'Por favor completa las fechas de inicio y fin.',
+            text: 'Por favor selecciona al menos un día válido en el calendario.',
             confirmButtonColor: '#124416',
             borderRadius: '25px'
         });
-
         return;
     }
 
@@ -491,7 +567,6 @@ function guardarEdicion() {
     const fechaFinObj = new Date(fechaFin + 'T23:59:59');
 
     if (fechaFinObj < fechaInicioObj) {
-
         Swal.fire({
             icon: 'warning',
             title: 'Fechas inválidas',
@@ -499,12 +574,10 @@ function guardarEdicion() {
             confirmButtonColor: '#124416',
             borderRadius: '25px'
         });
-
         return;
     }
 
     if (fechaFinObj < new Date()) {
-
         Swal.fire({
             icon: 'warning',
             title: 'Período inválido',
@@ -512,7 +585,6 @@ function guardarEdicion() {
             confirmButtonColor: '#124416',
             borderRadius: '25px'
         });
-
         return;
     }
 
@@ -522,34 +594,32 @@ function guardarEdicion() {
         allowOutsideClick: false,
         allowEscapeKey: false,
         borderRadius: '25px',
-        didOpen: () => {
-            Swal.showLoading();
-        }
+        didOpen: () => Swal.showLoading()
     });
 
     fetch(`/periodos/${periodoEnEdicion}`, {
         method: 'PUT',
+        credentials: 'same-origin',
         headers: {
             'Content-Type': 'application/json',
-            'X-CSRF-TOKEN': csrfTokenHist
+            'X-CSRF-TOKEN': csrfTokenHist,
+            'X-Requested-With': 'XMLHttpRequest'
         },
         body: JSON.stringify({
+            multiple_dates: multipleDates,
             fecha_inicio: fechaInicio,
-            fecha_fin: fechaFin
+            fecha_fin: fechaFin,
+            observaciones: observaciones
         })
     })
     .then(async response => {
-
         const data = await response.json();
-
         if (!response.ok) {
             throw new Error(data.error || 'Error del servidor');
         }
-
         return data;
     })
-    .then(data => {
-
+    .then(() => {
         Swal.fire({
             icon: 'success',
             title: '¡Actualizado!',
@@ -557,15 +627,12 @@ function guardarEdicion() {
             confirmButtonColor: '#124416',
             borderRadius: '25px'
         }).then(() => {
-
             closeEditModal();
             location.reload();
         });
     })
     .catch(error => {
-
         console.error('Error:', error);
-
         Swal.fire({
             icon: 'error',
             title: 'Error al guardar',
@@ -577,7 +644,6 @@ function guardarEdicion() {
 }
 
 function deletePeriodo(id) {
-
     Swal.fire({
         title: '¿Estás seguro?',
         text: 'Esta acción eliminará la solicitud y restaurará los días al balance del empleado.',
@@ -589,38 +655,32 @@ function deletePeriodo(id) {
         confirmButtonText: 'Sí, eliminar',
         cancelButtonText: '<span style="color:#334155">Cancelar</span>'
     }).then((result) => {
-
         if (result.isConfirmed) {
-
             Swal.fire({
                 title: 'Eliminando...',
                 text: 'Por favor espera',
                 allowOutsideClick: false,
                 allowEscapeKey: false,
                 borderRadius: '25px',
-                didOpen: () => {
-                    Swal.showLoading();
-                }
+                didOpen: () => Swal.showLoading()
             });
 
             fetch(`/periodos/${id}`, {
                 method: 'DELETE',
+                credentials: 'same-origin',
                 headers: {
-                    'X-CSRF-TOKEN': csrfTokenHist
+                    'X-CSRF-TOKEN': csrfTokenHist,
+                    'X-Requested-With': 'XMLHttpRequest'
                 }
             })
             .then(async response => {
-
                 const data = await response.json();
-
                 if (!response.ok) {
                     throw new Error(data.error || 'Error del servidor');
                 }
-
                 return data;
             })
-            .then(data => {
-
+            .then(() => {
                 Swal.fire({
                     title: '¡Eliminado!',
                     text: 'Los días se han restaurado correctamente.',
@@ -632,9 +692,7 @@ function deletePeriodo(id) {
                 });
             })
             .catch(error => {
-
                 console.error('Error:', error);
-
                 Swal.fire({
                     icon: 'error',
                     title: 'Error',
@@ -647,13 +705,14 @@ function deletePeriodo(id) {
     });
 }
 
-document.getElementById('editModal').addEventListener('click', function(e) {
+if (document.getElementById('editModal')) {
+    document.getElementById('editModal').addEventListener('click', function(e) {
+        if (e.target === this) closeEditModal();
+    });
+}
 
-    if (e.target === this) {
-        closeEditModal();
-    }
-});
-
+initEditFlatpickr();
 </script>
 <?php $__env->stopPush(); ?>
+
 <?php echo $__env->make('layouts.app', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH /var/www/html/resources/views/historial.blade.php ENDPATH**/ ?>

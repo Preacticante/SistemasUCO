@@ -85,9 +85,9 @@
         </thead>
         <tbody>
             <?php
-                $ultimoPeriodo = $periodosVacacionales instanceof \Illuminate\Support\Collection 
-                    ? $periodosVacacionales->last() 
-                    : (is_array($periodosVacacionales) ? end($periodosVacacionales) : null);
+                $ultimoPeriodo = $periodoSeleccionado ?? ($periodosVacacionales instanceof \Illuminate\Support\Collection 
+                    ? $periodosVacacionales->first() 
+                    : (is_array($periodosVacacionales) ? reset($periodosVacacionales) : null));
             ?>
 
             <?php if($ultimoPeriodo): ?>
