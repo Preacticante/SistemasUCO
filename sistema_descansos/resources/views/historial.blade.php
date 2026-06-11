@@ -35,6 +35,7 @@
                         <th style="text-align: center;">ACCIÓN</th>
                     </tr>
                 </thead>
+                @php $canManage = session('email') === 'admin@sistema.com'; @endphp
                 <tbody>
                     @forelse($periodosVacacionales as $periodo)
                         @php
@@ -64,21 +65,35 @@
                                     {{ $estado }}
                                 </span>
                             </td>
-                            <td style="text-align: center; display: flex; gap: 8px; justify-content: center;">
+                            <td style="text-align: center; display: flex; gap: 8px; justify-content: center; align-items: center;">
+                                {{-- Enlace a la vista de vacaciones (siempre visible) --}}
+                                <a href="{{ route('empleados.vacaciones', $empleado?->id) }}" class="btn-action-vacaciones" title="Vacaciones">
+                                    <i class="fas fa-calendar"></i>
+                                </a>
+
                                 @if($yaTomado)
                                     <button type="button" class="btn-action-edit btn-disabled" title="No se puede editar un período ya tomado" disabled>
                                         <i class="fas fa-lock"></i> Completado
                                     </button>
                                 @else
-                                    <button type="button" class="btn-action-edit" onclick="openEditModal({{ $periodo->id }}, {{ $empleado?->id }})">
-                                        <i class="fas fa-pencil"></i> 
-                                    </button>
-                                    <button type="button" class="btn-action-delete" onclick="deletePeriodo({{ $periodo->id }})">
-                                        <i class="fas fa-trash"></i> 
-                                    </button>
-                                    <a href="/empleados/{{ $empleado?->id }}/vacaciones/pdf" target="_blank" class="btn-action-pdf" title="Descargar comprobante">
-                                        <i class="fas fa-file-pdf"></i> PDF
-                                    </a>
+                                    @if($canManage)
+                                        <button type="button" class="btn-action-edit" onclick="openEditModal({{ $periodo->id }}, {{ $empleado?->id }})">
+                                            <i class="fas fa-pencil"></i>
+                                        </button>
+                                        <button type="button" class="btn-action-delete" onclick="deletePeriodo({{ $periodo->id }})">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                        <a href="/empleados/{{ $empleado?->id }}/vacaciones/pdf?periodo_id={{ $periodo->id }}" target="_blank" class="btn-action-pdf" title="Descargar comprobante">
+                                            <i class="fas fa-file-pdf"></i> PDF
+                                        </a>
+                                    @else
+                                        <button type="button" class="btn-action-edit btn-disabled" aria-disabled="true" title="No autorizado">
+                                            <i class="fas fa-pencil"></i>
+                                        </button>
+                                        <button type="button" class="btn-action-delete btn-disabled" aria-disabled="true" title="No autorizado">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    @endif
                                 @endif
                             </td>
                         </tr>
@@ -301,6 +316,9 @@
 
         .btn-action-pdf { background-color: #a87e3b; }
         .btn-action-pdf:hover { background-color: #8c6827; transform: translateY(-2px); }
+
+        .btn-action-vacaciones { border: none; cursor: pointer; padding: 6px 12px; border-radius: 6px; font-size: 0.85rem; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; color: white; background-color: #124416; text-decoration: none; }
+        .btn-action-vacaciones:hover { background-color: #0d2e10; transform: translateY(-2px); }
 
         .btn-disabled {
             background-color: #cbd5e1 !important;

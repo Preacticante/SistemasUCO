@@ -33,6 +33,7 @@
                         <th style="text-align: center;">ACCIÓN</th>
                     </tr>
                 </thead>
+                <?php $canManage = session('email') === 'admin@sistema.com'; ?>
                 <tbody>
                     <?php $__empty_1 = true; $__currentLoopData = $periodosVacacionales; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $periodo): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
                         <?php
@@ -67,21 +68,35 @@
 
                                 </span>
                             </td>
-                            <td style="text-align: center; display: flex; gap: 8px; justify-content: center;">
+                            <td style="text-align: center; display: flex; gap: 8px; justify-content: center; align-items: center;">
+                                
+                                <a href="<?php echo e(route('empleados.vacaciones', $empleado?->id)); ?>" class="btn-action-vacaciones" title="Vacaciones">
+                                    <i class="fas fa-calendar"></i>
+                                </a>
+
                                 <?php if($yaTomado): ?>
                                     <button type="button" class="btn-action-edit btn-disabled" title="No se puede editar un período ya tomado" disabled>
                                         <i class="fas fa-lock"></i> Completado
                                     </button>
                                 <?php else: ?>
-                                    <button type="button" class="btn-action-edit" onclick="openEditModal(<?php echo e($periodo->id); ?>, <?php echo e($empleado?->id); ?>)">
-                                        <i class="fas fa-pencil"></i> 
-                                    </button>
-                                    <button type="button" class="btn-action-delete" onclick="deletePeriodo(<?php echo e($periodo->id); ?>)">
-                                        <i class="fas fa-trash"></i> 
-                                    </button>
-                                    <a href="/empleados/<?php echo e($empleado?->id); ?>/vacaciones/pdf" target="_blank" class="btn-action-pdf" title="Descargar comprobante">
-                                        <i class="fas fa-file-pdf"></i> PDF
-                                    </a>
+                                    <?php if($canManage): ?>
+                                        <button type="button" class="btn-action-edit" onclick="openEditModal(<?php echo e($periodo->id); ?>, <?php echo e($empleado?->id); ?>)">
+                                            <i class="fas fa-pencil"></i>
+                                        </button>
+                                        <button type="button" class="btn-action-delete" onclick="deletePeriodo(<?php echo e($periodo->id); ?>)">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                        <a href="/empleados/<?php echo e($empleado?->id); ?>/vacaciones/pdf" target="_blank" class="btn-action-pdf" title="Descargar comprobante">
+                                            <i class="fas fa-file-pdf"></i> PDF
+                                        </a>
+                                    <?php else: ?>
+                                        <button type="button" class="btn-action-edit btn-disabled" aria-disabled="true" title="No autorizado">
+                                            <i class="fas fa-pencil"></i>
+                                        </button>
+                                        <button type="button" class="btn-action-delete btn-disabled" aria-disabled="true" title="No autorizado">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    <?php endif; ?>
                                 <?php endif; ?>
                             </td>
                         </tr>
@@ -305,6 +320,9 @@
 
         .btn-action-pdf { background-color: #a87e3b; }
         .btn-action-pdf:hover { background-color: #8c6827; transform: translateY(-2px); }
+
+        .btn-action-vacaciones { border: none; cursor: pointer; padding: 6px 12px; border-radius: 6px; font-size: 0.85rem; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; color: white; background-color: #124416; text-decoration: none; }
+        .btn-action-vacaciones:hover { background-color: #0d2e10; transform: translateY(-2px); }
 
         .btn-disabled {
             background-color: #cbd5e1 !important;

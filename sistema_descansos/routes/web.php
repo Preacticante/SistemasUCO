@@ -23,6 +23,7 @@ use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\EmpleadoController;
 use App\Http\Controllers\UsuarioController;
 use App\Http\Controllers\UsuariosController;
+use App\Http\Controllers\PuestoController;
 
 // Librerías
 use Dompdf\Dompdf;
@@ -37,6 +38,8 @@ Route::get('/forgot-password', [ForgotPasswordController::class, 'showLinkReques
 Route::post('/forgot-password', [ForgotPasswordController::class, 'sendResetLinkEmail'])->name('password.email');
 Route::get('/reset-password/{token}', [ResetPasswordController::class, 'showResetForm'])->name('password.reset');
 Route::post('/reset-password', [ResetPasswordController::class, 'reset'])->name('password.update');
+Route::post('/puestos', [PuestoController::class, 'store'])->name('puestos.store');
+Route::post('/puestos/store', [App\Http\Controllers\EmpleadoController::class, 'storePuesto'])->name('puestos.store');
 
 Route::get('/logout', function () {
     session()->forget(['logeado', 'user_id', 'nombre', 'email']);
@@ -88,6 +91,7 @@ Route::put('/perfiles/{id}', [UsuariosController::class, 'update'])->name('perfi
 Route::delete('/perfiles/{id}', [UsuariosController::class, 'destroy'])->name('perfiles.destroy');
 Route::post('/perfil/update', [ProfileController::class, 'update'])->name('perfil.update');
 Route::post('/perfil/password', [ProfileController::class, 'changePassword'])->name('perfil.password');
+Route::post('/puestos', [App\Http\Controllers\PuestoController::class, 'store'])->name('puestos.store');
 
 
 // | RUTAS DE LÓGICA DE VACACIONES (MÓDULO INDIVIDUAL)
@@ -193,10 +197,19 @@ Route::post('/empleados/{empleado}/vacaciones', function (Request $request, Empl
     return back()->with('success', 'Registro de días de vacaciones actualizado correctamente.');
 })->name('empleados.vacaciones.guardar');
 
-Route::get('/empleados/{empleado}/vacaciones/pdf', function (Empleado $empleado) {
+Route::get('/empleados/{empleado}/vacaciones/pdf', function (Request $request, Empleado $empleado) {
     if (! session('logeado')) return redirect()->route('login');
 
+    // Determine the year for the PDF. If a specific periodo_id is provided, use its fecha_inicio year
     $anioActual = Carbon::now()->year;
+    $periodoId = $request->query('periodo_id');
+    if ($periodoId) {
+        $p = PeriodoVacacional::find($periodoId);
+        if ($p && $p->fecha_inicio) {
+            $anioActual = Carbon::parse($p->fecha_inicio)->year;
+        }
+    }
+
     $antiguedadAnios = (int) floor(Carbon::parse($empleado->fecha_ingreso)->diffInYears(Carbon::now()));
     $ley = LeyVacacion::where('anios_antiguedad', '<=', $antiguedadAnios)->orderBy('anios_antiguedad', 'desc')->first();
     $diasDerecho = $ley?->dias_derecho ?? 0;

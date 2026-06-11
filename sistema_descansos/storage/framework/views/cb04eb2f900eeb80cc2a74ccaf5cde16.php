@@ -167,6 +167,9 @@
 .btn-eliminar { background-color: #fee2e2; color: #991b1b; }
 .btn-eliminar:hover { background-color: #fca5a5; }
 
+/* Estado deshabilitado para acciones no permitidas */
+.btn-disabled { opacity: 0.45; cursor: not-allowed; pointer-events: none; }
+
 .form-group { margin-bottom: 20px; padding: 0 4px; }
 .form-group label { 
     display: block; 
@@ -242,8 +245,9 @@
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <script>
-(function(){
+    (function(){
     const token = '<?php echo e(csrf_token()); ?>';
+    const principalEmail = '<?php echo e(session("email")); ?>' || '';
     const qs = (id)=> document.getElementById(id);
     let usuarios = [];
 
@@ -254,6 +258,7 @@
         try {
             const res = await fetch('/perfiles/list');
             usuarios = await res.json();
+            console.log('perfiles/list response:', usuarios);
             render();
         } catch(e){ 
             console.error(e); 
@@ -276,11 +281,23 @@
                     </div>
                 </div>`;
             const acc = document.createElement('div'); acc.className='acciones';
-            const btnE = document.createElement('button'); btnE.className='btn-accion btn-edit'; btnE.title='Editar'; btnE.innerHTML='<i class="fa-solid fa-pen-to-square"></i>';
-            btnE.onclick = ()=> fillForm(u);
-            const btnD = document.createElement('button'); btnD.className='btn-accion btn-eliminar'; btnD.title='Eliminar'; btnD.innerHTML='<i class="fa-solid fa-trash"></i>';
-            btnD.onclick = ()=> eliminar(u.id);
-            acc.appendChild(btnE); acc.appendChild(btnD);
+            // Mostrar botones solo si el servidor indicó que se puede (bandera 'can_manage')
+            const canManage = !!u.can_manage;
+            if (canManage) {
+                const btnE = document.createElement('button');
+                btnE.className = 'btn-accion btn-edit';
+                btnE.title = 'Editar';
+                btnE.innerHTML = '<i class="fa-solid fa-pen-to-square"></i>';
+                btnE.onclick = ()=> fillForm(u);
+
+                const btnD = document.createElement('button');
+                btnD.className = 'btn-accion btn-eliminar';
+                btnD.title = 'Eliminar';
+                btnD.innerHTML = '<i class="fa-solid fa-trash"></i>';
+                btnD.onclick = ()=> eliminar(u.id);
+
+                acc.appendChild(btnE); acc.appendChild(btnD);
+            }
             div.appendChild(acc);
             cont.appendChild(div);
         });

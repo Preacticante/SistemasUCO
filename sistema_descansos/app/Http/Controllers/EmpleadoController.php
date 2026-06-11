@@ -160,7 +160,24 @@ class EmpleadoController extends Controller
         return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
     }
 }
+ 
+public function storePuesto(Request $request)
+{
+    // Validación: Si el nombre ya existe, regresa un error explícito
+    $request->validate([
+        'nombre' => 'required|string|max:191|unique:puestos,nombre',
+    ], [
+        'nombre.required' => 'El nombre del puesto es obligatorio.',
+        'nombre.unique'   => 'Ese puesto ya existe en el catálogo.',
+    ]);
 
+    \App\Models\Puesto::create([
+        'nombre' => $request->nombre
+    ]);
+
+    // Regresa a la página con un mensaje de éxito
+    return redirect()->route('empleados.index')->with('success', 'Puesto agregado correctamente.');
+}
     /**
      * Genera el reporte PDF masivo de vacaciones EXCLUSIVO de los empleados del usuario logeado
      */

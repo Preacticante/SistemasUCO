@@ -17,13 +17,18 @@ class UsuariosController extends Controller
             $usuariosRaw = Usuario::select('id_acceso', 'nombre_completo', 'correo', 'departamento')->get();
             
             // Transformación de compatibilidad para el JavaScript de tu vista
-            $usuarios = $usuariosRaw->map(function($u) {
+            $sessionEmail = strtolower(session('email') ?? '');
+            // Solo el administrador global (admin@sistema.com) puede gestionar (editar/eliminar) desde la lista de perfiles
+            $isAdminSession = ($sessionEmail === 'admin@sistema.com');
+            $usuarios = $usuariosRaw->map(function($u) use ($isAdminSession) {
+                $correo = $u->correo ?? '';
                 return [
-                    'id'              => $u->id_acceso, // El JS lo usará como identificador en los formularios
+                    'id'              => $u->id_acceso,
                     'id_acceso'       => $u->id_acceso,
                     'nombre_completo' => $u->nombre_completo,
-                    'correo'          => $u->correo,
-                    'departamento'    => $u->departamento
+                    'correo'          => $correo,
+                    'departamento'    => $u->departamento,
+                    'can_manage'      => $isAdminSession
                 ];
             });
                                 
@@ -36,6 +41,12 @@ class UsuariosController extends Controller
     // 2. CREAR: Creación limpia confiando en el Folio Automático de tu modelo
     public function store(Request $request) 
     {
+        // Only admin can create users
+        $sessionEmail = strtolower(session('email') ?? '');
+        if ($sessionEmail !== 'admin@sistema.com') {
+            return response()->json(['success' => false, 'message' => 'No autorizado'], 403);
+        }
+
         $validator = Validator::make($request->all(), [
             'nombre_completo' => 'required|string|max:255',
             'correo'          => 'required|email|unique:usuario,correo',
@@ -83,12 +94,21 @@ class UsuariosController extends Controller
             return response()->json(['success' => false, 'errors' => $validator->errors()], 422);
         }
 
+        // Authorization: only admin can update users
+        $sessionEmail = strtolower(session('email') ?? '');
+        if ($sessionEmail !== 'admin@sistema.com') {
+            return response()->json(['success' => false, 'message' => 'No autorizado'], 403);
+        }
         try {
             // Buscamos al usuario por su folio único institucional
             $usuario = Usuario::where('id_acceso', $id_acceso)->first();
 
             if (!$usuario) {
                 return response()->json(['success' => false, 'message' => 'Usuario no encontrado.'], 404);
+            }
+
+            if ($sessionEmail !== 'admin@sistema.com' && strtolower($usuario->correo) !== $sessionEmail) {
+                return response()->json(['success' => false, 'message' => 'No autorizado'], 403);
             }
 
             $usuario->nombre_completo = $request->nombre_completo;
@@ -110,6 +130,11 @@ class UsuariosController extends Controller
     // 4. ELIMINAR: Borrado físico directo para evitar errores de columnas faltantes
     public function destroy($id_acceso)
     {
+        // Authorization: only admin can delete users
+        $sessionEmail = strtolower(session('email') ?? '');
+        if ($sessionEmail !== 'admin@sistema.com') {
+            return response()->json(['success' => false, 'message' => 'No autorizado'], 403);
+        }
         try {
             $usuario = Usuario::where('id_acceso', $id_acceso)->first();
 

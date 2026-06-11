@@ -3,18 +3,16 @@
 @section('title', 'Empleados')
 @section('header', 'Directorio de Personal')
 
-{{-- 1. BLOQUE DE CONTENIDO PRINCIPAL --}}
 @section('content')
 <div class="employees-container">
     <div class="employees-header">
         <h2>Control de Empleados</h2>
-         <p>Resumen general del de personal activo.</p>
+        <p>Resumen general del personal activo.</p>
     </div>
 
-    {{-- Distribución invertida: Agregar a la izquierda y Buscador a la derecha --}}
     <div class="employees-actions-bar">
         <div class="button-add-employee">
-            <button onclick="abrirModal()" class="btn-add">
+            <button onclick="abrirModal('modalAgregar')" class="btn-add">
                 <i class="fa-solid fa-user-plus"></i> 
                 <span class="btn-text">Agregar Empleado</span>
             </button>
@@ -30,6 +28,7 @@
     </div>
     
     <div class="table-container">
+        @php $canManage = session('email') === 'admin@sistema.com'; @endphp
         <table class="tabla-empleados">
             <thead>
                 <tr>
@@ -42,46 +41,49 @@
             <tbody>
                 @forelse($empleados as $emp)
                 <tr id="fila-empleado-{{ $emp->id }}" style="transition: all 0.4s ease;">
-                    {{-- Cálculo matemático para continuar el conteo en las páginas siguientes --}}
                     <td><strong>{{ ($empleados->currentPage() - 1) * $empleados->perPage() + $loop->iteration }}</strong></td>
                     <td class="td-nombre">{{ $emp->nombre }} {{ $emp->apellido_paterno }} {{ $emp->apellido_materno }}</td>
                     <td class="td-puesto">{{ $emp->puesto->nombre ?? 'Sin Puesto' }}</td>
-                    
-                    {{-- Alineación normal a la izquierda para la celda de acciones --}}
                     <td style="text-align: left;">
                         <div class="contenedor-acciones">
+                            <a href="{{ route('empleados.vacaciones', $emp->id) }}" class="btn-accion btn-vacaciones" title="Vacaciones">
+                                <i class="fa-solid fa-calendar"></i>
+                            </a>
 
-                        {{-- 2. VACACIONES --}}
-                            <a href="{{ route('empleados.vacaciones', $emp->id) }}" class="btn-accion btn-vacaciones">
-                                <i class="fa-solid fa-calendar"></i> 
-                                <span class="btn-text">Vacaciones</span>
-                            </a> 
+                            {{-- PDF solo para administradores --}}
+                            @if($canManage)
+                                <a href="/empleados/{{ $emp->id }}/vacaciones/pdf" target="_blank" class="btn-accion btn-pdf" title="Descargar PDF">
+                                    <i class="fa-solid fa-file-pdf"></i>
+                                </a>
+                            @endif
 
-                            {{-- 1. EDITAR (Al estar primero en el orden HTML, aparecerá al extremo izquierdo) --}}
-                            <button onclick="abrirModalEditar({{ json_encode($emp) }})" class="btn-accion btn-edit">
-                                <i class="fa-solid fa-pen-to-square"></i> 
-                                <span class="btn-text"></span>
-                            </button>
+                            {{-- Editar/Eliminar: visibles pero bloqueados para no administradores --}}
+                            @if($canManage)
+                                <button onclick="abrirModalEditar({{ json_encode($emp) }})" class="btn-accion btn-edit">
+                                    <i class="fa-solid fa-pen-to-square"></i>
+                                </button>
+                                <button type="button" class="btn-accion btn-eliminar" onclick="ejecutarSoftDelete(this)" data-id="{{ $emp->id }}">
+                                    <i class="fa-solid fa-trash"></i>
+                                </button>
+                            @else
+                                <button class="btn-accion btn-edit btn-disabled" aria-disabled="true" title="No autorizado">
+                                    <i class="fa-solid fa-pen-to-square"></i>
+                                </button>
+                                <button class="btn-accion btn-eliminar btn-disabled" aria-disabled="true" title="No autorizado">
+                                    <i class="fa-solid fa-trash"></i>
+                                </button>
+                            @endif
 
-                            {{-- 3. ELIMINAR --}}
-                            <button type="button" class="btn-accion btn-eliminar" onclick="ejecutarSoftDelete(this)" data-id="{{ $emp->id }}">
-                                <i class="fa-solid fa-trash"></i> <span class="btn-text"></span>
-                            </button>
                         </div>
                     </td>
                 </tr>
                 @empty
-                <tr>
-                    <td colspan="4" style="text-align: center; padding: 2rem; color: #64748b;">
-                        No se encontraron empleados que coincidan con la búsqueda.
-                    </td>
-                </tr>
+                <tr><td colspan="4" style="text-align: center; padding: 2rem; color: #64748b;">No se encontraron empleados.</td></tr>
                 @endforelse
             </tbody>
         </table>
     </div>
 
-    {{-- Paginación corregida con alineación a la izquierda inferior --}}
     @if(method_exists($empleados, 'hasPages') && $empleados->hasPages())
         <div class="custom-pagination-container">
             {{ $empleados->appends(request()->query())->links('pagination::bootstrap-4') }}
@@ -92,38 +94,25 @@
 {{-- MODAL AGREGAR --}}
 <div id="modalAgregar" class="modal">
     <div class="modal-content">
-        <h3 class="modal-header add">
-            <i class="fa-solid fa-user-plus"></i> Nuevo Empleado
-        </h3>
+        <h3 class="modal-header add"><i class="fa-solid fa-user-plus"></i> Nuevo Empleado</h3>
         <form action="{{ route('empleados.store') }}" method="POST">
             @csrf 
-            <div class="form-group">
-                <label>Nombre(s)</label>
-                <input type="text" name="nombre" required>
-            </div>
-            <div class="form-group">
-                <label>Apellido Paterno</label>
-                <input type="text" name="apellido_paterno" required>
-            </div>
-            <div class="form-group">
-                <label>Apellido Materno</label>
-                <input type="text" name="apellido_materno">
-            </div>
+            <div class="form-group"><label>Nombre(s)</label><input type="text" name="nombre" required></div>
+            <div class="form-group"><label>Apellido Paterno</label><input type="text" name="apellido_paterno" required></div>
+            <div class="form-group"><label>Apellido Materno</label><input type="text" name="apellido_materno"></div>
             <div class="form-group">
                 <label>Puesto</label>
-                <select name="puesto_id" required>
-                    <option value="" disabled selected>Selecciona un puesto...</option>
-                    @foreach($puestos as $puesto)
-                        <option value="{{ $puesto->id }}">{{ $puesto->nombre }}</option>
-                    @endforeach
-                </select>
+                <div style="display: flex; gap: 8px;">
+                    <select name="puesto_id" required style="flex-grow:1;">
+                        <option value="" disabled selected>Selecciona un puesto...</option>
+                        @foreach($puestos as $puesto)<option value="{{ $puesto->id }}">{{ $puesto->nombre }}</option>@endforeach
+                    </select>
+                    <button type="button" onclick="abrirModal('modalPuesto', this.previousElementSibling)" class="btn-add-puesto">+</button>
+                </div>
             </div>
-            <div class="form-group">
-                <label>Fecha de Ingreso</label>
-                <input type="date" name="fecha_ingreso" required>
-            </div>
+            <div class="form-group"><label>Fecha de Ingreso</label><input type="date" name="fecha_ingreso" required></div>
             <div class="modal-actions">
-                <button type="button" onclick="cerrarModal()" class="btn-cancel">Cancelar</button>
+                <button type="button" onclick="cerrarModal('modalAgregar')" class="btn-cancel">Cancelar</button>
                 <button type="submit" class="btn-submit">Guardar</button>
             </div>
         </form>
@@ -133,151 +122,177 @@
 {{-- MODAL EDITAR --}}
 <div id="modalEditar" class="modal">
     <div class="modal-content">
-        <h3 class="modal-header edit">
-            <i class="fa-solid fa-user-pen"></i> Editar Empleado
-        </h3>
+        <h3 class="modal-header edit"><i class="fa-solid fa-user-pen"></i> Editar Empleado</h3>
         <form id="formEditar" method="POST">
-            @csrf 
-            @method('PUT')
-            <div class="form-group">
-                <label>Nombre(s)</label>
-                <input type="text" name="nombre" id="edit_nombre" required>
-            </div>
-            <div class="form-group">
-                <label>Apellido Paterno</label>
-                <input type="text" name="apellido_paterno" id="edit_paterno" required>
-            </div>
-            <div class="form-group">
-                <label>Apellido Materno</label>
-                <input type="text" name="apellido_materno" id="edit_materno">
-            </div>
+            @csrf @method('PUT')
+            <div class="form-group"><label>Nombre(s)</label><input type="text" name="nombre" id="edit_nombre" required></div>
+            <div class="form-group"><label>Apellido Paterno</label><input type="text" name="apellido_paterno" id="edit_paterno" required></div>
+            <div class="form-group"><label>Apellido Materno</label><input type="text" name="apellido_materno" id="edit_materno"></div>
             <div class="form-group">
                 <label>Puesto</label>
-                <select name="puesto_id" id="edit_puesto_id" required>
-                    <option value="" disabled>Selecciona un puesto...</option>
-                    @foreach($puestos as $puesto)
-                        <option value="{{ $puesto->id }}">{{ $puesto->nombre }}</option>
-                    @endforeach
-                </select>
+                <div style="display: flex; gap: 8px;">
+                    <select name="puesto_id" id="edit_puesto_id" required style="flex-grow:1;">
+                        @foreach($puestos as $puesto)<option value="{{ $puesto->id }}">{{ $puesto->nombre }}</option>@endforeach
+                    </select>
+                    <button type="button" onclick="abrirModal('modalPuesto', this.previousElementSibling)" class="btn-add-puesto">+</button>
+                </div>
             </div>
-            <div class="form-group">
-                <label>Fecha de Ingreso</label>
-                <input type="date" name="fecha_ingreso" id="edit_fecha" required>
-            </div>
+            <div class="form-group"><label>Fecha de Ingreso</label><input type="date" name="fecha_ingreso" id="edit_fecha" required></div>
             <div class="modal-actions">
-                <button type="button" onclick="cerrarModalEditar()" class="btn-cancel">Cancelar</button>
+                <button type="button" onclick="cerrarModal('modalEditar')" class="btn-cancel">Cancelar</button>
                 <button type="submit" class="btn-submit edit">Actualizar</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{{-- MODAL NUEVO PUESTO --}}
+<div id="modalPuesto" class="modal">
+    <div class="modal-content" style="max-width: 400px;">
+        <h3 class="modal-header add"><i class="fa-solid fa-briefcase"></i> Nuevo Puesto</h3>
+        <form action="{{ route('puestos.store') }}" method="POST">
+            @csrf
+            <div class="form-group"><label>Nombre del Puesto</label><input type="text" name="nombre" required></div>
+            <div class="modal-actions">
+                <button type="button" onclick="cerrarModal('modalPuesto')" class="btn-cancel">Cancelar</button>
+                <button type="submit" class="btn-submit">Guardar</button>
             </div>
         </form>
     </div>
 </div>
 @endsection
 
-{{-- 2. BLOQUE DE SCRIPTS JAVASCRIPT --}}
 @push('scripts')
-{{-- Incluimos la librería de SweetAlert2 en caso de que tu layout app no la tenga cargada --}}
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
 <script>
-    function abrirModal() {
-        document.getElementById('modalAgregar').classList.add('show');
-    }
+    let lastPuestoSelect = null;
+    function abrirModal(id, relatedSelect = null) { if (relatedSelect) lastPuestoSelect = relatedSelect; document.getElementById(id).classList.add('show'); }
+    function cerrarModal(id) { document.getElementById(id).classList.remove('show'); lastPuestoSelect = null; }
 
-    function cerrarModal() {
-        document.getElementById('modalAgregar').classList.remove('show');
-    }
+    // Evita que los modales se cierren al hacer clic dentro
+    document.querySelectorAll('.modal-content').forEach(content => {
+        content.addEventListener('click', e => e.stopPropagation());
+    });
 
     function abrirModalEditar(empleado) {
         const form = document.getElementById('formEditar');
         form.action = `/empleados/${empleado.id}`;
-
         document.getElementById('edit_nombre').value = empleado.nombre;
         document.getElementById('edit_paterno').value = empleado.apellido_paterno;
         document.getElementById('edit_materno').value = empleado.apellido_materno || '';
         document.getElementById('edit_puesto_id').value = empleado.puesto_id;
         document.getElementById('edit_fecha').value = empleado.fecha_ingreso;
-
-        document.getElementById('modalEditar').classList.add('show');
+        abrirModal('modalEditar');
     }
-
-    function cerrarModalEditar() {
-        document.getElementById('modalEditar').classList.remove('show');
-    }
-
     
-    function ejecutarSoftDelete(boton) {
-        const id = boton.getAttribute('data-id');
-        const tokenSeguro = '{{ csrf_token() }}';
+    function cerrarModalEditar() { cerrarModal('modalEditar'); }
 
-        // Alerta moderna de confirmación con SweetAlert2
-        Swal.fire({
-            title: '¿Estás seguro?',
-            text: "Esta acción eliminara al empleado.",
-            icon: 'warning',
-            borderRadius: '25px',
-            showCancelButton: true,
-            confirmButtonColor: '#dc2626',
-            cancelButtonColor: '#e2e8f0',
-            confirmButtonText: 'Sí, eliminar',
-            cancelButtonText: '<span style="color:#334155">Cancelar</span>'
-        }).then((result) => {
-            if (result.isConfirmed) {
-                
-                // Si el usuario confirma, hacemos la petición Fetch
-                fetch(`/empleados/${id}`, {
-                    method: 'POST',
-                    headers: {
-                        'X-CSRF-TOKEN': tokenSeguro,
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/json'
-                    },
-                    body: JSON.stringify({ _method: 'DELETE' })
-                })
-                .then(async response => {
-                    const data = await response.json();
-                    if (!response.ok) throw new Error(data.message || 'Error del servidor');
-                    return data;
-                })
-                .then(data => {
-                    if (data.success) {
-                        // Animación de salida de la fila
-                        const fila = document.getElementById('fila-empleado-' + id);
-                        if (fila) {
-                            fila.classList.add('row-fade-out');
-                            setTimeout(() => { fila.remove(); }, 500);
-                        }
+    // Manejo AJAX para agregar un nuevo puesto desde el modal sin recargar la página
+    (function(){
+        const form = document.querySelector('#modalPuesto form');
+        if (!form) return;
 
-                        // Alerta de éxito moderna estilo SweetAlert2
-                        Swal.fire({
-                            title: '¡Eliminado!',
-                            text: 'El empleado ha sido dado de baja de forma correcta.',
-                            icon: 'success',
-                            borderRadius: '25px',
-                            confirmButtonColor: '#124416'
-                        }).then(() => {
-                            // Fuerza el F5 automático al cerrar el aviso para actualizar el contador
-                            window.location.reload();
-                        });
-                    } else {
-                        Swal.fire('Error', 'El servidor no pudo eliminar: ' + data.message, 'error');
-                    }
-                })
-                .catch(error => {
-                    console.error('Error completo:', error);
-                    Swal.fire('Error', 'No se pudo conectar o procesar en el servidor: ' + error.message, 'error');
-                });
+        form.addEventListener('submit', async function(e){
+            e.preventDefault();
+            const url = form.action;
+            const formData = new FormData(form);
+            const token = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
+            try {
+                const res = await fetch(url, { method: 'POST', headers: { 'X-CSRF-TOKEN': token, 'Accept': 'application/json' }, body: formData });
+                if (!res.ok) {
+                    const text = await res.text();
+                    console.error('Error response:', text);
+                    alert('Error al guardar el puesto.');
+                    return;
+                }
+
+                const data = await res.json();
+                const option = document.createElement('option');
+                option.value = data.id;
+                option.textContent = data.nombre;
+
+                // Añadir la opción a todos los selects relevantes
+                document.querySelectorAll('select[name="puesto_id"], select#edit_puesto_id').forEach(s => s.appendChild(option.cloneNode(true)));
+
+                // Seleccionar la nueva opción en el select que abrió el modal (si existe)
+                if (lastPuestoSelect) {
+                    lastPuestoSelect.value = data.id;
+                } else {
+                    const sel = document.querySelector('#modalAgregar select[name="puesto_id"]');
+                    if (sel) sel.value = data.id;
+                }
+
+                form.reset();
+                cerrarModal('modalPuesto');
+            } catch (err) {
+                console.error(err);
+                alert('Ocurrió un error al guardar el puesto.');
             }
         });
+    })();
+
+    // Tu lógica original de soft delete y window.onclick permanece activa
+    async function ejecutarSoftDelete(btn) {
+        const id = btn.getAttribute('data-id');
+        if (!id) return;
+
+        const result = await Swal.fire({
+            title: '¿Estás seguro?',
+            text: 'Esta acción eliminará al empleado (soft delete).',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'Sí, eliminar',
+            cancelButtonText: 'Cancelar'
+        });
+
+        if (!result.isConfirmed) return;
+
+        const token = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
+        try {
+            const res = await fetch(`/empleados/${id}`, { method: 'DELETE', headers: { 'X-CSRF-TOKEN': token, 'Accept': 'application/json' } });
+            if (!res.ok) {
+                const body = await res.json().catch(() => ({}));
+                Swal.fire('Error', body.message || 'No se pudo eliminar el empleado.', 'error');
+                return;
+            }
+
+            // Animar y remover la fila
+            const row = document.getElementById(`fila-empleado-${id}`);
+            if (row) {
+                row.classList.add('row-fade-out');
+                setTimeout(() => row.remove(), 500);
+            }
+
+            Swal.fire({ icon: 'success', title: 'Eliminado', text: 'Empleado eliminado correctamente.', timer: 1500, showConfirmButton: false });
+        } catch (err) {
+            console.error(err);
+            Swal.fire('Error', 'Ocurrió un error al eliminar.', 'error');
+        }
     }
 
-    window.onclick = function(event) {
-        const modalAgregar = document.getElementById('modalAgregar');
-        const modalEditar = document.getElementById('modalEditar');
-        
-        if (event.target == modalAgregar) cerrarModal();
-        if (event.target == modalEditar) cerrarModalEditar();
-    }
+    // Mostrar alerta de éxito si la sesión tiene mensaje
+    @if(session('success'))
+        Swal.fire({
+            icon: 'success',
+            title: 'Éxito',
+            text: @json(session('success')),
+            timer: 2000,
+            showConfirmButton: false
+        });
+    @endif
 </script>
+@endpush
+
+@push('styles')
+<style>
+    .btn-add-puesto { background: #124416; color: white; border: none; padding: 0 15px; border-radius: 8px; cursor: pointer; font-weight: 700; }
+    .btn-add-puesto:hover { background: #0e3310; }
+    /* Tus estilos originales se conservan */
+</style>
 @endpush
 
 {{-- 3. BLOQUE DE ESTILOS CSS --}}
@@ -484,6 +499,10 @@
 
     .btn-vacaciones { background-color: #124416; color: white; }
     .btn-vacaciones:hover { background-color: #0e3310; transform: translateY(-1px); }
+    .btn-pdf { background-color: #b91c1c; color: white; }
+    .btn-pdf:hover { background-color: #951616; transform: translateY(-1px); }
+    .btn-disabled { background: #e2e8e5 !important; color: #9aa3a0 !important; cursor: not-allowed; box-shadow: none; }
+    .btn-disabled i { opacity: 0.6; }
     
     .btn-eliminar .btn-text { display: none; }
     .btn-eliminar { background-color: #dc3545; color: white; align-items: center; }
