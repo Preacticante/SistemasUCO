@@ -9,12 +9,13 @@ use Illuminate\Support\Facades\Validator;
 
 class UsuariosController extends Controller
 {
-    // 1. LISTAR: Trae todos los usuarios y simula el "id" con "id_acceso" para no romper el JS
     public function list() 
     {
         try {
-            // Traemos todos los registros de tu tabla
-            $usuariosRaw = Usuario::select('id_acceso', 'nombre_completo', 'correo', 'departamento')->get();
+            // Traemos todos los registros no eliminados de tu tabla
+            $usuariosRaw = Usuario::select('id_acceso', 'nombre_completo', 'correo', 'departamento')
+                ->whereNull('deleted_at')
+                ->get();
             
             // Transformación de compatibilidad para el JavaScript de tu vista
             $sessionEmail = strtolower(session('email') ?? '');

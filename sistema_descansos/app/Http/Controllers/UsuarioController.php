@@ -11,7 +11,9 @@ class UsuarioController extends Controller
     // 1. Método para listar los usuarios en la pantalla de forma dinámica
     public function list() 
     {
-        $usuarios = Usuario::select('id', 'id_acceso', 'nombre_completo', 'correo', 'departamento')->get();
+        $usuarios = Usuario::select('id', 'id_acceso', 'nombre_completo', 'correo', 'departamento')
+            ->whereNull('deleted_at')
+            ->get();
         return response()->json($usuarios);
     }
 

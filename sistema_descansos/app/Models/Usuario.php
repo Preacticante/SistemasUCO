@@ -4,11 +4,12 @@ namespace App\Models;
 
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Carbon\Carbon;
 
 class Usuario extends Authenticatable
 {
-    use Notifiable;
+    use Notifiable, SoftDeletes;
 
     protected $table = 'usuario';
 
@@ -31,6 +32,10 @@ class Usuario extends Authenticatable
     protected $hidden = [
         'contrasena',
         'remember_token',
+    ];
+
+    protected $casts = [
+        'deleted_at' => 'datetime',
     ];
 
     // Laravel usará esta contraseña para login

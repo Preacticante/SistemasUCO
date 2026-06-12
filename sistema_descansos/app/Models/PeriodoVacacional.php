@@ -3,11 +3,13 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Carbon\Carbon;
 
 class PeriodoVacacional extends Model
 {
+    use SoftDeletes;
     protected $table = 'periodos_vacacionales';
     
     // Deshabilitamos timestamps ya que la tabla original no los requiere
@@ -33,6 +35,7 @@ class PeriodoVacacional extends Model
         'fecha_regreso' => 'date:Y-m-d',
         'dias'          => 'integer',
         'empleado_id'   => 'integer',
+        'deleted_at'    => 'datetime',
     ];
 
     /**

@@ -61,7 +61,9 @@ Route::get('/historial', function (Request $request) {
     if (! session('logeado')) return redirect()->route('login');
 
     $buscar = $request->input('buscar');
-    $query = PeriodoVacacional::with('empleado')->orderBy('fecha_inicio', 'desc');
+    $query = PeriodoVacacional::with('empleado')
+        ->whereNull('deleted_at')
+        ->orderBy('fecha_inicio', 'desc');
 
     if ($buscar) {
         $query->whereHas('empleado', function ($q) use ($buscar) {
@@ -222,6 +224,7 @@ Route::get('/empleados/{empleado}/vacaciones/pdf', function (Request $request, E
     $diasRestantes = max(0, $diasDerecho - $diasTomados);
 
     $periodosVacacionales = PeriodoVacacional::where('empleado_id', $empleado->id)
+        ->whereNull('deleted_at')
         ->orderBy('fecha_inicio', 'desc')
         ->get();
 
@@ -272,6 +275,7 @@ Route::get('/empleados/{empleado}/vacaciones/historial/pdf', function (Empleado 
 
     $periodosVacacionales = PeriodoVacacional::where('empleado_id', $empleado->id)
         ->where('anio_calendario', $anioActual)
+        ->whereNull('deleted_at')
         ->orderBy('fecha_inicio', 'asc')
         ->get();
 
@@ -324,7 +328,10 @@ Route::get('/panel/reporte/pdf', function () {
         $ley = LeyVacacion::where('anios_antiguedad', '<=', $antiguedadAnios)->orderBy('anios_antiguedad', 'desc')->first();
         $diasDerecho = $ley?->dias_derecho ?? 0;
 
-        $registros = RegistroDescanso::where('empleado_id', $empleado->id)->where('anio_calendario', $anioActual)->get();
+        $registros = RegistroDescanso::where('empleado_id', $empleado->id)
+            ->where('anio_calendario', $anioActual)
+            ->whereNull('deleted_at')
+            ->get();
         $diasTomados = $registros->sum('dias_tomados');
         $diasAdeuda = max(0, $diasDerecho - $diasTomados);
 
@@ -372,17 +379,20 @@ Route::get('/periodos/{id}', function ($id) {
     ]);
 });
 Route::get('/api/eventos-vacaciones', function () {
-    return \App\Models\PeriodoVacacional::with('empleado')->get()->map(function ($p) {
-        return [
-            'title' => $p->empleado->nombre . ' ' . substr($p->empleado->apellido_paterno, 0, 1) . '.',
-            'start' => $p->fecha_inicio,
-            'end'   => \Illuminate\Support\Carbon::parse($p->fecha_fin)->addDay()->toDateString(),
-            'backgroundColor' => '#124416',
-            'borderColor'     => '#124416',
-            'textColor'       => '#ffffff',
-            'classNames'      => ['evento-moderno'] // Clase para estilo extra
-        ];
-    });
+    return \App\Models\PeriodoVacacional::with('empleado')
+        ->whereNull('deleted_at')
+        ->get()
+        ->map(function ($p) {
+            return [
+                'title' => $p->empleado->nombre . ' ' . substr($p->empleado->apellido_paterno, 0, 1) . '.',
+                'start' => $p->fecha_inicio,
+                'end'   => \Illuminate\Support\Carbon::parse($p->fecha_fin)->addDay()->toDateString(),
+                'backgroundColor' => '#124416',
+                'borderColor'     => '#124416',
+                'textColor'       => '#ffffff',
+                'classNames'      => ['evento-moderno'] // Clase para estilo extra
+            ];
+        });
 });
 
 Route::put('/periodos/{id}', function (Request $request, $id) {

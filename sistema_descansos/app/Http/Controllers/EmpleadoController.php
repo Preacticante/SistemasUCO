@@ -36,8 +36,8 @@ class EmpleadoController extends Controller
         // 4. Paginar los resultados automáticamente (10 por página del subgrupo)
         $empleados = $query->paginate(10);
 
-        // 5. Traer todos los puestos para los Modales
-        $puestos = \App\Models\Puesto::all();
+        // 5. Traer todos los puestos para los Modales (excluyendo eliminados)
+        $puestos = \App\Models\Puesto::whereNull('deleted_at')->get();
 
         // 6. Retornar la vista
         return view('empleados.index', compact('empleados', 'puestos'));

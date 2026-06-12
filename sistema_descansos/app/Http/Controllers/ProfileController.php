@@ -47,7 +47,9 @@ class ProfileController extends Controller
         // --- Suma de Días Gestionados ---
         try {
             // Nota: Veo en tu traza que tu tabla se llama 'periodos_vacacionales' y la columna 'dias'
-            $diasGestionados = DB::table('periodos_vacacionales')->sum('dias'); 
+            $diasGestionados = DB::table('periodos_vacacionales')
+                                ->whereNull('deleted_at')
+                                ->sum('dias'); 
         } catch (\Exception $e) {
             $diasGestionados = 0; 
         }
