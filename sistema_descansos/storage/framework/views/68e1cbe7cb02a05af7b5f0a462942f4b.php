@@ -70,6 +70,17 @@
         </div>
 
         <div class="calendar-card">
+            <div class="calendar-card-header">
+                <div>
+                    <strong>Calendario de eventos</strong>
+                    <div class="calendar-legend">
+                        <span class="legend-item legend-descanso">Descanso de un trabajador</span>
+                        <span class="legend-item legend-festivo">Festivo</span>
+                        <span class="legend-item legend-institucional">Vacaciones institucionales</span>
+                    </div>
+                </div>
+                <a href="<?php echo e(route('dias-especiales.index')); ?>" class="btn-calcular">Gestionar días especiales</a>
+            </div>
             <div id="calendar"></div>
         </div>
     </div>
@@ -181,6 +192,29 @@
         box-shadow: 0 4px 6px rgba(0,0,0,0.05);
         min-width: 0; 
     }
+    .calendar-card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 16px;
+        margin-bottom: 18px;
+    }
+    .calendar-legend {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-top: 8px;
+    }
+    .legend-item {
+        padding: 6px 12px;
+        border-radius: 999px;
+        font-size: 0.8rem;
+        color: white;
+        font-weight: 700;
+    }
+    .legend-descanso { background-color: #124416; }
+    .legend-festivo { background-color: #AA7F31; color: #091014; }
+    .legend-institucional { background-color: #340C51};
     
     /* Adaptaciones de UI para FullCalendar */
     .fc .fc-toolbar-title { font-size: 1.1rem !important; color: #124416; font-weight: 700; }

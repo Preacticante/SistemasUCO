@@ -12,6 +12,7 @@ use App\Models\LeyVacacion;
 use App\Models\RegistroDescanso;
 use App\Models\PeriodoVacacional;
 use App\Models\Puesto;
+use App\Models\DiaEspecial;
 
 // Controladores
 use App\Http\Controllers\Auth\LoginController;
@@ -95,6 +96,81 @@ Route::delete('/perfiles/{id}', [UsuariosController::class, 'destroy'])->name('p
 Route::post('/perfil/update', [ProfileController::class, 'update'])->name('perfil.update');
 Route::post('/perfil/password', [ProfileController::class, 'changePassword'])->name('perfil.password');
 Route::post('/puestos', [App\Http\Controllers\PuestoController::class, 'store'])->name('puestos.store');
+
+Route::get('/dias-especiales', function () {
+    if (! session('logeado')) return redirect()->route('login');
+
+    $diasEspeciales = DiaEspecial::orderBy('fecha_inicio', 'desc')->get();
+    $empleados = Empleado::orderBy('nombre')->get();
+    return view('dias_especiales.index', compact('diasEspeciales','empleados'));
+})->name('dias-especiales.index');
+
+Route::post('/dias-especiales', function (Request $request) {
+    if (! session('logeado')) return redirect()->route('login');
+
+    $request->validate([
+        'tipo' => 'required|in:descanso,festivo,institucional',
+        'titulo' => 'required|string|max:255',
+        'fecha_inicio' => 'required|date',
+        'fecha_fin' => 'required|date|after_or_equal:fecha_inicio',
+        'selection_mode' => 'required|string|in:personalizado,semana,mes,varios',
+        'multiple_dates' => 'required|string',
+        'aplica_todos' => 'nullable|boolean',
+        'empleados' => 'nullable|array',
+        'empleados.*' => 'integer|exists:empleados,id',
+        'observaciones' => 'nullable|string|max:1000',
+    ]);
+
+    $selectedDates = array_filter(array_map('trim', explode(',', $request->input('multiple_dates'))));
+    $count = count($selectedDates);
+
+    // Validaciones según modo de selección
+    $mode = $request->input('selection_mode');
+    if ($mode === 'semana' && $count !== 7) {
+        return back()->withErrors(['multiple_dates' => 'Para selección semanal debes elegir exactamente 7 días.'])->withInput();
+    }
+    if ($mode === 'mes') {
+        $start = Carbon::parse($request->input('fecha_inicio'));
+        $daysInMonth = $start->daysInMonth;
+        if ($count !== $daysInMonth) {
+            return back()->withErrors(['multiple_dates' => "Para selección por mes debes seleccionar los {$daysInMonth} días del mes."])->withInput();
+        }
+    }
+
+    // Validación: si estás creando un 'descanso' no permitir seleccionar fechas que ya sean festivas o institucionales
+    if ($request->input('tipo') === 'descanso') {
+        $conflicts = [];
+        foreach ($selectedDates as $sd) {
+            $d = Carbon::parse($sd)->toDateString();
+            $exists = DiaEspecial::whereIn('tipo', ['festivo', 'institucional'])
+                ->whereDate('fecha_inicio', '<=', $d)
+                ->whereDate('fecha_fin', '>=', $d)
+                ->exists();
+            if ($exists) $conflicts[] = $d;
+        }
+        if (!empty($conflicts)) {
+            return back()->withErrors(['multiple_dates' => 'Las siguientes fechas no pueden asignarse como descanso porque son festivas o institucionales: ' . implode(', ', $conflicts)])->withInput();
+        }
+    }
+
+    $data = $request->only(['tipo','titulo','fecha_inicio','fecha_fin','observaciones']);
+    if ($request->input('aplica_todos')) {
+        $data['aplicado_a'] = ['all'];
+    } else {
+        $data['aplicado_a'] = $request->input('empleados') ?: null;
+    }
+
+    DiaEspecial::create($data);
+
+    return redirect()->route('dias-especiales.index');
+})->name('dias-especiales.store');
+
+Route::delete('/dias-especiales/{id}', function ($id) {
+    if (! session('logeado')) return redirect()->route('login');
+
+    DiaEspecial::findOrFail($id)->delete();
+    return redirect()->route('dias-especiales.index');
+})->name('dias-especiales.destroy');
 
 
 // | RUTAS DE LÓGICA DE VACACIONES (MÓDULO INDIVIDUAL)
@@ -380,20 +456,35 @@ Route::get('/periodos/{id}', function ($id) {
     ]);
 });
 Route::get('/api/eventos-vacaciones', function () {
-    return \App\Models\PeriodoVacacional::with('empleado')
+    $vacaciones = PeriodoVacacional::with('empleado')
         ->whereNull('deleted_at')
         ->get()
         ->map(function ($p) {
             return [
-                'title' => $p->empleado->nombre . ' ' . substr($p->empleado->apellido_paterno, 0, 1) . '.',
+                'title' => $p->empleado ? $p->empleado->nombre . ' ' . substr($p->empleado->apellido_paterno, 0, 1) . '.' : 'Vacaciones Institucionales',
                 'start' => $p->fecha_inicio,
                 'end'   => \Illuminate\Support\Carbon::parse($p->fecha_fin)->addDay()->toDateString(),
-                'backgroundColor' => '#124416',
-                'borderColor'     => '#124416',
+                'backgroundColor' => '#F97316',
+                'borderColor'     => '#F97316',
                 'textColor'       => '#ffffff',
-                'classNames'      => ['evento-moderno'] // Clase para estilo extra
+                'classNames'      => ['evento-moderno', 'evento-institucional']
             ];
         });
+
+    $especiales = DiaEspecial::orderBy('fecha_inicio', 'desc')->get()->map(function ($dia) {
+        return [
+            'title' => $dia->titulo,
+            'start' => $dia->fecha_inicio,
+            'end'   => \Illuminate\Support\Carbon::parse($dia->fecha_fin)->addDay()->toDateString(),
+            'backgroundColor' => $dia->color,
+            'borderColor'     => $dia->color,
+            'textColor'       => $dia->text_color,
+            'display' => 'auto',
+            'classNames'      => ['evento-especial', 'evento-' . $dia->tipo]
+        ];
+    });
+
+    return $vacaciones->merge($especiales)->values();
 });
 
 Route::put('/periodos/{id}', function (Request $request, $id) {
