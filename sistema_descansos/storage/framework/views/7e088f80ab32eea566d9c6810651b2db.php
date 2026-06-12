@@ -151,6 +151,23 @@
 <div id="modalPuesto" class="modal">
     <div class="modal-content" style="max-width: 400px;">
         <h3 class="modal-header add"><i class="fa-solid fa-briefcase"></i> Nuevo Puesto</h3>
+        <div style="margin-bottom:12px;">
+            <strong>Puestos existentes</strong>
+            <ul id="lista-puestos" style="margin:8px 0 12px 0; padding:0; list-style:none; max-height:160px; overflow:auto;">
+    <?php $__currentLoopData = $puestos; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $p): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+        <li id="puesto-item-<?php echo e($p->id); ?>" style="display:flex; justify-content:space-between; align-items:center; padding:6px 8px; border-bottom:1px solid #eee;">
+            <span><?php echo e($p->nombre); ?></span>
+            <button type="button" 
+                    class="btn-delete-puesto" 
+                    onclick="eliminarPuesto(<?php echo e($p->id); ?>)"
+                    style="background:#dc3545; color:white; border:none; padding:6px 8px; border-radius:6px; cursor:pointer;">
+                Eliminar
+            </button>
+        </li>
+    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+        </ul>
+        </div>
+
         <form action="<?php echo e(route('puestos.store')); ?>" method="POST">
             <?php echo csrf_field(); ?>
             <div class="form-group"><label>Nombre del Puesto</label><input type="text" name="nombre" required></div>
@@ -232,6 +249,57 @@
             }
         });
     })();
+
+    // Eliminar puesto (soft delete) desde el modal
+    async function eliminarPuesto(id) {
+        if (!id) return;
+        const token = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
+        const result = await Swal.fire({
+            title: '¿Eliminar puesto?',
+            text: 'Se marcará el puesto como eliminado (soft delete).',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'Sí, eliminar',
+            cancelButtonText: 'Cancelar'
+        });
+
+        if (!result.isConfirmed) return;
+
+        try {
+            const res = await fetch(`/puestos/${id}`, { method: 'DELETE', headers: { 'X-CSRF-TOKEN': token, 'Accept': 'application/json' } });
+            const body = await res.json().catch(() => ({}));
+            if (!res.ok) {
+                Swal.fire('Error', body.message || body.error || 'No se pudo eliminar el puesto.', 'error');
+                return;
+            }
+
+            // Remover el item de la lista
+            const item = document.getElementById(`puesto-item-${id}`);
+            if (item) item.remove();
+
+            // Remover opciones de selects
+            document.querySelectorAll('select[name="puesto_id"], select#edit_puesto_id').forEach(s => {
+                const opt = s.querySelector(`option[value="${id}"]`);
+                if (opt) opt.remove();
+            });
+
+            Swal.fire({ icon: 'success', title: 'Eliminado', text: 'Puesto eliminado correctamente.', timer: 1500, showConfirmButton: false });
+        } catch (err) {
+            console.error(err);
+            Swal.fire('Error', 'Ocurrió un error al eliminar el puesto.', 'error');
+        }
+    }
+
+    // Delegación de eventos para botones de eliminar puesto
+    document.addEventListener('click', function(e){
+        if (e.target && e.target.classList.contains('btn-delete-puesto')) {
+            const id = e.target.getAttribute('data-id');
+            eliminarPuesto(id);
+        }
+    });
 
     // Tu lógica original de soft delete y window.onclick permanece activa
     async function ejecutarSoftDelete(btn) {

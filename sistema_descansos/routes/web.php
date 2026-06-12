@@ -39,6 +39,7 @@ Route::post('/forgot-password', [ForgotPasswordController::class, 'sendResetLink
 Route::get('/reset-password/{token}', [ResetPasswordController::class, 'showResetForm'])->name('password.reset');
 Route::post('/reset-password', [ResetPasswordController::class, 'reset'])->name('password.update');
 Route::post('/puestos', [PuestoController::class, 'store'])->name('puestos.store');
+Route::delete('/puestos/{id}', [PuestoController::class, 'destroy'])->name('puestos.destroy');
 Route::post('/puestos/store', [App\Http\Controllers\EmpleadoController::class, 'storePuesto'])->name('puestos.store');
 
 Route::get('/logout', function () {
