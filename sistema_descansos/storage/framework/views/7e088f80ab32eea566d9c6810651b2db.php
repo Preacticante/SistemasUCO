@@ -568,7 +568,7 @@
 
     .btn-vacaciones { background-color: #124416; color: white; }
     .btn-vacaciones:hover { background-color: #0e3310; transform: translateY(-1px); }
-    .btn-pdf { background-color: #b91c1c; color: white; }
+    .btn-pdf { background-color: #340C51; color: white; }
     .btn-pdf:hover { background-color: #951616; transform: translateY(-1px); }
     .btn-disabled { background: #e2e8e5 !important; color: #9aa3a0 !important; cursor: not-allowed; box-shadow: none; }
     .btn-disabled i { opacity: 0.6; }
