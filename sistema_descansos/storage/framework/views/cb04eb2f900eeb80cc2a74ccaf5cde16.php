@@ -22,6 +22,7 @@
             <div class="card-header">
                 <i class="fa-solid fa-user-plus"></i> Nuevo / Editar Usuario
             </div>
+            <?php if(session('email') === 'admin@sistema.com'): ?>
             <form id="formUsuario" class="card-body" autocomplete="off">
                 <?php echo csrf_field(); ?>
                 <input type="hidden" id="usuario_id" name="usuario_id" value="">
@@ -58,6 +59,11 @@
                     </button>
                 </div>
             </form>
+            <?php else: ?>
+            <div class="card-body">
+                <p style="color:#475569;">Modo lectura: no tienes permisos para crear, editar o eliminar usuarios.</p>
+            </div>
+            <?php endif; ?>
         </div>
     </div>
 </div>
@@ -425,8 +431,12 @@
 
     document.addEventListener('DOMContentLoaded', function(){ 
         loadUsuarios(); 
-        qs('formUsuario').addEventListener('submit', submit); 
-        qs('cancelUsuario').addEventListener('click', resetForm); 
+        const form = qs('formUsuario');
+        if (form) {
+            form.addEventListener('submit', submit);
+            const cancel = qs('cancelUsuario');
+            if (cancel) cancel.addEventListener('click', resetForm);
+        }
     });
 })();
 </script>

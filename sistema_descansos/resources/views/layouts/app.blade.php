@@ -173,6 +173,11 @@
                         <i class="fa-solid fa-calendar-check"></i> Historial de Vacaciones
                     </a>
                 </li>
+                <li>
+                    <a href="{{ route('dias-especiales.index') }}" class="{{ request()->routeIs('dias-especiales.*') ? 'active' : '' }}">
+                        <i class="fa-solid fa-calendar-days"></i> Días Especiales
+                    </a>
+                </li>
                 
                 {{-- CONDICIONAL: Solo se muestra el botón si el correo en sesión es el del administrador principal --}}
                 @if(session('email') === 'admin@sistema.com')
