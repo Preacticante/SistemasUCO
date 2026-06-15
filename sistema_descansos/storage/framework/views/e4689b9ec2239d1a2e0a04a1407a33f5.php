@@ -22,94 +22,90 @@
 
         <div style="overflow-x: auto;">
             <table class="responsive-table-v2">
-                <thead>
-                    <tr>
-                        <th>EMPLEADO</th>
-                        <th>TIPO</th>
-                        <th>FECHA INICIO</th>
-                        <th>FECHA FIN</th>
-                        <th>DÍAS TOTALES</th>
-                        <th>ESTADO</th>
-                        <th style="text-align: center;">ACCIÓN</th>
-                    </tr>
-                </thead>
-                <?php $canManage = session('email') === 'admin@sistema.com'; ?>
-                <tbody>
-                    <?php $__empty_1 = true; $__currentLoopData = $periodosVacacionales; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $periodo): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
-                        <?php
-                            $empleado = $periodo->empleado;
-                            $fechaFin = \Carbon\Carbon::parse($periodo->fecha_fin);
-                            $yaTomado = $fechaFin->isPast();
-                            $estado = $yaTomado ? 'Tomado' : 'Programado';
-                        ?>
-                        <tr>
-                            <td class="text-employee-name">
-                                <?php echo e($empleado?->nombre); ?> <?php echo e($empleado?->apellido_paterno); ?> <?php echo e($empleado?->apellido_materno); ?>
+    <thead>
+        <tr>
+            <th>EMPLEADO</th>
+            <th>TIPO</th>
+            <th>FECHA INICIO</th>
+            <th>FECHA FIN</th>
+            <th>DÍAS TOTALES</th>
+            <th>ESTADO</th>
+            <th style="text-align: center;">ACCIÓN</th>
+        </tr>
+    </thead>
+    <?php $canManage = session('email') === 'admin@sistema.com'; ?>
+    <tbody>
+        <?php $__empty_1 = true; $__currentLoopData = $periodosVacacionales; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $periodo): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
+            <?php
+                $empleado = $periodo->empleado;
+                $fechaFin = \Carbon\Carbon::parse($periodo->fecha_fin);
+                $yaTomado = $fechaFin->isPast();
+                $estado = $yaTomado ? 'Tomado' : 'Programado';
+            ?>
+            <tr>
+                <td class="text-employee-name">
+                    <?php if($empleado): ?>
+                        <?php echo e($empleado->nombre); ?> <?php echo e($empleado->apellido_paterno); ?> <?php echo e($empleado->apellido_materno); ?>
 
-                            </td>
-                            <td style="color: #64748b; font-weight: 500;">
-                                Vacaciones
-                            </td>
-                            <td style="color: #334155;">
-                                <?php echo e(\Carbon\Carbon::parse($periodo->fecha_inicio)->format('d/m/Y')); ?>
-
-                            </td>
-                            <td style="color: #334155;">
-                                <?php echo e($fechaFin->format('d/m/Y')); ?>
-
-                            </td>
-                            <td class="<?php echo e($yaTomado ? 'text-muted-days' : 'text-danger-bold'); ?>">
-                                <?php echo e($periodo->dias); ?> día<?php echo e($periodo->dias === 1 ? '' : 's'); ?>
-
-                            </td>
-                            <td>
-                                <span class="badge <?php echo e($yaTomado ? 'badge-success' : 'badge-info'); ?>">
-                                    <?php echo e($estado); ?>
-
-                                </span>
-                            </td>
-                            <td style="text-align: center; display: flex; gap: 8px; justify-content: center; align-items: center;">
-                                
-                                <a href="<?php echo e(route('empleados.vacaciones', $empleado?->id)); ?>" class="btn-action-vacaciones" title="Vacaciones">
-                                    <i class="fas fa-calendar"></i>
-                                </a>
-
-                                <?php if($yaTomado): ?>
-                                    <button type="button" class="btn-action-edit btn-disabled" title="No se puede editar un período ya tomado" disabled>
-                                        <i class="fas fa-lock"></i> Completado
-                                    </button>
-                                <?php else: ?>
-                                    <?php if($canManage): ?>
-                                        <button type="button" class="btn-action-edit" onclick="openEditModal(<?php echo e($periodo->id); ?>, <?php echo e($empleado?->id); ?>)">
-                                            <i class="fas fa-pencil"></i>
-                                        </button>
-                                        <button type="button" class="btn-action-delete" onclick="deletePeriodo(<?php echo e($periodo->id); ?>)">
-                                            <i class="fas fa-trash"></i>
-                                        </button>
-                                        <a href="/empleados/<?php echo e($empleado?->id); ?>/vacaciones/pdf?periodo_id=<?php echo e($periodo->id); ?>" target="_blank" class="btn-action-pdf" title="Descargar comprobante">
-                                            <i class="fas fa-file-pdf"></i> PDF
-                                        </a>
-                                    <?php else: ?>
-                                        <button type="button" class="btn-action-edit btn-disabled" aria-disabled="true" title="No autorizado">
-                                            <i class="fas fa-pencil"></i>
-                                        </button>
-                                        <button type="button" class="btn-action-delete btn-disabled" aria-disabled="true" title="No autorizado">
-                                            <i class="fas fa-trash"></i>
-                                        </button>
-                                    <?php endif; ?>
-                                <?php endif; ?>
-                            </td>
-                        </tr>
-                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
-                        <tr>
-                            <td colspan="7" style="text-align:center; padding: 40px 0; color: #5e7087;">
-                                <i class="fas fa-folder-open" style="font-size: 2.5rem; color: #cbd5e1; margin-bottom: 15px; display: block;"></i>
-                                No se encontraron registros de vacaciones en el sistema.
-                            </td>
-                        </tr>
+                    <?php else: ?>
+                        <span class="text-muted" style="font-style: italic;">Empleado eliminado</span>
                     <?php endif; ?>
-                </tbody>
-            </table>
+                </td>
+                <td style="color: #64748b; font-weight: 500;">Vacaciones</td>
+                <td style="color: #334155;"><?php echo e(\Carbon\Carbon::parse($periodo->fecha_inicio)->format('d/m/Y')); ?></td>
+                <td style="color: #334155;"><?php echo e($fechaFin->format('d/m/Y')); ?></td>
+                <td class="<?php echo e($yaTomado ? 'text-muted-days' : 'text-danger-bold'); ?>">
+                    <?php echo e($periodo->dias); ?> día<?php echo e($periodo->dias === 1 ? '' : 's'); ?>
+
+                </td>
+                <td>
+                    <span class="badge <?php echo e($yaTomado ? 'badge-success' : 'badge-info'); ?>"><?php echo e($estado); ?></span>
+                </td>
+                <td style="text-align: center; display: flex; gap: 8px; justify-content: center; align-items: center;">
+                    
+                    
+                    <?php if($empleado): ?>
+                        <a href="<?php echo e(route('empleados.vacaciones', $empleado->id)); ?>" class="btn-action-vacaciones" title="Vacaciones">
+                            <i class="fas fa-calendar"></i>
+                        </a>
+
+                        <?php if($yaTomado): ?>
+                            <button type="button" class="btn-action-edit btn-disabled" title="No se puede editar un período ya tomado" disabled>
+                                <i class="fas fa-lock"></i> Completado
+                            </button>
+                        <?php else: ?>
+                            <?php if($canManage): ?>
+                                <button type="button" class="btn-action-edit" onclick="openEditModal(<?php echo e($periodo->id); ?>, <?php echo e($empleado->id); ?>)">
+                                    <i class="fas fa-pencil"></i>
+                                </button>
+                                <button type="button" class="btn-action-delete" onclick="deletePeriodo(<?php echo e($periodo->id); ?>)">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                                <a href="/empleados/<?php echo e($empleado->id); ?>/vacaciones/pdf?periodo_id=<?php echo e($periodo->id); ?>" target="_blank" class="btn-action-pdf" title="Descargar comprobante">
+                                    <i class="fas fa-file-pdf"></i> PDF
+                                </a>
+                            <?php else: ?>
+                                <button type="button" class="btn-action-edit btn-disabled" disabled><i class="fas fa-pencil"></i></button>
+                                <button type="button" class="btn-action-delete btn-disabled" disabled><i class="fas fa-trash"></i></button>
+                            <?php endif; ?>
+                        <?php endif; ?>
+                    <?php else: ?>
+                        <button class="btn-disabled" title="Datos de empleado no disponibles" disabled>
+                            <i class="fas fa-exclamation-triangle"></i>
+                        </button>
+                    <?php endif; ?>
+                </td>
+            </tr>
+        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
+            <tr>
+                <td colspan="7" style="text-align:center; padding: 40px 0; color: #5e7087;">
+                    <i class="fas fa-folder-open" style="font-size: 2.5rem; color: #cbd5e1; margin-bottom: 15px; display: block;"></i>
+                    No se encontraron registros de vacaciones en el sistema.
+                </td>
+            </tr>
+        <?php endif; ?>
+    </tbody>
+</table>
         </div>
 
         <?php if($periodosVacacionales->hasPages()): ?>
