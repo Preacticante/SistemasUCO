@@ -390,6 +390,21 @@
         return dates;
     }
 
+    function parseYMDToLocal(dateStr) {
+        if (!dateStr) return null;
+        const parts = String(dateStr).split('-').map(p => parseInt(p, 10));
+        if (parts.length !== 3) return new Date(dateStr);
+        return new Date(parts[0], parts[1] - 1, parts[2]);
+    }
+
+    function formatYMD(date) {
+        if (!date) return '';
+        const y = date.getFullYear();
+        const m = String(date.getMonth() + 1).padStart(2, '0');
+        const d = String(date.getDate()).padStart(2, '0');
+        return `${y}-${m}-${d}`;
+    }
+
     function selectRange(start, end) {
         const dates = getDatesBetween(start, end);
         fp.setDate(dates, true, 'Y-m-d');
@@ -466,9 +481,9 @@
         events.forEach(ev => {
             if (!ev.extendedProps || !ev.extendedProps.is_special) return;
 
-            const start = new Date(ev.start);
-            const end = ev.end ? new Date(ev.end) : start;
-            const dates = getDatesBetween(start, end).map(d => fp.formatDate(d, 'Y-m-d'));
+            const start = parseYMDToLocal(ev.start);
+            const end = ev.end ? parseYMDToLocal(ev.end) : start;
+            const dates = getDatesBetween(start, end).map(d => formatYMD(d));
             dates.forEach(d => {
                 specialDateMap[d] = ev.backgroundColor || ev.color || specialDateMap[d] || '#ccc';
                 const tipo = ev.extendedProps.tipo;

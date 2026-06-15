@@ -479,21 +479,21 @@ Route::get('/api/eventos-vacaciones', function () {
         ->map(function ($p) {
             return [
                 'title' => $p->empleado ? $p->empleado->nombre . ' ' . substr($p->empleado->apellido_paterno, 0, 1) . '.' : 'Vacaciones Institucionales',
-                'start' => $p->fecha_inicio,
-                'end'   => \Illuminate\Support\Carbon::parse($p->fecha_fin)->toDateString(),
+                'start' => \Illuminate\Support\Carbon::parse($p->fecha_inicio)->toDateString(),
+                'end'   => \Illuminate\Support\Carbon::parse($p->fecha_fin)->addDay()->toDateString(),
                 'backgroundColor' => '#F97316',
                 'borderColor'     => '#F97316',
                 'textColor'       => '#ffffff',
                 'classNames'      => ['evento-moderno', 'evento-vacacion-general'],
                 'extendedProps'   => ['tipo' => 'periodo_vacacional', 'is_special' => false],
             ];
-        });
+        })->toBase();
 
     $especiales = DiaEspecial::orderBy('fecha_inicio', 'desc')->get()->map(function ($dia) {
         return [
             'title' => $dia->titulo,
-            'start' => $dia->fecha_inicio,
-            'end'   => \Illuminate\Support\Carbon::parse($dia->fecha_fin)->toDateString(),
+            'start' => \Illuminate\Support\Carbon::parse($dia->fecha_inicio)->toDateString(),
+            'end'   => \Illuminate\Support\Carbon::parse($dia->fecha_fin)->addDay()->toDateString(),
             'backgroundColor' => $dia->color,
             'borderColor'     => $dia->color,
             'textColor'       => $dia->text_color,
@@ -501,7 +501,7 @@ Route::get('/api/eventos-vacaciones', function () {
             'classNames'      => ['evento-especial', 'evento-' . $dia->tipo],
             'extendedProps'   => ['tipo' => $dia->tipo, 'is_special' => true, 'aplicado_a' => $dia->aplicado_a],
         ];
-    });
+    })->toBase();
 
     $events = $vacaciones->merge($especiales)->values();
     return response()->json($events);
