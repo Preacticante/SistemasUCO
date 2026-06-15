@@ -148,7 +148,21 @@ class EmpleadoController extends Controller
             return response()->json(['success' => false, 'message' => 'Empleado no encontrado o sin autorización.'], 404);
         }
         
-        // 2. Si todo está bien, lo marcamos como eliminado (Soft Delete)
+            // 2. Eliminar todos los períodos vacacionales (soft delete) asociados al empleado
+            \DB::table('periodos_vacacionales')
+                ->where('empleado_id', $id)
+                ->update([
+                    'deleted_at' => \Carbon\Carbon::now()
+                ]);
+        
+            // 3. Eliminar todos los registros de descanso asociados al empleado
+            \DB::table('registros_descanso')
+                ->where('empleado_id', $id)
+                ->update([
+                    'deleted_at' => \Carbon\Carbon::now()
+                ]);
+        
+            // 4. Si todo está bien, lo marcamos como eliminado (Soft Delete)
         \DB::table('empleados')
             ->where('id', $id)
             ->update([

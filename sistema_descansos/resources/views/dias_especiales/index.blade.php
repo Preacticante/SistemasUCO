@@ -69,7 +69,7 @@
                 
 
                 <div class="form-group">
-                    <label for="empleados">Seleccionar trabajadores (mantén Ctrl/Cmd para multi)</label>
+                    <label for="empleados">Seleccionar trabajadores</label>
                     <select id="empleados" name="empleados[]" multiple size="6">
                         @foreach($empleados as $emp)
                             <option value="{{ $emp->id }}">{{ $emp->nombre }} {{ $emp->apellido_paterno }} {{ $emp->apellido_materno }}</option>
@@ -295,6 +295,11 @@
         font-weight: 700;
     }
 
+    .flatpickr-day.has-special {
+        opacity: 1 !important;
+        color: inherit !important;
+    }
+
     @media (max-width: 1080px) {
         .special-days-form-grid { grid-template-columns: 1fr; }
     }
@@ -396,60 +401,62 @@
         updateFields([]);
     }
 
-    const fp = flatpickr('#calendar-inline', {
-        inline: true,
-        mode: 'multiple',
-        locale: 'es',
-        dateFormat: 'Y-m-d',
-        defaultDate: inputHiddenDates.value ? inputHiddenDates.value.split(',') : [],
-        onDayCreate: function(dObj, dStr, dayElement) {
-            // mark existing special days visually
-            const ds = dayElement.dateObj ? fp.formatDate(dayElement.dateObj, 'Y-m-d') : null;
-            if (ds && specialDateMap[ds]) {
-                dayElement.classList.add('has-special');
-                dayElement.style.borderBottom = '3px solid ' + specialDateMap[ds];
-            }
+    let fp;
 
-            dayElement.dateObj && dayElement.addEventListener('click', function(e) {
+    function createSpecialDayCalendar() {
+        fp = flatpickr('#calendar-inline', {
+            inline: true,
+            mode: 'multiple',
+            locale: 'es',
+            dateFormat: 'Y-m-d',
+            defaultDate: inputHiddenDates.value ? inputHiddenDates.value.split(',') : [],
+            onDayCreate: function(dObj, dStr, dayElement) {
+                const ds = dayElement.dateObj ? fp.formatDate(dayElement.dateObj, 'Y-m-d') : null;
+                if (ds && specialDateMap[ds]) {
+                    dayElement.classList.add('has-special');
+                    dayElement.style.borderBottom = '3px solid ' + specialDateMap[ds];
+                    dayElement.style.backgroundColor = specialDateMap[ds] + '22';
+                }
+
+                dayElement.dateObj && dayElement.addEventListener('click', function(e) {
+                    const mode = selectionMode.value;
+                    const type = tipoSelect.value;
+                    if (type === 'descanso' && disabledForDescansoSet.has(fp.formatDate(dayElement.dateObj, 'Y-m-d'))) {
+                        e.preventDefault();
+                        alert('Esa fecha está marcada como festivo o vacaciones institucionales y no puede ser seleccionada como descanso.');
+                        return;
+                    }
+
+                    if (mode === 'semana') {
+                        const [start, end] = getWeekRange(dayElement.dateObj);
+                        const dates = getDatesBetween(start, end).map(d => fp.formatDate(d, 'Y-m-d'));
+                        if (type === 'descanso' && dates.some(d => disabledForDescansoSet.has(d))) {
+                            alert('La semana contiene días festivos/institucionales, no se puede seleccionar.');
+                            return;
+                        }
+                        selectRange(start, end);
+                    } else if (mode === 'mes') {
+                        const [start, end] = getMonthRange(dayElement.dateObj);
+                        const dates = getDatesBetween(start, end).map(d => fp.formatDate(d, 'Y-m-d'));
+                        if (type === 'descanso' && dates.some(d => disabledForDescansoSet.has(d))) {
+                            alert('El mes contiene días festivos/institucionales, no se puede seleccionar.');
+                            return;
+                        }
+                        selectRange(start, end);
+                    }
+                });
+            },
+            onChange: function(selectedDates) {
                 const mode = selectionMode.value;
-                const type = tipoSelect.value;
-                // prevent selecting dates that are disabled for descansos
-                if (type === 'descanso' && disabledForDescansoSet.has(fp.formatDate(dayElement.dateObj, 'Y-m-d'))) {
-                    e.preventDefault();
-                    alert('Esa fecha está marcada como festivo o vacaciones institucionales y no puede ser seleccionada como descanso.');
-                    return;
+                if (mode === 'varios' || mode === 'personalizado') {
+                    updateFields(selectedDates);
                 }
-
-                if (mode === 'semana') {
-                    const [start, end] = getWeekRange(dayElement.dateObj);
-                    // validate range doesn't include disabled dates
-                    const dates = getDatesBetween(start, end).map(d => fp.formatDate(d, 'Y-m-d'));
-                    if (type === 'descanso' && dates.some(d => disabledForDescansoSet.has(d))) {
-                        alert('La semana contiene días festivos/institucionales, no se puede seleccionar.');
-                        return;
-                    }
-                    selectRange(start, end);
-                } else if (mode === 'mes') {
-                    const [start, end] = getMonthRange(dayElement.dateObj);
-                    const dates = getDatesBetween(start, end).map(d => fp.formatDate(d, 'Y-m-d'));
-                    if (type === 'descanso' && dates.some(d => disabledForDescansoSet.has(d))) {
-                        alert('El mes contiene días festivos/institucionales, no se puede seleccionar.');
-                        return;
-                    }
-                    selectRange(start, end);
+                if (selectedDates.length === 0) {
+                    updateFields([]);
                 }
-            });
-        },
-        onChange: function(selectedDates) {
-            const mode = selectionMode.value;
-            if (mode === 'varios' || mode === 'personalizado') {
-                updateFields(selectedDates);
             }
-            if (selectedDates.length === 0) {
-                updateFields([]);
-            }
-        }
-    });
+        });
+    }
 
     // Load existing special events to prevent conflicts client-side
     const specialDateMap = {}; // date -> color
@@ -457,29 +464,27 @@
     const disabledForDescansoSet = new Set();
     fetch('/api/eventos-vacaciones').then(r => r.json()).then(events => {
         events.forEach(ev => {
-            // only consider evento-especial types
-            if ((ev.classNames || []).some(c => c.includes('evento-'))) {
-                // mark each date in range
-                const start = new Date(ev.start);
-                const end = ev.end ? new Date(ev.end) : start;
-                // FullCalendar end is exclusive; keep inclusive by subtracting 1 day if end provided
-                if (ev.end) end.setDate(end.getDate() - 1);
-                const dates = getDatesBetween(start, end).map(d => fp.formatDate(d, 'Y-m-d'));
-                dates.forEach(d => {
-                    specialDateMap[d] = ev.backgroundColor || ev.color || specialDateMap[d] || '#ccc';
-                    // if event is festivo or institucional, mark as disabled for descanso
-                    if ((ev.classNames || []).some(c => c === 'evento-festivo' || c === 'evento-institucional' || c.includes('evento-festivo') || c.includes('evento-institucional'))) {
-                        if (!disabledForDescansoSet.has(d)) {
-                            disabledForDescanso.push(d);
-                            disabledForDescansoSet.add(d);
-                        }
+            if (!ev.extendedProps || !ev.extendedProps.is_special) return;
+
+            const start = new Date(ev.start);
+            const end = ev.end ? new Date(ev.end) : start;
+            const dates = getDatesBetween(start, end).map(d => fp.formatDate(d, 'Y-m-d'));
+            dates.forEach(d => {
+                specialDateMap[d] = ev.backgroundColor || ev.color || specialDateMap[d] || '#ccc';
+                const tipo = ev.extendedProps.tipo;
+                if (tipo === 'festivo' || tipo === 'institucional') {
+                    if (!disabledForDescansoSet.has(d)) {
+                        disabledForDescanso.push(d);
+                        disabledForDescansoSet.add(d);
                     }
-                });
-            }
+                }
+            });
         });
-        // apply disable if current type is descanso
+        createSpecialDayCalendar();
         updateSelectedColor();
-    }).catch(()=>{});
+    }).catch(()=>{
+        createSpecialDayCalendar();
+    });
 
     selectionMode.addEventListener('change', function() {
         selectionText.textContent = this.options[this.selectedIndex].text;

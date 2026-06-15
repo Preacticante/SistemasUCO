@@ -166,23 +166,101 @@
         const previewRestantes = document.getElementById('preview-restantes');
 
         // Inicialización de Flatpickr en modo incrustado e interactivo múltiple
-        const fp = flatpickr("#calendar-inline", {
-            inline: true,
-            mode: "multiple",
-            locale: "es",
-            dateFormat: "Y-m-d",
-            conjunction: ",",
-            defaultDate: inputHiddenDates.value ? inputHiddenDates.value.split(",") : [],
-            onChange: function(selectedDates, dateStr, instance) {
-                const sortedDates = selectedDates.slice().sort((a, b) => a - b);
-                const dateStrings = sortedDates.map(date => instance.formatDate(date, "Y-m-d"));
+        // Pero primero cargamos los días especiales para marcarlos y deshabilitar sélection de festivos/institucionales
+        function formatISO(d) {
+            const y = d.getFullYear();
+            const m = String(d.getMonth() + 1).padStart(2, '0');
+            const day = String(d.getDate()).padStart(2, '0');
+            return `${y}-${m}-${day}`;
+        }
 
-                inputHiddenDates.value = dateStrings.join(",");
-                inputDias.value = dateStrings.length;
-                inputFechaInicio.value = dateStrings.length ? dateStrings[0] : '';
-                inputFechaFin.value = dateStrings.length ? dateStrings[dateStrings.length - 1] : '';
-                previewRestantes.textContent = Math.max(0, diasRestantes - dateStrings.length);
+        function getDatesBetween(start, end) {
+            const dates = [];
+            const cur = new Date(start);
+            while (cur <= end) {
+                dates.push(new Date(cur));
+                cur.setDate(cur.getDate() + 1);
             }
+            return dates;
+        }
+
+        const specialDateMap = {}; // fecha -> color
+        const disabledForDescanso = [];
+        const disabledForDescansoSet = new Set();
+
+        fetch('/api/eventos-vacaciones').then(r => r.json()).then(events => {
+            events.forEach(ev => {
+                if (!ev.extendedProps || !ev.extendedProps.is_special) return;
+
+                const start = ev.start ? new Date(ev.start) : null;
+                let end = ev.end ? new Date(ev.end) : start;
+                if (!start) return;
+                if (ev.end) end.setDate(end.getDate() - 1);
+
+                const dates = getDatesBetween(start, end).map(d => formatISO(d));
+                dates.forEach(d => {
+                    specialDateMap[d] = ev.backgroundColor || ev.color || specialDateMap[d] || '#ccc';
+                    const tipo = ev.extendedProps.tipo;
+                    if (tipo === 'festivo' || tipo === 'institucional') {
+                        if (!disabledForDescansoSet.has(d)) {
+                            disabledForDescanso.push(d);
+                            disabledForDescansoSet.add(d);
+                        }
+                    }
+                });
+            });
+
+            const fp = flatpickr("#calendar-inline", {
+                inline: true,
+                mode: "multiple",
+                locale: "es",
+                dateFormat: "Y-m-d",
+                conjunction: ",",
+                defaultDate: inputHiddenDates.value ? inputHiddenDates.value.split(",") : [],
+                disable: disabledForDescanso,
+                onDayCreate: function(dObj, dStr, dayElement) {
+                    const ds = dayElement.dateObj ? formatISO(dayElement.dateObj) : null;
+                    if (ds && specialDateMap[ds]) {
+                        dayElement.classList.add('has-special');
+                        dayElement.style.borderBottom = '3px solid ' + specialDateMap[ds];
+                        dayElement.style.backgroundColor = specialDateMap[ds] + '22';
+                    }
+                    if (ds && disabledForDescansoSet.has(ds)) {
+                        dayElement.classList.add('flatpickr-disabled');
+                        dayElement.setAttribute('aria-disabled', 'true');
+                    }
+                },
+                onChange: function(selectedDates, dateStr, instance) {
+                    const sortedDates = selectedDates.slice().sort((a, b) => a - b);
+                    const dateStrings = sortedDates.map(date => instance.formatDate(date, "Y-m-d"));
+
+                    inputHiddenDates.value = dateStrings.join(",");
+                    inputDias.value = dateStrings.length;
+                    inputFechaInicio.value = dateStrings.length ? dateStrings[0] : '';
+                    inputFechaFin.value = dateStrings.length ? dateStrings[dateStrings.length - 1] : '';
+                    previewRestantes.textContent = Math.max(0, diasRestantes - dateStrings.length);
+                }
+            });
+        }).catch(()=>{
+            // fallback: inicializar sin deshabilitados si la carga falla
+            flatpickr("#calendar-inline", {
+                inline: true,
+                mode: "multiple",
+                locale: "es",
+                dateFormat: "Y-m-d",
+                conjunction: ",",
+                defaultDate: inputHiddenDates.value ? inputHiddenDates.value.split(",") : [],
+                onChange: function(selectedDates, dateStr, instance) {
+                    const sortedDates = selectedDates.slice().sort((a, b) => a - b);
+                    const dateStrings = sortedDates.map(date => instance.formatDate(date, "Y-m-d"));
+
+                    inputHiddenDates.value = dateStrings.join(",");
+                    inputDias.value = dateStrings.length;
+                    inputFechaInicio.value = dateStrings.length ? dateStrings[0] : '';
+                    inputFechaFin.value = dateStrings.length ? dateStrings[dateStrings.length - 1] : '';
+                    previewRestantes.textContent = Math.max(0, diasRestantes - dateStrings.length);
+                }
+            });
         });
     </script>
 </body>
@@ -362,6 +440,11 @@
         background: var(--morado-uco) !important;
         border-color: var(--morado-uco) !important;
         color: white !important;
+    }
+
+    .flatpickr-day.has-special {
+        opacity: 1 !important;
+        color: inherit !important;
     }
 
     .flatpickr-day.selected.inRange {
