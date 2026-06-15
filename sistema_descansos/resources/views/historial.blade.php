@@ -24,89 +24,88 @@
 
         <div style="overflow-x: auto;">
             <table class="responsive-table-v2">
-                <thead>
-                    <tr>
-                        <th>EMPLEADO</th>
-                        <th>TIPO</th>
-                        <th>FECHA INICIO</th>
-                        <th>FECHA FIN</th>
-                        <th>DÍAS TOTALES</th>
-                        <th>ESTADO</th>
-                        <th style="text-align: center;">ACCIÓN</th>
-                    </tr>
-                </thead>
-                @php $canManage = session('email') === 'admin@sistema.com'; @endphp
-                <tbody>
-                    @forelse($periodosVacacionales as $periodo)
-                        @php
-                            $empleado = $periodo->empleado;
-                            $fechaFin = \Carbon\Carbon::parse($periodo->fecha_fin);
-                            $yaTomado = $fechaFin->isPast();
-                            $estado = $yaTomado ? 'Tomado' : 'Programado';
-                        @endphp
-                        <tr>
-                            <td class="text-employee-name">
-                                {{ $empleado?->nombre }} {{ $empleado?->apellido_paterno }} {{ $empleado?->apellido_materno }}
-                            </td>
-                            <td style="color: #64748b; font-weight: 500;">
-                                Vacaciones
-                            </td>
-                            <td style="color: #334155;">
-                                {{ \Carbon\Carbon::parse($periodo->fecha_inicio)->format('d/m/Y') }}
-                            </td>
-                            <td style="color: #334155;">
-                                {{ $fechaFin->format('d/m/Y') }}
-                            </td>
-                            <td class="{{ $yaTomado ? 'text-muted-days' : 'text-danger-bold' }}">
-                                {{ $periodo->dias }} día{{ $periodo->dias === 1 ? '' : 's' }}
-                            </td>
-                            <td>
-                                <span class="badge {{ $yaTomado ? 'badge-success' : 'badge-info' }}">
-                                    {{ $estado }}
-                                </span>
-                            </td>
-                            <td style="text-align: center; display: flex; gap: 8px; justify-content: center; align-items: center;">
-                                {{-- Enlace a la vista de vacaciones (siempre visible) --}}
-                                <a href="{{ route('empleados.vacaciones', $empleado?->id) }}" class="btn-action-vacaciones" title="Vacaciones">
-                                    <i class="fas fa-calendar"></i>
-                                </a>
+    <thead>
+        <tr>
+            <th>EMPLEADO</th>
+            <th>TIPO</th>
+            <th>FECHA INICIO</th>
+            <th>FECHA FIN</th>
+            <th>DÍAS TOTALES</th>
+            <th>ESTADO</th>
+            <th style="text-align: center;">ACCIÓN</th>
+        </tr>
+    </thead>
+    @php $canManage = session('email') === 'admin@sistema.com'; @endphp
+    <tbody>
+        @forelse($periodosVacacionales as $periodo)
+            @php
+                $empleado = $periodo->empleado;
+                $fechaFin = \Carbon\Carbon::parse($periodo->fecha_fin);
+                $yaTomado = $fechaFin->isPast();
+                $estado = $yaTomado ? 'Tomado' : 'Programado';
+            @endphp
+            <tr>
+                <td class="text-employee-name">
+                    @if($empleado)
+                        {{ $empleado->nombre }} {{ $empleado->apellido_paterno }} {{ $empleado->apellido_materno }}
+                    @else
+                        <span class="text-muted" style="font-style: italic;">Empleado eliminado</span>
+                    @endif
+                </td>
+                <td style="color: #64748b; font-weight: 500;">Vacaciones</td>
+                <td style="color: #334155;">{{ \Carbon\Carbon::parse($periodo->fecha_inicio)->format('d/m/Y') }}</td>
+                <td style="color: #334155;">{{ $fechaFin->format('d/m/Y') }}</td>
+                <td class="{{ $yaTomado ? 'text-muted-days' : 'text-danger-bold' }}">
+                    {{ $periodo->dias }} día{{ $periodo->dias === 1 ? '' : 's' }}
+                </td>
+                <td>
+                    <span class="badge {{ $yaTomado ? 'badge-success' : 'badge-info' }}">{{ $estado }}</span>
+                </td>
+                <td style="text-align: center; display: flex; gap: 8px; justify-content: center; align-items: center;">
+                    
+                    {{-- VERIFICACIÓN: Solo mostramos el enlace si el empleado existe --}}
+                    @if($empleado)
+                        <a href="{{ route('empleados.vacaciones', $empleado->id) }}" class="btn-action-vacaciones" title="Vacaciones">
+                            <i class="fas fa-calendar"></i>
+                        </a>
 
-                                @if($yaTomado)
-                                    <button type="button" class="btn-action-edit btn-disabled" title="No se puede editar un período ya tomado" disabled>
-                                        <i class="fas fa-lock"></i> Completado
-                                    </button>
-                                @else
-                                    @if($canManage)
-                                        <button type="button" class="btn-action-edit" onclick="openEditModal({{ $periodo->id }}, {{ $empleado?->id }})">
-                                            <i class="fas fa-pencil"></i>
-                                        </button>
-                                        <button type="button" class="btn-action-delete" onclick="deletePeriodo({{ $periodo->id }})">
-                                            <i class="fas fa-trash"></i>
-                                        </button>
-                                        <a href="/empleados/{{ $empleado?->id }}/vacaciones/pdf?periodo_id={{ $periodo->id }}" target="_blank" class="btn-action-pdf" title="Descargar comprobante">
-                                            <i class="fas fa-file-pdf"></i> PDF
-                                        </a>
-                                    @else
-                                        <button type="button" class="btn-action-edit btn-disabled" aria-disabled="true" title="No autorizado">
-                                            <i class="fas fa-pencil"></i>
-                                        </button>
-                                        <button type="button" class="btn-action-delete btn-disabled" aria-disabled="true" title="No autorizado">
-                                            <i class="fas fa-trash"></i>
-                                        </button>
-                                    @endif
-                                @endif
-                            </td>
-                        </tr>
-                    @empty
-                        <tr>
-                            <td colspan="7" style="text-align:center; padding: 40px 0; color: #5e7087;">
-                                <i class="fas fa-folder-open" style="font-size: 2.5rem; color: #cbd5e1; margin-bottom: 15px; display: block;"></i>
-                                No se encontraron registros de vacaciones en el sistema.
-                            </td>
-                        </tr>
-                    @endforelse
-                </tbody>
-            </table>
+                        @if($yaTomado)
+                            <button type="button" class="btn-action-edit btn-disabled" title="No se puede editar un período ya tomado" disabled>
+                                <i class="fas fa-lock"></i> Completado
+                            </button>
+                        @else
+                            @if($canManage)
+                                <button type="button" class="btn-action-edit" onclick="openEditModal({{ $periodo->id }}, {{ $empleado->id }})">
+                                    <i class="fas fa-pencil"></i>
+                                </button>
+                                <button type="button" class="btn-action-delete" onclick="deletePeriodo({{ $periodo->id }})">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                                <a href="/empleados/{{ $empleado->id }}/vacaciones/pdf?periodo_id={{ $periodo->id }}" target="_blank" class="btn-action-pdf" title="Descargar comprobante">
+                                    <i class="fas fa-file-pdf"></i> PDF
+                                </a>
+                            @else
+                                <button type="button" class="btn-action-edit btn-disabled" disabled><i class="fas fa-pencil"></i></button>
+                                <button type="button" class="btn-action-delete btn-disabled" disabled><i class="fas fa-trash"></i></button>
+                            @endif
+                        @endif
+                    @else
+                        <button class="btn-disabled" title="Datos de empleado no disponibles" disabled>
+                            <i class="fas fa-exclamation-triangle"></i>
+                        </button>
+                    @endif
+                </td>
+            </tr>
+        @empty
+            <tr>
+                <td colspan="7" style="text-align:center; padding: 40px 0; color: #5e7087;">
+                    <i class="fas fa-folder-open" style="font-size: 2.5rem; color: #cbd5e1; margin-bottom: 15px; display: block;"></i>
+                    No se encontraron registros de vacaciones en el sistema.
+                </td>
+            </tr>
+        @endforelse
+    </tbody>
+</table>
         </div>
 
         @if($periodosVacacionales->hasPages())
