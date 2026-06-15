@@ -10,6 +10,30 @@
         <p>Agrega y administra descansos semanales, días festivos y vacaciones institucionales con selección personalizada.</p>
     </div>
 
+    {{-- Bloque de alertas para mensajes Flash de Laravel (Éxito / Error) --}}
+    @if(session('success'))
+        <div class="alert alert-success">
+            <i class="fa-solid fa-circle-check"></i> {{ session('success') }}
+        </div>
+    @endif
+
+    @if(session('error'))
+        <div class="alert alert-danger">
+            <i class="fa-solid fa-circle-xmark"></i> {{ session('error') }}
+        </div>
+    @endif
+
+    @if ($errors->any())
+        <div class="alert alert-danger">
+            <i class="fa-solid fa-triangle-exclamation"></i> Por favor revisa los errores del formulario.
+            <ul style="margin-top: 5px; margin-left: 20px;">
+                @foreach ($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
+
     <div class="special-days-hero">
         <div class="special-day-card special-day-descanso">
             <strong>Descanso de trabajador </strong>
@@ -62,11 +86,8 @@
                         <option value="personalizado">Personalizado</option>
                         <option value="semana">Por semana</option>
                         <option value="mes">Por mes</option>
-                    
                     </select>
                 </div>
-
-                
 
                 <div class="form-group">
                     <label for="empleados">Seleccionar trabajadores</label>
@@ -124,7 +145,8 @@
                     <td>{{ $dia->fecha_inicio->format('d/m/Y') }}</td>
                     <td>{{ $dia->fecha_fin->format('d/m/Y') }}</td>
                     <td>
-                        <form action="{{ route('dias-especiales.destroy', $dia->id) }}" method="POST" style="display:inline;">
+                        {{-- MODIFICADO: Clase 'form-eliminar' añadida para interceptar la acción mediante JS con SweetAlert2 --}}
+                        <form action="{{ route('dias-especiales.destroy', $dia->id) }}" method="POST" class="form-eliminar" style="display:inline;">
                             @csrf
                             @method('DELETE')
                             <button type="submit" class="btn-danger">Eliminar</button>
@@ -144,7 +166,65 @@
 
 @push('styles')
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+{{-- NUEVO: CDN de estilos de SweetAlert2 con tema limpio --}}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@sweetalert2/theme-bootstrap-4/bootstrap-4.css">
+
 <style>
+    /* Alertas de cabecera de Laravel */
+    .alert {
+        padding: 16px;
+        margin-bottom: 20px;
+        border-radius: 16px;
+        font-weight: 600;
+        font-size: 0.95rem;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        animation: fadeIn 0.3s ease-in-out;
+    }
+    .alert-success {
+        background-color: #ecfdf5;
+        border: 1px solid #10b981;
+        color: #065f46;
+    }
+    .alert-danger {
+        background-color: #fef2f2;
+        border: 1px solid #ef4444;
+        color: #991b1b;
+    }
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(-5px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Estilos estéticos personalizados para SweetAlert2 basados en tu paleta de colores */
+    .swal2-popup {
+        border-radius: 24px !important;
+        padding: 2rem !important;
+        font-family: inherit !important;
+    }
+    .swal2-title {
+        color: #0f172a !important;
+        font-weight: 700 !important;
+        font-size: 1.6rem !important;
+    }
+    .swal2-html-container {
+        color: #475569 !important;
+        font-size: 1rem !important;
+    }
+    .swal2-confirm {
+        border-radius: 9999px !important;
+        padding: 12px 30px !important;
+        font-weight: 700 !important;
+        background-color: #ef4444 !important; /* Rojo idéntico a image_9098e7.png */
+    }
+    .swal2-cancel {
+        border-radius: 9999px !important;
+        padding: 12px 30px !important;
+        font-weight: 700 !important;
+        background-color: #3b82f6 !important; /* Azul idéntico a image_9098e7.png */
+    }
+
     .special-days-hero {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -190,25 +270,10 @@
         align-items: center;
         gap: 0.75rem;
     }
-    .special-form {
-        display: grid;
-        gap: 16px;
-    }
-    .form-group {
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
-    }
-    .form-grid-2 {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 16px;
-    }
-    .special-form label {
-        color: #334155;
-        font-weight: 700;
-        font-size: 0.95rem;
-    }
+    .special-form { display: grid; gap: 16px; }
+    .form-group { display: flex; flex-direction: column; gap: 10px; }
+    .form-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .special-form label { color: #334155; font-weight: 700; font-size: 0.95rem; }
     .special-form input,
     .special-form select,
     .special-form textarea {
@@ -254,8 +319,7 @@
     .btn-danger:hover { background-color: #dc2626; transform: translateY(-1px); }
     .table-uco { width: 100%; border-collapse: collapse; }
     .table-uco thead { background-color: #124416; color: #ffffff; }
-    .table-uco th,
-    .table-uco td { padding: 14px 16px; border-bottom: 1px solid #e2e8f0; }
+    .table-uco th, .table-uco td { padding: 14px 16px; border-bottom: 1px solid #e2e8f0; }
     .table-uco tbody tr:hover { background: #f8fafc; }
     .event-pill {
         display: inline-flex;
@@ -269,16 +333,9 @@
     .event-festivo { background: rgba(170, 127, 49, 0.16); color: #AA7F31; }
     .event-institucional { background: rgba(249, 115, 22, 0.16); color: #F97316; }
 
-    #calendar-inline {
-        border-radius: 24px;
-        overflow: hidden;
-        border: 1px solid #e2e8f0;
-    }
-    .calendar-controls {
-        margin-bottom: 16px;
-        color: #475569;
-        font-size: 0.95rem;
-    }
+    #calendar-inline { border-radius: 24px; overflow: hidden; border: 1px solid #e2e8f0; }
+    .calendar-controls { margin-bottom: 16px; color: #475569; font-size: 0.95rem; }
+    
     .flatpickr-day.selected,
     .flatpickr-day.startRange,
     .flatpickr-day.endRange {
@@ -290,15 +347,8 @@
         background: var(--selected-day-bg, #124416) !important;
         color: var(--selected-day-color, #ffffff) !important;
     }
-    .flatpickr-day.today {
-        color: #124416;
-        font-weight: 700;
-    }
-
-    .flatpickr-day.has-special {
-        opacity: 1 !important;
-        color: inherit !important;
-    }
+    .flatpickr-day.today { color: #124416; font-weight: 700; }
+    .flatpickr-day.has-special { opacity: 1 !important; color: inherit !important; }
 
     @media (max-width: 1080px) {
         .special-days-form-grid { grid-template-columns: 1fr; }
@@ -309,6 +359,9 @@
 @push('scripts')
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/es.js"></script>
+{{-- NUEVO: CDN de JavaScript de SweetAlert2 --}}
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
 <script>
     const tipoSelect = document.getElementById('tipo');
     const selectionMode = document.getElementById('selection_mode');
@@ -320,29 +373,15 @@
     const inputFechaInicioDisplay = document.getElementById('fecha_inicio_display');
     const inputFechaFinDisplay = document.getElementById('fecha_fin_display');
 
-    const colors = {
-        descanso: '#124416',
-        festivo: '#AA7F31',
-        institucional: '#340C51'
-    };
-
-    const textColors = {
-        descanso: '#ffffff',
-        festivo: '#000000',
-        institucional: '#ffffff'
-    };
+    const colors = { descanso: '#124416', festivo: '#AA7F31', institucional: '#340C51' };
+    const textColors = { descanso: '#ffffff', festivo: '#000000', institucional: '#ffffff' };
 
     function updateSelectedColor() {
         const type = tipoSelect.value || 'descanso';
         document.documentElement.style.setProperty('--selected-day-bg', colors[type]);
         document.documentElement.style.setProperty('--selected-day-color', textColors[type]);
-        // when selecting descansos, disable festivo/institucional dates
         if (fp) {
-            if (type === 'descanso') {
-                fp.set('disable', disabledForDescanso);
-            } else {
-                fp.set('disable', []);
-            }
+            if (type === 'descanso') { fp.set('disable', disabledForDescanso); } else { fp.set('disable', []); }
         }
     }
 
@@ -438,7 +477,7 @@
                     const type = tipoSelect.value;
                     if (type === 'descanso' && disabledForDescansoSet.has(fp.formatDate(dayElement.dateObj, 'Y-m-d'))) {
                         e.preventDefault();
-                        alert('Esa fecha está marcada como festivo o vacaciones institucionales y no puede ser seleccionada como descanso.');
+                        Swal.fire({ icon: 'warning', title: 'Fecha bloqueada', text: 'Esa fecha está marcada como festivo o vacaciones institucionales y no puede ser seleccionada como descanso.' });
                         return;
                     }
 
@@ -446,7 +485,7 @@
                         const [start, end] = getWeekRange(dayElement.dateObj);
                         const dates = getDatesBetween(start, end).map(d => fp.formatDate(d, 'Y-m-d'));
                         if (type === 'descanso' && dates.some(d => disabledForDescansoSet.has(d))) {
-                            alert('La semana contiene días festivos/institucionales, no se puede seleccionar.');
+                            Swal.fire({ icon: 'error', title: 'Conflicto de fechas', text: 'La semana contiene días festivos o institucionales, no se puede seleccionar.' });
                             return;
                         }
                         selectRange(start, end);
@@ -454,7 +493,7 @@
                         const [start, end] = getMonthRange(dayElement.dateObj);
                         const dates = getDatesBetween(start, end).map(d => fp.formatDate(d, 'Y-m-d'));
                         if (type === 'descanso' && dates.some(d => disabledForDescansoSet.has(d))) {
-                            alert('El mes contiene días festivos/institucionales, no se puede seleccionar.');
+                            Swal.fire({ icon: 'error', title: 'Conflicto de fechas', text: 'El mes contiene días festivos o institucionales, no se puede seleccionar.' });
                             return;
                         }
                         selectRange(start, end);
@@ -463,24 +502,18 @@
             },
             onChange: function(selectedDates) {
                 const mode = selectionMode.value;
-                if (mode === 'varios' || mode === 'personalizado') {
-                    updateFields(selectedDates);
-                }
-                if (selectedDates.length === 0) {
-                    updateFields([]);
-                }
+                if (mode === 'varios' || mode === 'personalizado') { updateFields(selectedDates); }
+                if (selectedDates.length === 0) { updateFields([]); }
             }
         });
     }
 
-    // Load existing special events to prevent conflicts client-side
-    const specialDateMap = {}; // date -> color
+    const specialDateMap = {};
     const disabledForDescanso = [];
     const disabledForDescansoSet = new Set();
     fetch('/api/eventos-vacaciones').then(r => r.json()).then(events => {
         events.forEach(ev => {
             if (!ev.extendedProps || !ev.extendedProps.is_special) return;
-
             const start = parseYMDToLocal(ev.start);
             const end = ev.end ? parseYMDToLocal(ev.end) : start;
             const dates = getDatesBetween(start, end).map(d => formatYMD(d));
@@ -497,33 +530,46 @@
         });
         createSpecialDayCalendar();
         updateSelectedColor();
-    }).catch(()=>{
-        createSpecialDayCalendar();
-    });
+    }).catch(()=>{ createSpecialDayCalendar(); });
 
     selectionMode.addEventListener('change', function() {
         selectionText.textContent = this.options[this.selectedIndex].text;
         clearSelection();
     });
 
-    tipoSelect.addEventListener('change', function() {
-        updateSelectedColor();
-    });
-
+    tipoSelect.addEventListener('change', function() { updateSelectedColor(); });
     updateSelectedColor();
 
-    // Validación cliente antes de enviar
+    // ==========================================
+    // VALIDACIONES DEL FORMULARIO DE GUARDADO
+    // ==========================================
     const form = document.querySelector('.special-form');
-    const aplicaTodosCheckbox = document.getElementById('aplica_todos');
     const empleadosSelect = document.getElementById('empleados');
 
     form.addEventListener('submit', function(e) {
+        const tipoDia = tipoSelect.value;
         const mode = selectionMode.value;
         const count = parseInt(selectedCount.textContent || '0', 10);
 
+        // 1. Validar que siempre se haya seleccionado al menos una fecha
+        if (count === 0) {
+            e.preventDefault();
+            Swal.fire({ 
+                icon: 'info', 
+                title: 'Faltan fechas', 
+                text: 'Debes seleccionar al menos un día en el calendario antes de guardar.' 
+            });
+            return false;
+        }
+
+        // 2. Validar consistencia de rangos según el modo seleccionado
         if (mode === 'semana' && count !== 7) {
             e.preventDefault();
-            alert('Seleccion semanal: debes elegir exactamente 7 días.');
+            Swal.fire({ 
+                icon: 'warning', 
+                title: 'Selección incompleta', 
+                text: 'Selección semanal: debes elegir exactamente 7 días.' 
+            });
             return false;
         }
 
@@ -531,26 +577,62 @@
             const start = inputFechaInicio.value ? new Date(inputFechaInicio.value) : null;
             if (!start) {
                 e.preventDefault();
-                alert('Seleccion por mes: selecciona una fecha dentro del mes deseado.');
+                Swal.fire({ 
+                    icon: 'warning', 
+                    title: 'Selección incompleta', 
+                    text: 'Selección por mes: selecciona una fecha dentro del mes deseado.' 
+                });
                 return false;
             }
             const lastDay = new Date(start.getFullYear(), start.getMonth() + 1, 0).getDate();
             if (count !== lastDay) {
                 e.preventDefault();
-                alert('Seleccion por mes: debes seleccionar todos los dias del mes (' + lastDay + ').');
+                Swal.fire({ 
+                    icon: 'warning', 
+                    title: 'Días faltantes', 
+                    text: 'Selección por mes: debes seleccionar todos los días del mes (' + lastDay + ').' 
+                });
                 return false;
             }
         }
 
-        // Si no aplica a todos, al menos un empleado debe estar seleccionado
-        if (!aplicaTodosCheckbox.checked) {
+        // 3. Obligar trabajador SOLO si es "Descanso de trabajador"
+        if (tipoDia === 'descanso') {
             const anySelected = Array.from(empleadosSelect.options).some(o => o.selected);
             if (!anySelected) {
                 e.preventDefault();
-                alert('Selecciona al menos un trabajador o marca "Aplica a todos".');
+                Swal.fire({ 
+                    icon: 'info', 
+                    title: 'Asignación requerida', 
+                    text: 'Para el tipo "Descanso de trabajador" es obligatorio seleccionar al menos un trabajador.' 
+                });
                 return false;
             }
         }
+    });
+
+    // ==========================================
+    // ALERTA ESTÉTICA DE ELIMINACIÓN
+    // ==========================================
+    document.querySelectorAll('.form-eliminar').forEach(formEliminar => {
+        formEliminar.addEventListener('submit', function(e) {
+            e.preventDefault(); // Detiene el envío automático del formulario
+            
+            Swal.fire({
+                title: '¿Estás seguro?',
+                text: 'Esta acción eliminará el registro del día especial de forma permanente.',
+                icon: 'warning',
+                iconColor: '#f8bb86', // Color naranja de advertencia idéntico
+                showCancelButton: true,
+                confirmButtonText: 'Sí, eliminar',
+                cancelButtonText: 'Cancelar',
+                reverseButtons: true   // Coloca el botón de Cancelar a la derecha
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    formEliminar.submit(); // Envía el formulario si se confirma
+                }
+            });
+        });
     });
 </script>
 @endpush
