@@ -173,6 +173,11 @@
                         <i class="fa-solid fa-calendar-check"></i> Historial de Vacaciones
                     </a>
                 </li>
+                <li>
+                    <a href="<?php echo e(route('dias-especiales.index')); ?>" class="<?php echo e(request()->routeIs('dias-especiales.*') ? 'active' : ''); ?>">
+                        <i class="fa-solid fa-calendar-days"></i> Días Especiales
+                    </a>
+                </li>
                 
                 
                 <?php if(session('email') === 'admin@sistema.com'): ?>
