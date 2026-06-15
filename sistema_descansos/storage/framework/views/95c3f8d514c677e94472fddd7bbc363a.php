@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
 </head>
 <body>
     <main class="page-shell">
@@ -44,19 +45,12 @@
         </section>
 
         <?php if($errors->any()): ?>
-            <div class="status error">
-                <ul style="margin: 0; padding-left: 1.2rem;">
+            <div class="status error" style="display: none;">
+                <ul id="laravel-errors-list">
                     <?php $__currentLoopData = $errors->all(); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $error): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                         <li><?php echo e($error); ?></li>
                     <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                 </ul>
-            </div>
-        <?php endif; ?>
-
-        <?php if(session('success')): ?>
-            <div class="status success">
-                <i class="fa-solid fa-circle-check"></i> <?php echo e(session('success')); ?>
-
             </div>
         <?php endif; ?>
 
@@ -88,7 +82,7 @@
         <section class="card-columns">
             <article class="card">
                 <h2><i class="fa-solid fa-calendar-plus" style="color: #124416;"></i> Registrar vacaciones</h2>
-                <form action="<?php echo e(route('empleados.vacaciones.guardar', $empleado->id)); ?>" method="POST">
+                <form id="form-vacaciones" action="<?php echo e(route('empleados.vacaciones.guardar', $empleado->id)); ?>" method="POST">
                     <?php echo csrf_field(); ?>
                     
                     <input type="hidden" id="multiple_dates" name="multiple_dates" value="<?php echo e(old('multiple_dates')); ?>">
@@ -157,111 +151,206 @@
 
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/es.js"></script>
-    <script>
-        const diasRestantes = <?php echo e($diasRestantes); ?>;
-        const inputHiddenDates = document.getElementById('multiple_dates');
-        const inputFechaInicio = document.getElementById('fecha_inicio');
-        const inputFechaFin = document.getElementById('fecha_fin');
-        const inputDias = document.getElementById('dias_solicitados');
-        const previewRestantes = document.getElementById('preview-restantes');
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-        // Inicialización de Flatpickr en modo incrustado e interactivo múltiple
-        // Pero primero cargamos los días especiales para marcarlos y deshabilitar sélection de festivos/institucionales
-        function formatISO(d) {
-            const y = d.getFullYear();
-            const m = String(d.getMonth() + 1).padStart(2, '0');
-            const day = String(d.getDate()).padStart(2, '0');
-            return `${y}-${m}-${day}`;
-        }
+<script>
+    const diasRestantes = <?php echo e($diasRestantes); ?>;
+    const inputHiddenDates = document.getElementById('multiple_dates');
+    const inputFechaInicio = document.getElementById('fecha_inicio');
+    const inputFechaFin = document.getElementById('fecha_fin');
+    const inputDias = document.getElementById('dias_solicitados');
+    const previewRestantes = document.getElementById('preview-restantes');
+    const formVacaciones = document.getElementById('form-vacaciones');
 
-        function getDatesBetween(start, end) {
-            const dates = [];
-            const cur = new Date(start);
-            while (cur <= end) {
-                dates.push(new Date(cur));
-                cur.setDate(cur.getDate() + 1);
-            }
-            return dates;
-        }
+    // Mapeos para procesar los eventos de la API externa
+    const specialDateMap = {}; 
+    const disabledForDescanso = [];
 
-        const specialDateMap = {}; // fecha -> color
-        const disabledForDescanso = [];
-        const disabledForDescansoSet = new Set();
-
-        fetch('/api/eventos-vacaciones').then(r => r.json()).then(events => {
-            events.forEach(ev => {
-                if (!ev.extendedProps || !ev.extendedProps.is_special) return;
-
-                const start = ev.start ? new Date(ev.start) : null;
-                let end = ev.end ? new Date(ev.end) : start;
-                if (!start) return;
-
-                const dates = getDatesBetween(start, end).map(d => formatISO(d));
-                dates.forEach(d => {
-                    specialDateMap[d] = ev.backgroundColor || ev.color || specialDateMap[d] || '#ccc';
-                    const tipo = ev.extendedProps.tipo;
-                    if (tipo === 'festivo' || tipo === 'institucional') {
-                        if (!disabledForDescansoSet.has(d)) {
-                            disabledForDescanso.push(d);
-                            disabledForDescansoSet.add(d);
-                        }
-                    }
-                });
+    // --- MANEJO DE ALERTAS DE SESIÓN (Laravel -> SweetAlert2) ---
+    document.addEventListener("DOMContentLoaded", () => {
+        <?php if(session('success')): ?>
+            Swal.fire({
+                icon: 'success',
+                title: '¡Operación Exitosa!',
+                text: "<?php echo e(session('success')); ?>",
+                confirmButtonColor: '#124416'
             });
+        <?php endif; ?>
 
-            const fp = flatpickr("#calendar-inline", {
-                inline: true,
-                mode: "multiple",
-                locale: "es",
-                dateFormat: "Y-m-d",
-                conjunction: ",",
-                defaultDate: inputHiddenDates.value ? inputHiddenDates.value.split(",") : [],
-                disable: disabledForDescanso,
-                onDayCreate: function(dObj, dStr, dayElement) {
-                    const ds = dayElement.dateObj ? formatISO(dayElement.dateObj) : null;
-                    if (ds && specialDateMap[ds]) {
-                        dayElement.classList.add('has-special');
-                        dayElement.style.borderBottom = '3px solid ' + specialDateMap[ds];
-                        dayElement.style.backgroundColor = specialDateMap[ds] + '22';
-                    }
-                    if (ds && disabledForDescansoSet.has(ds)) {
-                        dayElement.classList.add('flatpickr-disabled');
-                        dayElement.setAttribute('aria-disabled', 'true');
-                    }
-                },
-                onChange: function(selectedDates, dateStr, instance) {
-                    const sortedDates = selectedDates.slice().sort((a, b) => a - b);
-                    const dateStrings = sortedDates.map(date => instance.formatDate(date, "Y-m-d"));
+        const errorsList = document.getElementById('laravel-errors-list');
+        if (errorsList) {
+            let errorText = '';
+            errorsList.querySelectorAll('li').forEach(li => {
+                errorText += li.textContent + '\n';
+            });
+            Swal.fire({
+                icon: 'error',
+                title: 'No se pudo guardar',
+                text: errorText,
+                confirmButtonColor: '#340C51'
+            });
+        }
+    });
 
-                    inputHiddenDates.value = dateStrings.join(",");
-                    inputDias.value = dateStrings.length;
-                    inputFechaInicio.value = dateStrings.length ? dateStrings[0] : '';
-                    inputFechaFin.value = dateStrings.length ? dateStrings[dateStrings.length - 1] : '';
-                    previewRestantes.textContent = Math.max(0, diasRestantes - dateStrings.length);
+    // --- FUNCIONES AUXILIARES ---
+    function formatISO(d) {
+        const y = d.getFullYear();
+        const m = String(d.getMonth() + 1).padStart(2, '0');
+        const day = String(d.getDate()).padStart(2, '0');
+        return `${y}-${m}-${day}`;
+    }
+
+    function getDatesBetween(start, end) {
+        const dates = [];
+        const cur = new Date(start);
+        while (cur <= end) {
+            dates.push(new Date(cur));
+            cur.setDate(cur.getDate() + 1);
+        }
+        return dates;
+    }
+
+    function updateSelectedDayColors(instance) {
+        if (!instance || !instance.calendarContainer) return;
+
+        const dayElements = instance.calendarContainer.querySelectorAll('.flatpickr-day');
+        dayElements.forEach(dayElement => {
+            const ds = dayElement.dateObj ? formatISO(dayElement.dateObj) : null;
+            const special = ds ? specialDateMap[ds] : null;
+
+            dayElement.classList.remove('bloqueado-descanso', 'bloqueado-festivo', 'bloqueado-institucional');
+            dayElement.style.removeProperty('--day-color');
+
+            if (special) {
+                dayElement.style.setProperty('--day-color', special.color);
+                if (special.tipo === 'descanso') {
+                    dayElement.classList.add('bloqueado-descanso');
+                } else if (special.tipo === 'festivo') {
+                    dayElement.classList.add('bloqueado-festivo');
+                } else if (special.tipo === 'institucional') {
+                    dayElement.classList.add('bloqueado-institucional');
                 }
-            });
-        }).catch(()=>{
-            // fallback: inicializar sin deshabilitados si la carga falla
-            flatpickr("#calendar-inline", {
-                inline: true,
-                mode: "multiple",
-                locale: "es",
-                dateFormat: "Y-m-d",
-                conjunction: ",",
-                defaultDate: inputHiddenDates.value ? inputHiddenDates.value.split(",") : [],
-                onChange: function(selectedDates, dateStr, instance) {
-                    const sortedDates = selectedDates.slice().sort((a, b) => a - b);
-                    const dateStrings = sortedDates.map(date => instance.formatDate(date, "Y-m-d"));
+            }
+        });
+    }
 
-                    inputHiddenDates.value = dateStrings.join(",");
-                    inputDias.value = dateStrings.length;
-                    inputFechaInicio.value = dateStrings.length ? dateStrings[0] : '';
-                    inputFechaFin.value = dateStrings.length ? dateStrings[dateStrings.length - 1] : '';
-                    previewRestantes.textContent = Math.max(0, diasRestantes - dateStrings.length);
+    // --- CARGAR EVENTOS DESDE LA API ---
+    fetch('/api/eventos-vacaciones')
+    .then(r => r.json())
+    .then(events => {
+        events.forEach(ev => {
+            const tipo = ev.extendedProps ? ev.extendedProps.tipo : null;
+            const start = ev.start ? new Date(ev.start) : null;
+            let end = ev.end ? new Date(ev.end) : start;
+            if (!start) return;
+
+            if (ev.end && ev.start !== ev.end) {
+                end.setDate(end.getDate() - 1);
+            }
+
+            const dates = getDatesBetween(start, end).map(d => formatISO(d));
+            
+            dates.forEach(d => {
+                let color = ev.backgroundColor || ev.color;
+                if (!color && tipo === 'vacaciones') {
+                    color = '#340C51'; 
+                }
+
+                specialDateMap[d] = { tipo: tipo, color: color || '#ccc' };
+
+                if (tipo === 'festivo' || tipo === 'institucional') {
+                    if (!disabledForDescanso.includes(d)) {
+                        disabledForDescanso.push(d);
+                    }
                 }
             });
         });
-    </script>
+
+        initFlatpickr();
+    })
+    .catch((err) => {
+        console.error("Error al cargar eventos:", err);
+        initFlatpickr();
+    });
+
+    // --- INICIALIZAR CALENDARIO ---
+    function initFlatpickr() {
+        flatpickr("#calendar-inline", {
+            inline: true,
+            mode: "multiple",
+            locale: "es",
+            dateFormat: "Y-m-d",
+            conjunction: ",",
+            defaultDate: inputHiddenDates.value ? inputHiddenDates.value.split(",") : [],
+            disable: disabledForDescanso, 
+            onDayCreate: function(dObj, dStr, dayElement) {
+                const ds = dayElement.dateObj ? formatISO(dayElement.dateObj) : null;
+                if (ds && specialDateMap[ds]) {
+                    const special = specialDateMap[ds];
+                    dayElement.classList.add('has-special');
+                    dayElement.style.setProperty('--day-color', special.color);
+                }
+            },
+            onReady: function(selectedDates, dateStr, instance) {
+                updateSelectedDayColors(instance);
+            },
+            onMonthChange: function(selectedDates, dateStr, instance) {
+                setTimeout(() => updateSelectedDayColors(instance), 10);
+            },
+            onYearChange: function(selectedDates, dateStr, instance) {
+                setTimeout(() => updateSelectedDayColors(instance), 10);
+            },
+            onChange: function(selectedDates, dateStr, instance) {
+                const sortedDates = selectedDates.slice().sort((a, b) => a - b);
+                const dateStrings = sortedDates.map(date => instance.formatDate(date, "Y-m-d"));
+
+                inputHiddenDates.value = dateStrings.join(",");
+                inputDias.value = dateStrings.length;
+                inputFechaInicio.value = dateStrings.length ? dateStrings[0] : '';
+                inputFechaFin.value = dateStrings.length ? dateStrings[dateStrings.length - 1] : '';
+                
+                // Actualización del remanente estimado en tiempo real
+                const calculoRestantes = diasRestantes - dateStrings.length;
+                previewRestantes.textContent = calculoRestantes;
+
+                if (calculoRestantes < 0) {
+                    previewRestantes.style.color = "#b91c1c";
+                } else {
+                    previewRestantes.style.color = "#124416";
+                }
+
+                updateSelectedDayColors(instance);
+            }
+        });
+    }
+
+    // --- VALIDACIONES AL ENVIAR FORMULARIO ---
+    formVacaciones.addEventListener('submit', function(e) {
+        const seleccionados = parseInt(inputDias.value) || 0;
+
+        if (seleccionados === 0) {
+            e.preventDefault();
+            Swal.fire({
+                icon: 'warning',
+                title: 'Calendario Vacío',
+                text: 'Por favor, selecciona al menos un día en el calendario antes de guardar el registro.',
+                confirmButtonColor: '#AA7F31'
+            });
+            return false;
+        }
+
+        if (seleccionados > diasRestantes) {
+            e.preventDefault();
+            Swal.fire({
+                icon: 'error',
+                title: 'Días Insuficientes',
+                text: `Estás intentando solicitar ${seleccionados} días, pero el empleado sólo dispone de ${diasRestantes} días restantes.`,
+                confirmButtonColor: '#340C51'
+            });
+            return false;
+        }
+    });
+</script>
 </body>
 </html>
 
@@ -435,22 +524,6 @@
         box-shadow: 0 4px 12px rgba(170, 127, 49, 0.2);
     }
 
-    .flatpickr-day.selected, .flatpickr-day.startRange, .flatpickr-day.endRange {
-        background: var(--morado-uco) !important;
-        border-color: var(--morado-uco) !important;
-        color: white !important;
-    }
-
-    .flatpickr-day.has-special {
-        opacity: 1 !important;
-        color: inherit !important;
-    }
-
-    .flatpickr-day.selected.inRange {
-        background: rgba(52, 12, 81, 0.15) !important;
-        color: var(--morado-uco) !important;
-    }
-
     .summary-grid {
         display: grid;
         gap: 1.5rem;
@@ -555,14 +628,13 @@
         padding: 0.8rem 1rem;
         border-radius: 12px;
         border: 1px solid #cbd5e1;
-        background: #e2e8f0; /* Color grisáceo para indicar que se calcula solo */
+        background: #e2e8f0; 
         color: #1e293b;
         font-size: 0.95rem;
         font-family: inherit;
         outline: none;
     }
 
-    /* --- PERSONALIZACIÓN EXCLUSIVA DE FLATPICKR (COLOR MORADO UCO) --- */
     .flatpickr-calendar {
         width: 100% !important;
         max-width: 350px;
@@ -573,14 +645,60 @@
         padding: 8px;
     }
 
+    /* 1. Días especiales/eventos (Inactivos o de fondo previo) */
+    .flatpickr-day.has-special {
+        background-color: var(--day-color) !important;
+        background-image: linear-gradient(rgba(255,255,255,0.85), rgba(255,255,255,0.85)) !important;
+        border-bottom: 3px solid var(--day-color) !important;
+        color: var(--text-main) !important;
+        opacity: 1 !important;
+    }
+
+    .flatpickr-day.has-special:hover {
+        background-image: linear-gradient(rgba(255,255,255,0.7), rgba(255,255,255,0.7)) !important;
+    }
+
+    .flatpickr-day.bloqueado-descanso,
+    .flatpickr-day.bloqueado-descanso:hover,
+    .flatpickr-day.bloqueado-descanso.flatpickr-disabled {
+        background: #124416 !important;
+        color: #ffffff !important;
+        border-color: #124416 !important;
+        opacity: 1 !important;
+    }
+
+    .flatpickr-day.bloqueado-festivo,
+    .flatpickr-day.bloqueado-festivo:hover,
+    .flatpickr-day.bloqueado-festivo.flatpickr-disabled {
+        background: #AA7F31 !important;
+        color: #ffffff !important;
+        border-color: #AA7F31 !important;
+        opacity: 1 !important;
+    }
+
+    .flatpickr-day.bloqueado-institucional,
+    .flatpickr-day.bloqueado-institucional:hover,
+    .flatpickr-day.bloqueado-institucional.flatpickr-disabled {
+        background: #340C51 !important;
+        color: #ffffff !important;
+        border-color: #340C51 !important;
+        opacity: 1 !important;
+    }
+
+    /* 2. DÍAS SELECCIONADOS POR EL USUARIO */
     .flatpickr-day.selected, 
     .flatpickr-day.selected:hover, 
-    .flatpickr-day.selected:focus {
-        background: var(--morado-uco) !important;
-        border-color: var(--morado-uco) !important;
+    .flatpickr-day.selected:focus,
+    .flatpickr-day.startRange, 
+    .flatpickr-day.endRange {
+        background: var(--day-color, var(--morado-uco)) !important;
+        background-image: none !important; 
+        border: 1px solid var(--day-color, var(--morado-uco)) !important;
+        border-bottom: 1px solid var(--day-color, var(--morado-uco)) !important;
         color: #ffffff !important;
-        font-weight: 600;
+        font-weight: 600 !important;
         border-radius: 8px !important;
+        opacity: 1 !important;
     }
 
     .flatpickr-day:hover {
@@ -652,25 +770,24 @@
     }
 
     textarea.form-textarea {
-    width: 100%;
-    padding: 0.8rem 1rem;
-    border-radius: 12px;
-    border: 1px solid #cbd5e1;
-    background: #ffffff;
-    color: #1e293b;
-    font-size: 0.95rem;
-    font-family: inherit;
-    outline: none;
-    resize: vertical;
-    transition: border-color 0.3s ease;
+        width: 100%;
+        padding: 0.8rem 1rem;
+        border-radius: 12px;
+        border: 1px solid #cbd5e1;
+        background: #ffffff;
+        color: #1e293b;
+        font-size: 0.95rem;
+        font-family: inherit;
+        outline: none;
+        resize: vertical;
+        transition: border-color 0.3s ease;
     }
 
     textarea.form-textarea:focus {
-    border-color: var(--verde-uco);
-    box-shadow: 0 0 0 3px rgba(18, 68, 22, 0.1);
+        border-color: var(--verde-uco);
+        box-shadow: 0 0 0 3px rgba(18, 68, 22, 0.1);
     }
 
-    .status.success { background: #ecfdf5; color: #065f46; border: 1px solid #a7f3d0; }
     .status.error { background: #fef2f2; color: #991b1b; border: 1px solid #fecaca; }
 
     /* --- MEDIA QUERIES --- */

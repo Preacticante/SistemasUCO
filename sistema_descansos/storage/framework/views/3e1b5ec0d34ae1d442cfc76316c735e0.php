@@ -355,13 +355,42 @@
     @media (max-width: 1080px) {
         .special-days-form-grid { grid-template-columns: 1fr; }
     }
+    /* Clases prioritarias para forzar el pintado sólido de los días bloqueados/históricos */
+.flatpickr-day.bloqueado-descanso, 
+.flatpickr-day.bloqueado-descanso:hover,
+.flatpickr-day.bloqueado-descanso.flatpickr-disabled {
+    background: #124416 !important;
+    color: #ffffff !important;
+    border-color: #124416 !important;
+    opacity: 1 !important;
+    cursor: not-allowed;
+}
+
+.flatpickr-day.bloqueado-festivo, 
+.flatpickr-day.bloqueado-festivo:hover,
+.flatpickr-day.bloqueado-festivo.flatpickr-disabled {
+    background: #AA7F31 !important;
+    color: #ffffff !important;
+    border-color: #AA7F31 !important;
+    opacity: 1 !important;
+    cursor: not-allowed;
+}
+
+.flatpickr-day.bloqueado-institucional, 
+.flatpickr-day.bloqueado-institucional:hover,
+.flatpickr-day.bloqueado-institucional.flatpickr-disabled {
+    background: #340C51 !important;
+    color: #ffffff !important;
+    border-color: #340C51 !important;
+    opacity: 1 !important;
+    cursor: not-allowed;
+}
 </style>
 <?php $__env->stopPush(); ?>
 
 <?php $__env->startPush('scripts'); ?>
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/es.js"></script>
-
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <script>
@@ -375,16 +404,53 @@
     const inputFechaInicioDisplay = document.getElementById('fecha_inicio_display');
     const inputFechaFinDisplay = document.getElementById('fecha_fin_display');
 
+    // Paleta de colores exacta del sistema
     const colors = { descanso: '#124416', festivo: '#AA7F31', institucional: '#340C51' };
-    const textColors = { descanso: '#ffffff', festivo: '#000000', institucional: '#ffffff' };
+    const textColors = { descanso: '#ffffff', festivo: '#ffffff', institucional: '#ffffff' };
 
     function updateSelectedColor() {
         const type = tipoSelect.value || 'descanso';
         document.documentElement.style.setProperty('--selected-day-bg', colors[type]);
         document.documentElement.style.setProperty('--selected-day-color', textColors[type]);
+        
         if (fp) {
-            if (type === 'descanso') { fp.set('disable', disabledForDescanso); } else { fp.set('disable', []); }
+            if (type === 'descanso') { 
+                fp.set('disable', disabledForDescanso); 
+            } else { 
+                fp.set('disable', []); 
+            }
+            // Ejecutamos nuestra función de repintado manual justo después de redibujar Flatpickr
+            fp.redraw();
+            colorearDiasBloqueados();
         }
+    }
+
+    // NUEVA FUNCIÓN: Fuerza el pintado de las clases recorriendo los elementos del DOM actuales del calendario
+    function colorearDiasBloqueados() {
+        if (!fp) return;
+        
+        // Buscamos todas las celdas de días visibles en el Flatpickr actual
+        const dayElements = fp.calendarContainer.querySelectorAll('.flatpickr-day');
+        
+        dayElements.forEach(dayElement => {
+            const ds = dayElement.dateObj ? fp.formatDate(dayElement.dateObj, 'Y-m-d') : null;
+            
+            if (ds && specialDateMap[ds]) {
+                const tipoDiaHistorial = specialDateMap[ds].tipo;
+                
+                // Limpiamos residuos de selección nativa para evitar que el azul/gris de Flatpickr tape nuestro color
+                dayElement.classList.remove('selected', 'startRange', 'endRange');
+                
+                // Forzamos la clase correspondiente
+                if (tipoDiaHistorial === 'descanso') {
+                    dayElement.classList.add('bloqueado-descanso');
+                } else if (tipoDiaHistorial === 'festivo') {
+                    dayElement.classList.add('bloqueado-festivo');
+                } else if (tipoDiaHistorial === 'institucional') {
+                    dayElement.classList.add('bloqueado-institucional');
+                }
+            }
+        });
     }
 
     function formatDateDisplay(date) {
@@ -421,22 +487,31 @@
         return [firstDay, lastDay];
     }
 
-    function getDatesBetween(start, end) {
-        const dates = [];
-        const current = new Date(start);
-        while (current <= end) {
-            dates.push(new Date(current));
-            current.setDate(current.getDate() + 1);
-        }
-        return dates;
-    }
+   function getDatesBetween(start, end) {
+    const dates = [];
+    // Clonamos y forzamos el inicio del día local
+    const current = new Date(start.getFullYear(), start.getMonth(), start.getDate());
+    const final = new Date(end.getFullYear(), end.getMonth(), end.getDate());
 
-    function parseYMDToLocal(dateStr) {
-        if (!dateStr) return null;
-        const parts = String(dateStr).split('-').map(p => parseInt(p, 10));
-        if (parts.length !== 3) return new Date(dateStr);
+    while (current <= final) {
+        dates.push(new Date(current));
+        current.setDate(current.getDate() + 1);
+    }
+    return dates;
+}
+
+   function parseYMDToLocal(dateStr) {
+    if (!dateStr) return null;
+    // Si la cadena contiene una 'T' u horas de la API, nos quedamos solo con la parte 'AAAA-MM-DD'
+    const cleanStr = String(dateStr).split('T')[0];
+    const parts = cleanStr.split('-').map(p => parseInt(p, 10));
+    
+    if (parts.length === 3) {
+        // El mes en JS va de 0 a 11, por eso restamos 1
         return new Date(parts[0], parts[1] - 1, parts[2]);
     }
+    return new Date(cleanStr); // Fallback seguro
+}
 
     function formatYMD(date) {
         if (!date) return '';
@@ -467,11 +542,14 @@
             dateFormat: 'Y-m-d',
             defaultDate: inputHiddenDates.value ? inputHiddenDates.value.split(',') : [],
             onDayCreate: function(dObj, dStr, dayElement) {
+                // Ejecutamos el mapeo inicial al crear los nodos
                 const ds = dayElement.dateObj ? fp.formatDate(dayElement.dateObj, 'Y-m-d') : null;
                 if (ds && specialDateMap[ds]) {
-                    dayElement.classList.add('has-special');
-                    dayElement.style.borderBottom = '3px solid ' + specialDateMap[ds];
-                    dayElement.style.backgroundColor = specialDateMap[ds] + '22';
+                    const tipoDiaHistorial = specialDateMap[ds].tipo;
+                    dayElement.classList.remove('selected', 'startRange', 'endRange');
+                    if (tipoDiaHistorial === 'descanso') dayElement.classList.add('bloqueado-descanso');
+                    if (tipoDiaHistorial === 'festivo') dayElement.classList.add('bloqueado-festivo');
+                    if (tipoDiaHistorial === 'institucional') dayElement.classList.add('bloqueado-institucional');
                 }
 
                 dayElement.dateObj && dayElement.addEventListener('click', function(e) {
@@ -502,26 +580,53 @@
                     }
                 });
             },
+            // NUEVO: Cada que el usuario cambie de mes o de año, volvemos a aplicar las clases a los nuevos elementos renderizados
+            onMonthChange: function() {
+                setTimeout(colorearDiasBloqueados, 10);
+            },
+            onYearChange: function() {
+                setTimeout(colorearDiasBloqueados, 10);
+            },
             onChange: function(selectedDates) {
                 const mode = selectionMode.value;
-                if (mode === 'varios' || mode === 'personalizado') { updateFields(selectedDates); }
-                if (selectedDates.length === 0) { updateFields([]); }
+                if (mode === 'varios' || mode === 'personalizado') { 
+                    updateFields(selectedDates); 
+                }
+                if (selectedDates.length === 0) { 
+                    updateFields([]); 
+                }
+                fp.redraw();
+                colorearDiasBloqueados(); // Asegurar colores tras los cambios
             }
         });
+
+        // Forzar pintado inmediatamente después de que se cree el objeto flatpickr por primera vez
+        colorearDiasBloqueados();
     }
 
     const specialDateMap = {};
     const disabledForDescanso = [];
     const disabledForDescansoSet = new Set();
-    fetch('/api/eventos-vacaciones').then(r => r.json()).then(events => {
+    
+  fetch('/api/eventos-vacaciones').then(r => r.json()).then(events => {
         events.forEach(ev => {
             if (!ev.extendedProps || !ev.extendedProps.is_special) return;
+            
             const start = parseYMDToLocal(ev.start);
-            const end = ev.end ? parseYMDToLocal(ev.end) : start;
+            let end = ev.end ? parseYMDToLocal(ev.end) : start;
+            
+            // CORRECCIÓN: Si el evento tiene fecha de fin y no es el mismo día de inicio,
+            // le restamos 1 día para corregir el desfase del estándar de calendarios.
+            if (ev.end && ev.start !== ev.end) {
+                end.setDate(end.getDate() - 1);
+            }
+            
             const dates = getDatesBetween(start, end).map(d => formatYMD(d));
+            
             dates.forEach(d => {
-                specialDateMap[d] = ev.backgroundColor || ev.color || specialDateMap[d] || '#ccc';
                 const tipo = ev.extendedProps.tipo;
+                specialDateMap[d] = { tipo: tipo };
+
                 if (tipo === 'festivo' || tipo === 'institucional') {
                     if (!disabledForDescansoSet.has(d)) {
                         disabledForDescanso.push(d);
@@ -532,14 +637,21 @@
         });
         createSpecialDayCalendar();
         updateSelectedColor();
-    }).catch(()=>{ createSpecialDayCalendar(); });
+    }).catch((err) => { 
+        console.error("Error al mapear días especiales:", err);
+        createSpecialDayCalendar(); 
+    });
 
     selectionMode.addEventListener('change', function() {
         selectionText.textContent = this.options[this.selectedIndex].text;
         clearSelection();
+        colorearDiasBloqueados();
     });
 
-    tipoSelect.addEventListener('change', function() { updateSelectedColor(); });
+    tipoSelect.addEventListener('change', function() { 
+        updateSelectedColor(); 
+    });
+    
     updateSelectedColor();
 
     // ==========================================
@@ -553,61 +665,38 @@
         const mode = selectionMode.value;
         const count = parseInt(selectedCount.textContent || '0', 10);
 
-        // 1. Validar que siempre se haya seleccionado al menos una fecha
         if (count === 0) {
             e.preventDefault();
-            Swal.fire({ 
-                icon: 'info', 
-                title: 'Faltan fechas', 
-                text: 'Debes seleccionar al menos un día en el calendario antes de guardar.' 
-            });
+            Swal.fire({ icon: 'info', title: 'Faltan fechas', text: 'Debes seleccionar al menos un día en el calendario antes de guardar.' });
             return false;
         }
 
-        // 2. Validar consistencia de rangos según el modo seleccionado
         if (mode === 'semana' && count !== 7) {
             e.preventDefault();
-            Swal.fire({ 
-                icon: 'warning', 
-                title: 'Selección incompleta', 
-                text: 'Selección semanal: debes elegir exactamente 7 días.' 
-            });
+            Swal.fire({ icon: 'warning', title: 'Selección incompleta', text: 'Selección semanal: debes elegir exactamente 7 días.' });
             return false;
         }
 
         if (mode === 'mes') {
-            const start = inputFechaInicio.value ? new Date(inputFechaInicio.value) : null;
+            const start = inputFechaInicio.value ? parseYMDToLocal(inputFechaInicio.value) : null;
             if (!start) {
                 e.preventDefault();
-                Swal.fire({ 
-                    icon: 'warning', 
-                    title: 'Selección incompleta', 
-                    text: 'Selección por mes: selecciona una fecha dentro del mes deseado.' 
-                });
+                Swal.fire({ icon: 'warning', title: 'Selección incompleta', text: 'Selección por mes: selecciona una fecha dentro del mes deseado.' });
                 return false;
             }
             const lastDay = new Date(start.getFullYear(), start.getMonth() + 1, 0).getDate();
             if (count !== lastDay) {
                 e.preventDefault();
-                Swal.fire({ 
-                    icon: 'warning', 
-                    title: 'Días faltantes', 
-                    text: 'Selección por mes: debes seleccionar todos los días del mes (' + lastDay + ').' 
-                });
+                Swal.fire({ icon: 'warning', title: 'Días faltantes', text: 'Selección por mes: debes seleccionar todos los días del mes (' + lastDay + ').' });
                 return false;
             }
         }
 
-        // 3. Obligar trabajador SOLO si es "Descanso de trabajador"
         if (tipoDia === 'descanso') {
             const anySelected = Array.from(empleadosSelect.options).some(o => o.selected);
             if (!anySelected) {
                 e.preventDefault();
-                Swal.fire({ 
-                    icon: 'info', 
-                    title: 'Asignación requerida', 
-                    text: 'Para el tipo "Descanso de trabajador" es obligatorio seleccionar al menos un trabajador.' 
-                });
+                Swal.fire({ icon: 'info', title: 'Asignación requerida', text: 'Para el tipo "Descanso de trabajador" es obligatorio seleccionar al menos un trabajador.' });
                 return false;
             }
         }
@@ -618,20 +707,19 @@
     // ==========================================
     document.querySelectorAll('.form-eliminar').forEach(formEliminar => {
         formEliminar.addEventListener('submit', function(e) {
-            e.preventDefault(); // Detiene el envío automático del formulario
-            
+            e.preventDefault();
             Swal.fire({
                 title: '¿Estás seguro?',
                 text: 'Esta acción eliminará el registro del día especial de forma permanente.',
                 icon: 'warning',
-                iconColor: '#f8bb86', // Color naranja de advertencia idéntico
+                iconColor: '#f8bb86',
                 showCancelButton: true,
                 confirmButtonText: 'Sí, eliminar',
                 cancelButtonText: 'Cancelar',
-                reverseButtons: true   // Coloca el botón de Cancelar a la derecha
+                reverseButtons: true   
             }).then((result) => {
                 if (result.isConfirmed) {
-                    formEliminar.submit(); // Envía el formulario si se confirma
+                    formEliminar.submit(); 
                 }
             });
         });
