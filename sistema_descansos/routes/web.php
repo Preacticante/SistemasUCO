@@ -513,7 +513,7 @@ Route::put('/periodos/{id}', function (Request $request, $id) {
     \Log::info('PUT /periodos payload', ['id' => $id, 'payload' => $request->all()]);
 
     $validator = Validator::make($request->all(), [
-        'multiple_dates' => 'required|string', 
+        'multiple_dates' => 'nullable|string', 
         'fecha_inicio'   => 'required|date',
         'fecha_fin'      => 'required|date|after_or_equal:fecha_inicio',
         'observaciones'  => 'nullable|string|max:1000',
@@ -521,29 +521,59 @@ Route::put('/periodos/{id}', function (Request $request, $id) {
 
     if ($validator->fails()) {
         \Log::warning('PUT /periodos validation failed', ['errors' => $validator->errors()->all()]);
-        return response()->json(['error' => 'Validación de datos fallida.'], 422);
+        return response()->json([
+            'error' => 'Validación de datos fallida.',
+            'errors' => $validator->errors()->messages()
+        ], 422);
     }
 
     try {
-        DB::transaction(function () use ($request, $id) {
+        return DB::transaction(function () use ($request, $id) {
             $periodo = PeriodoVacacional::findOrFail($id);
             $empleadoId = $periodo->empleado_id;
             $anioActual = $periodo->anio_calendario;
 
-            $selectedDates = array_filter(array_map('trim', explode(',', $request->input('multiple_dates'))));
-            if (empty($selectedDates)) {
-                throw new \Exception("Debe seleccionar al menos un día en el calendario.");
+            $inicioReq = Carbon::parse($request->input('fecha_inicio'));
+            $finReq = Carbon::parse($request->input('fecha_fin'));
+            $selectedDates = [];
+
+            // CORRECCIÓN: Si viene 'multiple_dates' estructurado, lo usamos; si no, calculamos el rango real
+            if ($request->filled('multiple_dates') && trim($request->input('multiple_dates')) !== '') {
+                $selectedDates = array_filter(array_map('trim', explode(',', $request->input('multiple_dates'))));
+            } else {
+                // Si el calendario no mandó mapeo de días, tomamos el rango de fechas de forma inclusiva
+                for ($d = $inicioReq->copy(); $d->lte($finReq); $d->addDay()) {
+                    $selectedDates[] = $d->toDateString();
+                }
             }
+
+            if (empty($selectedDates)) {
+                return response()->json(['error' => 'Debe seleccionar al menos un día válido.'], 422);
+            }
+
             sort($selectedDates);
 
             $inicioNuevo = Carbon::parse($selectedDates[0]);
             $finNuevo = Carbon::parse(end($selectedDates));
 
             if ($inicioNuevo->year !== $anioActual || $finNuevo->year !== $anioActual) {
-                throw new \Exception("Las fechas editadas deben estar dentro del año {$anioActual}.");
+                return response()->json(['error' => "Las fechas editadas deben estar dentro del año {$anioActual}."], 422);
             }
 
-            $diasNuevos = count($selectedDates);
+            // Contar días laborables o seleccionados reales
+            $diasNuevos = 0;
+            foreach ($selectedDates as $sd) {
+                $cd = Carbon::parse($sd);
+                // Si el rango se autogeneró por falta de multiple_dates, omitimos fines de semana para el conteo de días cobrables
+                if (!$request->filled('multiple_dates') && $cd->isWeekend()) {
+                    continue;
+                }
+                $diasNuevos++;
+            }
+
+            if ($diasNuevos === 0) {
+                return response()->json(['error' => 'El rango seleccionado solo contiene días inhábiles o fines de semana.'], 422);
+            }
 
             $empleado = Empleado::find($empleadoId);
             $antiguedadAnios = (int) floor(Carbon::parse($empleado->fecha_ingreso)->diffInYears(Carbon::now()));
@@ -558,9 +588,10 @@ Route::put('/periodos/{id}', function (Request $request, $id) {
 
             if (($diasTomadosSinEstePeriodo + $diasNuevos) > $diasDerecho) {
                 $disponibles = $diasDerecho - $diasTomadosSinEstePeriodo;
-                throw new \Exception("El empleado solo tiene {$disponibles} día(s) disponible(s). No puedes asignarle {$diasNuevos} días.");
+                return response()->json(['error' => "El empleado solo tiene {$disponibles} día(s) disponible(s). No puedes asignarle {$diasNuevos} días."], 422);
             }
 
+            // Revertir días viejos del RegistroDescanso anterior
             $inicioViejo = Carbon::parse($periodo->fecha_inicio);
             $finViejo = Carbon::parse($periodo->fecha_fin);
             
@@ -584,9 +615,13 @@ Route::put('/periodos/{id}', function (Request $request, $id) {
                 }
             }
 
+            // Asignar los días nuevos al RegistroDescanso mensual
             $diasPorMesNuevos = [];
             foreach ($selectedDates as $selectedDate) {
                 $fechaObj = Carbon::parse($selectedDate);
+                if (!$request->filled('multiple_dates') && $fechaObj->isWeekend()) {
+                    continue; // No sumarle días tomados si es fin de semana calculado automáticamente
+                }
                 $mesN = $fechaObj->month;
                 $diasPorMesNuevos[$mesN] = ($diasPorMesNuevos[$mesN] ?? 0) + 1;
             }
@@ -597,6 +632,7 @@ Route::put('/periodos/{id}', function (Request $request, $id) {
                 $registro->save();
             }
 
+            // Actualizar el periodo vacacional
             $periodo->fecha_inicio = $request->fecha_inicio;
             $periodo->fecha_fin = $request->fecha_fin;
             $periodo->dias = $diasNuevos;
@@ -604,13 +640,13 @@ Route::put('/periodos/{id}', function (Request $request, $id) {
             $periodo->fecha_regreso = $finNuevo->copy()->addDay()->toDateString();
             $periodo->save(); 
 
-            \Log::info('Periodo actualizado', ['id' => $periodo->id, 'observaciones' => $periodo->observaciones, 'dias' => $periodo->dias]);
-        });
+            \Log::info('Periodo actualizado con éxito', ['id' => $periodo->id]);
 
-        return response()->json(['success' => true, 'mensaje' => 'Período actualizado correctamente']);
+            return response()->json(['success' => true, 'mensaje' => 'Período actualizado correctamente']);
+        });
     } catch (\Exception $e) {
-        \Log::error('PUT /periodos error', ['message' => $e->getMessage()]);
-        return response()->json(['error' => $e->getMessage()], 500); 
+        \Log::error('PUT /periodos error catastrófico', ['message' => $e->getMessage()]);
+        return response()->json(['error' => 'Ocurrió un error en el servidor al procesar la actualización.'], 500); 
     }
 });
 
