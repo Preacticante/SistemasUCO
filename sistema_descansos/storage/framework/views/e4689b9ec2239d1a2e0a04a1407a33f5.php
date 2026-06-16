@@ -380,6 +380,7 @@
 
     <div id="editModal" class="modal-edit">
         <div class="modal-edit-content">
+<<<<<<< Updated upstream
             <h3>Editar Período Vacacional</h3>
 =======
             <h3><i class="fas fa-calendar-plus"></i> Registrar / Editar vacaciones</h3>
