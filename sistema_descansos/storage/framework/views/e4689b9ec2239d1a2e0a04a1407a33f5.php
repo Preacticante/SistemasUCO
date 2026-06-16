@@ -381,6 +381,11 @@
     <div id="editModal" class="modal-edit">
         <div class="modal-edit-content">
             <h3>Editar Período Vacacional</h3>
+=======
+            <h3><i class="fas fa-calendar-plus"></i> Registrar / Editar vacaciones</h3>
+            <p style="color: #64748b; font-size: 0.9rem; margin-top:-5px; margin-bottom:15px;">Selecciona los días a descontar día a día en el calendario</p>
+            
+>>>>>>> Stashed changes
             <form id="editForm">
                 <?php echo csrf_field(); ?>
                 <div class="form-group">
@@ -456,6 +461,24 @@ function openEditModal(id, empleadoId) {
             document.getElementById('editFechaInicio').value = data.fecha_inicio;
             document.getElementById('editFechaFin').value = data.fecha_fin;
 
+<<<<<<< Updated upstream
+=======
+            if(data.fecha_inicio && data.fecha_fin) {
+                const pInicio = data.fecha_inicio.split('-');
+                const pFin = data.fecha_fin.split('-');
+                startDateSelected = new Date(pInicio[0], pInicio[1] - 1, pInicio[2]);
+                endDateSelected = new Date(pFin[0], pFin[1] - 1, pFin[2]);
+                currentYear = parseInt(pInicio[0]);
+                currentMonth = parseInt(pInicio[1]) - 1;
+            } else {
+                startDateSelected = null;
+                endDateSelected = null;
+            }
+
+            loadSpecialDays().then(() => {
+                renderCalendar();
+            });
+>>>>>>> Stashed changes
             document.getElementById('editModal').classList.add('show');
         })
         .catch(error => {
@@ -472,6 +495,128 @@ function openEditModal(id, empleadoId) {
         });
 }
 
+<<<<<<< Updated upstream
+=======
+function renderCalendar() {
+    const grid = document.getElementById('calendarGrid');
+    if (!grid) return; // <--- VÁLIDO: Retorno seguro si no existe el elemento en el DOM
+    
+    document.getElementById('calendarMonthYear').innerText = `${monthNames[currentMonth]} ${currentYear}`;
+    grid.innerHTML = '';
+
+    const daysLetters = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
+    daysLetters.forEach(d => {
+        const dDiv = document.createElement('div');
+        dDiv.className = 'day-name';
+        dDiv.innerText = d;
+        grid.appendChild(dDiv);
+    });
+
+    const firstDayIndex = new Date(currentYear, currentMonth, 1).getDay(); 
+    const totalDays = new Date(currentYear, currentMonth + 1, 0).getDate();
+    let startOffset = firstDayIndex === 0 ? 6 : firstDayIndex - 1;
+
+    for(let i = 0; i < startOffset; i++) {
+        const emptyDiv = document.createElement('div');
+        emptyDiv.className = 'calendar-day empty';
+        grid.appendChild(emptyDiv);
+    }
+
+    for(let day = 1; day <= totalDays; day++) {
+        const dayDiv = document.createElement('div');
+        dayDiv.className = 'calendar-day';
+        dayDiv.innerText = day;
+
+        const thisDate = new Date(currentYear, currentMonth, day);
+        const dateKey = formatYMD(thisDate);
+
+        const isSpecial = Boolean(specialDateMap[dateKey]);
+        if (isSpecial) {
+            const tipo = specialDateMap[dateKey].tipo;
+            if (tipo === 'festivo') {
+                dayDiv.classList.add('festivo-range');
+            } else if (tipo === 'institucional') {
+                dayDiv.classList.add('institucional-range');
+            } else if (tipo === 'descanso') {
+                dayDiv.classList.add('descanso-range');
+            } else {
+                dayDiv.classList.add('festivo-range');
+            }
+            dayDiv.classList.add('disabled');
+        }
+
+        const inRange = startDateSelected && endDateSelected && thisDate >= startDateSelected && thisDate <= endDateSelected;
+        const isStart = startDateSelected && thisDate.getTime() === startDateSelected.getTime();
+        const isEnd = endDateSelected && thisDate.getTime() === endDateSelected.getTime();
+
+        if (!isSpecial && (inRange || isStart || isEnd)) {
+            dayDiv.classList.add('selected-range');
+        }
+
+        dayDiv.onclick = () => {
+            if (isSpecial) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Fecha no seleccionable',
+                    text: 'Los días especiales no se pueden seleccionar aquí.',
+                    confirmButtonColor: '#124416'
+                });
+                return;
+            }
+            selectDate(thisDate);
+        };
+
+        grid.appendChild(dayDiv);
+    }
+
+    updateSummary();
+}
+
+function changeMonth(direction) {
+    currentMonth += direction;
+    if (currentMonth < 0) {
+        currentMonth = 11;
+        currentYear--;
+    } else if (currentMonth > 11) {
+        currentMonth = 0;
+        currentYear++;
+    }
+    renderCalendar();
+}
+
+function selectDate(date) {
+    if (!startDateSelected || (startDateSelected && endDateSelected)) {
+        startDateSelected = date;
+        endDateSelected = null;
+    } else if (startDateSelected && !endDateSelected) {
+        if (date < startDateSelected) {
+            endDateSelected = startDateSelected;
+            startDateSelected = date;
+        } else {
+            endDateSelected = date;
+        }
+    }
+    renderCalendar();
+}
+
+function getCountableSelectedDates() {
+    if (!startDateSelected) return [];
+    const end = endDateSelected || startDateSelected;
+    return getDatesBetween(startDateSelected, end)
+        .map(formatYMD)
+        .filter(dateKey => !specialDateMap[dateKey]);
+}
+
+function updateSummary() {
+    const summary = document.getElementById('daysSummary');
+    if (!summary) return;
+
+    const countableDates = getCountableSelectedDates();
+    const totalSelected = countableDates.length;
+    summary.innerText = `Días seleccionados a descontar: ${totalSelected} día${totalSelected === 1 ? '' : 's'}`;
+}
+
+>>>>>>> Stashed changes
 function closeEditModal() {
 
     document.getElementById('editModal').classList.remove('show');
@@ -488,6 +633,7 @@ function guardarEdicion() {
 
     if (!fechaInicio || !fechaFin) {
 
+<<<<<<< Updated upstream
         Swal.fire({
             icon: 'warning',
             title: 'Campos incompletos',
@@ -527,6 +673,57 @@ function guardarEdicion() {
 
         return;
     }
+=======
+    if (startDateSelected) {
+        const finalEnd = endDateSelected || startDateSelected;
+        fechaInicioStr = formatYMD(startDateSelected);
+        fechaFinStr = formatYMD(finalEnd);
+    } else if (inputInicio && inputFin && inputInicio.value && inputFin.value) {
+        const convertirAFormatovAlido = (fechaStr) => {
+            const partes = fechaStr.includes('/') ? fechaStr.split('/') : fechaStr.split('-');
+            if (partes.length === 3) {
+                if (partes[0].length <= 2 && partes[2].length === 4) {
+                    return `${partes[2]}-${partes[1].padStart(2, '0')}-${partes[0].padStart(2, '0')}`;
+                }
+                if (partes[0].length === 4) {
+                    return `${partes[0]}-${partes[1].padStart(2, '0')}-${partes[2].padStart(2, '0')}`;
+                }
+            }
+            return fechaStr;
+        };
+        fechaInicioStr = convertirAFormatovAlido(inputInicio.value);
+        fechaFinStr = convertirAFormatovAlido(inputFin.value);
+    } else {
+        Swal.fire({
+            icon: 'warning',
+            title: 'Campos incompletos',
+            text: 'Por favor selecciona al menos un día en el calendario.',
+            confirmButtonColor: '#124416'
+        });
+        return;
+    }
+
+    const observaciones = inputObservaciones ? inputObservaciones.value : '';
+    const countableDates = getCountableSelectedDates();
+
+    if (countableDates.length === 0) {
+        Swal.fire({
+            icon: 'warning',
+            title: 'Campos incompletos',
+            text: 'Por favor selecciona al menos un día verde en el calendario.',
+            confirmButtonColor: '#124416'
+        });
+        return;
+    }
+
+    const computeRangeBounds = (dateKeys) => {
+        const allDates = [...dateKeys];
+        allDates.sort();
+        return [allDates[0], allDates[allDates.length - 1]];
+    };
+
+    const [requestInicio, requestFin] = computeRangeBounds(countableDates);
+>>>>>>> Stashed changes
 
     Swal.fire({
         title: 'Guardando cambios...',
@@ -546,8 +743,15 @@ function guardarEdicion() {
             'X-CSRF-TOKEN': csrfTokenHist
         },
         body: JSON.stringify({
+<<<<<<< Updated upstream
             fecha_inicio: fechaInicio,
             fecha_fin: fechaFin
+=======
+            fecha_inicio: requestInicio,
+            fecha_fin: requestFin,
+            multiple_dates: countableDates.sort().join(','),
+            observaciones: observaciones
+>>>>>>> Stashed changes
         })
     })
     .then(async response => {
