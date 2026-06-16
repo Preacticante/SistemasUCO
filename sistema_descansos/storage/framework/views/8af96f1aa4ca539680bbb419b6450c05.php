@@ -21,18 +21,21 @@
         }
 
         .app-container {
-            display: flex;
             min-height: 100vh;
         }
 
-        /* --- Menú Lateral (Verde UCO) --- */
+        /* --- Menú Lateral Fijo (Verde UCO) --- */
         .sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            bottom: 0;
             width: 260px;
             background-color: #124416; /* VERDE INSTITUCIONAL */
             color: white;
             display: flex;
             flex-direction: column;
-            flex-shrink: 0;
+            z-index: 1000;
         }
 
         .sidebar-header {
@@ -83,14 +86,19 @@
         }
 
         .main-content {
-            flex-grow: 1;
+            margin-left: 260px;
+            min-height: 100vh;
             display: flex;
             flex-direction: column;
             width: calc(100% - 260px);
         }
 
-        /* --- Barra Superior / Topbar (Verde UCO) --- */
+        /* --- Barra Superior Fija / Topbar (Verde UCO) --- */
         .topbar {
+            position: fixed;
+            top: 0;
+            left: 260px;
+            right: 0;
             background-color: #124416; /* VERDE INSTITUCIONAL */
             padding: 15px 30px;
             display: flex;
@@ -98,6 +106,7 @@
             align-items: center;
             border-bottom: 1px solid rgba(255,255,255,0.1); /* Línea divisoria sutil */
             color: white;
+            z-index: 900;
         }
 
         .topbar div:first-child {
@@ -128,8 +137,9 @@
         }
 
         .content-area {
-            padding: 30px;
+            padding: 100px 30px 30px;
             flex-grow: 1;
+            min-height: calc(100vh - 100px);
         }
 
         /* Forzar el Verde UCO en botones genéricos de las tablas */

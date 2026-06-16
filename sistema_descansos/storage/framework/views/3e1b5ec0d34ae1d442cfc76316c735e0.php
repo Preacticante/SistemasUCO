@@ -1,5 +1,3 @@
-
-
 <?php $__env->startSection('title', 'Días Especiales'); ?>
 <?php $__env->startSection('header', 'Días Especiales'); ?>
 
