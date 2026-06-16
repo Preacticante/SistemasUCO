@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Vacaciones | {{ $empleado->nombre }} {{ $empleado->apellido_paterno }} {{ $empleado->apellido_materno }}</title>
+    <title>Vacaciones | <?php echo e($empleado->nombre); ?> <?php echo e($empleado->apellido_paterno); ?> <?php echo e($empleado->apellido_materno); ?></title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
@@ -13,7 +13,7 @@
 <body>
     <main class="page-shell">
 
-        @php
+        <?php
             $path = public_path('img/logo_uco.png');
             $base64 = '';
             if (file_exists($path)) {
@@ -21,38 +21,38 @@
                 $data = file_get_contents($path);
                 $base64 = 'data:image/' . $type . ';base64,' . base64_encode($data);
             }
-        @endphp
+        ?>
 
-        @if($base64)
+        <?php if($base64): ?>
             <div class="logo-outer-container">
-                <img src="{{ $base64 }}" alt="Logo UCO" class="logo-outside">
+                <img src="<?php echo e($base64); ?>" alt="Logo UCO" class="logo-outside">
             </div>
-        @endif
+        <?php endif; ?>
         
         <section class="topbar">
             <div class="topbar-left">
                 <div class="topbar-title">
                     <span class="page-label">Vacaciones</span>
-                    <h1>{{ $empleado->nombre }} {{ $empleado->apellido_paterno }} {{ $empleado->apellido_materno }}</h1>
+                    <h1><?php echo e($empleado->nombre); ?> <?php echo e($empleado->apellido_paterno); ?> <?php echo e($empleado->apellido_materno); ?></h1>
                 </div>
                 <p>Administra registros y consulta el consumo de vacaciones de manera clara.</p>
             </div>
 
-            <a href="{{ route('panel') }}" class="button-link"> 
+            <a href="<?php echo e(route('panel')); ?>" class="button-link"> 
                 <i class="fa-solid fa-arrow-left button-icon-svg"></i>
                 Volver al inicio
             </a>
         </section>
 
-        @if ($errors->any())
+        <?php if($errors->any()): ?>
             <div class="status error" style="display: none;">
                 <ul id="laravel-errors-list">
-                    @foreach ($errors->all() as $error)
-                        <li>{{ $error }}</li>
-                    @endforeach
+                    <?php $__currentLoopData = $errors->all(); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $error): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                        <li><?php echo e($error); ?></li>
+                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                 </ul>
             </div>
-        @endif
+        <?php endif; ?>
 
         <section class="summary-grid">
             <article class="card">
@@ -60,10 +60,10 @@
                     <i class="fa-solid fa-user-gear"></i> Información del empleado
                 </div>
                 <div class="meta-row">
-                    <span class="meta-pill">Puesto: <strong>{{ $puestoNombre }}</strong></span>
-                    <span class="meta-pill">Ingreso: <strong>{{ \Carbon\Carbon::parse($empleado->fecha_ingreso)->format('d/m/Y') }}</strong></span>
-                    <span class="meta-pill">Antigüedad: <strong>{{ $antiguedadAnios }} años</strong></span>
-                    <span class="meta-pill status-derecho">Derecho anual: <strong>{{ $diasDerecho }} días</strong></span>
+                    <span class="meta-pill">Puesto: <strong><?php echo e($puestoNombre); ?></strong></span>
+                    <span class="meta-pill">Ingreso: <strong><?php echo e(\Carbon\Carbon::parse($empleado->fecha_ingreso)->format('d/m/Y')); ?></strong></span>
+                    <span class="meta-pill">Antigüedad: <strong><?php echo e($antiguedadAnios); ?> años</strong></span>
+                    <span class="meta-pill status-derecho">Derecho anual: <strong><?php echo e($diasDerecho); ?> días</strong></span>
                 </div>
             </article>
 
@@ -72,9 +72,9 @@
                     <i class="fa-solid fa-chart-pie"></i> Estado actual
                 </div>
                 <div class="meta-row">
-                    <span class="meta-pill status-tomados">Tomados: <strong>{{ $diasTomados }}</strong></span>
-                    <span class="meta-pill status-restantes">Restantes: <strong>{{ $diasRestantes }}</strong></span>
-                    <span class="meta-pill">Año: <strong>{{ $anioActual }}</strong></span>
+                    <span class="meta-pill status-tomados">Tomados: <strong><?php echo e($diasTomados); ?></strong></span>
+                    <span class="meta-pill status-restantes">Restantes: <strong><?php echo e($diasRestantes); ?></strong></span>
+                    <span class="meta-pill">Año: <strong><?php echo e($anioActual); ?></strong></span>
                 </div>
             </article>
         </section>
@@ -82,12 +82,12 @@
         <section class="card-columns">
             <article class="card">
                 <h2><i class="fa-solid fa-calendar-plus" style="color: #124416;"></i> Registrar vacaciones</h2>
-                <form id="form-vacaciones" action="{{ route('empleados.vacaciones.guardar', $empleado->id) }}" method="POST">
-                    @csrf
+                <form id="form-vacaciones" action="<?php echo e(route('empleados.vacaciones.guardar', $empleado->id)); ?>" method="POST">
+                    <?php echo csrf_field(); ?>
                     
-                    <input type="hidden" id="multiple_dates" name="multiple_dates" value="{{ old('multiple_dates') }}">
-                    <input type="hidden" id="fecha_inicio" name="fecha_inicio" value="{{ old('fecha_inicio') }}">
-                    <input type="hidden" id="fecha_fin" name="fecha_fin" value="{{ old('fecha_fin') }}">
+                    <input type="hidden" id="multiple_dates" name="multiple_dates" value="<?php echo e(old('multiple_dates')); ?>">
+                    <input type="hidden" id="fecha_inicio" name="fecha_inicio" value="<?php echo e(old('fecha_inicio')); ?>">
+                    <input type="hidden" id="fecha_fin" name="fecha_fin" value="<?php echo e(old('fecha_fin')); ?>">
 
                     <div class="form-group">
                         <label for="calendar-inline">Selecciona los días en el calendario</label>
@@ -96,18 +96,18 @@
 
                     <div class="form-group">
                         <label for="dias_solicitados">Días seleccionados a descontar</label>
-                        <input type="number" id="dias_solicitados" name="dias_solicitados" value="{{ old('dias_solicitados', 0) }}" min="0" step="1" readonly required />
+                        <input type="number" id="dias_solicitados" name="dias_solicitados" value="<?php echo e(old('dias_solicitados', 0)); ?>" min="0" step="1" readonly required />
                         <div class="form-instruction" style="margin-top: 5px;">
                             * El sistema calcula los días contando de manera exacta cada fecha marcada en color morado.
                         </div>
                     </div>
                     <div class="form-group" style="margin-top: 1.5rem;">
                         <label for="observaciones">Observaciones / Motivo</label>
-                        <textarea id="observaciones" name="observaciones" rows="3" placeholder="Escribe aquí algún comentario u observación sobre este período (opcional)..." class="form-textarea">{{ old('observaciones') }}</textarea>
+                        <textarea id="observaciones" name="observaciones" rows="3" placeholder="Escribe aquí algún comentario u observación sobre este período (opcional)..." class="form-textarea"><?php echo e(old('observaciones')); ?></textarea>
                     </div>
 
                     <div class="meta-row" style="margin-bottom: 1.5rem;">
-                        <span class="meta-pill">Restantes estimados: <strong id="preview-restantes" style="color: #124416;">{{ max(0, $diasRestantes) }}</strong></span>
+                        <span class="meta-pill">Restantes estimados: <strong id="preview-restantes" style="color: #124416;"><?php echo e(max(0, $diasRestantes)); ?></strong></span>
                     </div>
 
                     <button type="submit" class="button-primary">
@@ -127,21 +127,21 @@
                             </tr>
                         </thead>
                         <tbody>
-                            @foreach ($meses as $numero => $nombre)
+                            <?php $__currentLoopData = $meses; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $numero => $nombre): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                                 <tr>
-                                    <td class="td-mes">{{ $nombre }}</td>
-                                    <td style="text-align: center;"><strong class="dias-count-table">{{ $registroPorMes[$numero] }}</strong></td>
+                                    <td class="td-mes"><?php echo e($nombre); ?></td>
+                                    <td style="text-align: center;"><strong class="dias-count-table"><?php echo e($registroPorMes[$numero]); ?></strong></td>
                                 </tr>
-                            @endforeach
+                            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                         </tbody>
                     </table>
                 </div>
 
                 <div style="margin-top: 1.5rem; display: flex; justify-content: flex-end; gap: 8px; flex-wrap: wrap;">
-                    <a href="{{ route('empleados.vacaciones.pdf', $empleado->id) }}" target="_blank" rel="noopener noreferrer" class="button-secondary">
+                    <a href="<?php echo e(route('empleados.vacaciones.pdf', $empleado->id)); ?>" target="_blank" rel="noopener noreferrer" class="button-secondary">
                         <i class="fa-solid fa-file-pdf"></i> Reporte PDF
                     </a>
-                    <a href="{{ route('empleados.vacaciones.historial.pdf', $empleado->id) }}" target="_blank" rel="noopener noreferrer" class="button-secondary">
+                    <a href="<?php echo e(route('empleados.vacaciones.historial.pdf', $empleado->id)); ?>" target="_blank" rel="noopener noreferrer" class="button-secondary">
                         <i class="fa-solid fa-clock-rotate-left"></i> Historial
                     </a>
                 </div>
@@ -154,7 +154,7 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <script>
-    const diasRestantes = {{ $diasRestantes }};
+    const diasRestantes = <?php echo e($diasRestantes); ?>;
     const inputHiddenDates = document.getElementById('multiple_dates');
     const inputFechaInicio = document.getElementById('fecha_inicio');
     const inputFechaFin = document.getElementById('fecha_fin');
@@ -168,14 +168,14 @@
 
     // --- MANEJO DE ALERTAS DE SESIÓN (Laravel -> SweetAlert2) ---
     document.addEventListener("DOMContentLoaded", () => {
-        @if (session('success'))
+        <?php if(session('success')): ?>
             Swal.fire({
                 icon: 'success',
                 title: '¡Operación Exitosa!',
-                text: "{{ session('success') }}",
+                text: "<?php echo e(session('success')); ?>",
                 confirmButtonColor: '#124416'
             });
-        @endif
+        <?php endif; ?>
 
         const errorsList = document.getElementById('laravel-errors-list');
         if (errorsList) {
@@ -807,4 +807,4 @@
         .meta-row { flex-direction: column; gap: 0.5rem; }
         .meta-pill { width: 100%; }
     }
-</style>
+</style><?php /**PATH /var/www/html/resources/views/empleados/vacaciones.blade.php ENDPATH**/ ?>

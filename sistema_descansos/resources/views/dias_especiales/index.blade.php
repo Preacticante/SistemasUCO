@@ -4,15 +4,43 @@
 @section('header', 'Días Especiales')
 
 @section('content')
-<div class="dashboard-container">
-    <div class="dashboard-header">
+<div class="dashboard-container" style="max-width: 1400px; margin: 0 auto; padding: 20px; font-family: system-ui, -apple-system, sans-serif;">
+    
+    {{-- Cabecera con la estética idéntica a image_ed643f.png --}}
+    <div class="dashboard-header-card">
         <h1>Gestión de días especiales</h1>
         <p>Agrega y administra descansos semanales, días festivos y vacaciones institucionales con selección personalizada.</p>
     </div>
 
+    {{-- Bloque de alertas para mensajes Flash de Laravel (Éxito / Error) --}}
+    @if(session('success'))
+        <div class="alert alert-success">
+            <i class="fa-solid fa-circle-check"></i> {{ session('success') }}
+        </div>
+    @endif
+
+    @if(session('error'))
+        <div class="alert alert-danger">
+            <i class="fa-solid fa-circle-xmark"></i> {{ session('error') }}
+        </div>
+    @endif
+
+    @if ($errors->any())
+        <div class="alert alert-danger" style="flex-direction: column; align-items: flex-start; gap: 5px;">
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <i class="fa-solid fa-triangle-exclamation"></i> <span>Por favor revisa los errores del formulario.</span>
+            </div>
+            <ul style="margin-top: 8px; margin-left: 24px; padding: 0; font-size: 0.9rem; opacity: 0.9;">
+                @foreach ($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
+
     <div class="special-days-hero">
         <div class="special-day-card special-day-descanso">
-            <strong>Descanso de trabajador </strong>
+            <strong>Descanso de trabajador</strong>
             <span>Color verde</span>
         </div>
         <div class="special-day-card special-day-festivo">
@@ -27,54 +55,55 @@
 
     <div class="special-days-form-grid">
         <article class="special-form-card">
-            <h2><i class="fa-solid fa-calendar-plus" style="color: #124416;"></i> Registrar día especial</h2>
+            <h2><i class="fa-solid fa-calendar-plus"></i> Registrar día especial</h2>
             <form action="{{ route('dias-especiales.store') }}" method="POST" class="special-form">
                 @csrf
-                <div class="form-group">
-                    <label for="tipo">Tipo de día</label>
-                    <select id="tipo" name="tipo" required>
-                        <option value="">Selecciona un tipo</option>
-                        <option value="descanso">Descanso de trabajador</option>
-                        <option value="festivo">Día festivo</option>
-                        <option value="institucional">Vacaciones institucionales</option>
-                    </select>
+                <div class="form-grid-2">
+                    <div class="form-group">
+                        <label for="tipo">Tipo de día</label>
+                        <select id="tipo" name="tipo" required>
+                            <option value="">Selecciona un tipo</option>
+                            <option value="descanso">Descanso de trabajador</option>
+                            <option value="festivo">Día festivo</option>
+                            <option value="institucional">Vacaciones institucionales</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="selection_mode">Modalidad de Selección</label>
+                        <select id="selection_mode" name="selection_mode">
+                            <option value="personalizado">Personalizado</option>
+                            <option value="semana">Por semana</option>
+                            <option value="mes">Por mes</option>
+                        </select>
+                    </div>
                 </div>
 
                 <div class="form-group">
-                    <label for="titulo">Título</label>
+                    <label for="titulo">Título descriptivo</label>
                     <input id="titulo" type="text" name="titulo" placeholder="Ej: Descanso semanal" value="{{ old('titulo') }}" required>
                 </div>
 
                 <div class="form-grid-2">
                     <div class="form-group">
-                        <label>Inicio</label>
-                        <input id="fecha_inicio_display" type="text" readonly placeholder="dd/mm/yyyy">
+                        <label>Fecha Inicio</label>
+                        <input id="fecha_inicio_display" class="readonly-input" type="text" readonly placeholder="dd/mm/yyyy">
                     </div>
                     <div class="form-group">
-                        <label>Fin</label>
-                        <input id="fecha_fin_display" type="text" readonly placeholder="dd/mm/yyyy">
+                        <label>Fecha Fin</label>
+                        <input id="fecha_fin_display" class="readonly-input" type="text" readonly placeholder="dd/mm/yyyy">
                     </div>
                 </div>
 
                 <div class="form-group">
-                    <label for="selection_mode">Personalizado</label>
-                    <select id="selection_mode" name="selection_mode">
-                        <option value="personalizado">Personalizado</option>
-                        <option value="semana">Por semana</option>
-                        <option value="mes">Por mes</option>
-                    
-                    </select>
-                </div>
-
-                
-
-                <div class="form-group">
-                    <label for="empleados">Seleccionar trabajadores</label>
-                    <select id="empleados" name="empleados[]" multiple size="6">
-                        @foreach($empleados as $emp)
-                            <option value="{{ $emp->id }}">{{ $emp->nombre }} {{ $emp->apellido_paterno }} {{ $emp->apellido_materno }}</option>
-                        @endforeach
-                    </select>
+                    <label for="empleados">Asignar trabajadores</label>
+                    <div class="select-wrapper">
+                        <select id="empleados" name="empleados[]" multiple size="5">
+                            @foreach($empleados as $emp)
+                                <option value="{{ $emp->id }}">{{ $emp->nombre }} {{ $emp->apellido_paterno }} {{ $emp->apellido_materno }}</option>
+                            @endforeach
+                        </select>
+                    </div>
                 </div>
 
                 <input type="hidden" id="multiple_dates" name="multiple_dates" value="{{ old('multiple_dates') }}">
@@ -82,226 +111,421 @@
                 <input type="hidden" id="fecha_fin" name="fecha_fin" value="{{ old('fecha_fin') }}">
 
                 <div class="form-group">
-                    <label for="observaciones">Observaciones</label>
-                    <textarea id="observaciones" name="observaciones" rows="3" placeholder="Opcional">{{ old('observaciones') }}</textarea>
+                    <label for="observaciones">Observaciones internas</label>
+                    <textarea id="observaciones" name="observaciones" placeholder="Añade detalles u observaciones de manera opcional...">{{ old('observaciones') }}</textarea>
                 </div>
 
                 <div class="summary-pill">
-                    <span>Seleccionados: <strong id="selected-count">0</strong></span>
-                    <span>Estado: <strong id="selection-type-text">Personalizado</strong></span>
+                    <span>Días seleccionados: <strong id="selected-count" class="badge">0</strong></span>
+                    <span>Modo activo: <strong id="selection-type-text">Personalizado</strong></span>
                 </div>
 
-                <button type="submit" class="btn-primary">Guardar día especial</button>
+                <button type="submit" class="btn-primary">
+                    <i class="fa-solid fa-floppy-disk"></i> Guardar día especial
+                </button>
             </form>
         </article>
 
         <article class="special-calendar-card">
-            <h2><i class="fa-solid fa-calendar-days" style="color: #124416;"></i> Selección de fechas</h2>
+            <h2><i class="fa-solid fa-calendar-days"></i> Selección de fechas</h2>
             <div class="calendar-controls">
-                <span>Usa el calendario para marcar los días en color según el tipo seleccionado.</span>
+                <i class="fa-solid fa-circle-info"></i> Usa el calendario interactivo para marcar los días según el tipo seleccionado.
             </div>
-            <div id="calendar-inline"></div>
+            <div id="calendar-inline-container">
+                <div id="calendar-inline"></div>
+            </div>
         </article>
     </div>
 
     <div class="table-wrapper">
-        <h2>Lista de días especiales</h2>
-        <table class="table-uco">
-            <thead>
-                <tr>
-                    <th>Tipo</th>
-                    <th>Título</th>
-                    <th>Inicio</th>
-                    <th>Fin</th>
-                    <th>Acción</th>
-                </tr>
-            </thead>
-            <tbody>
-                @forelse($diasEspeciales as $dia)
-                <tr>
-                    <td><span class="event-pill event-{{ $dia->tipo }}">{{ ucfirst($dia->tipo) }}</span></td>
-                    <td>{{ $dia->titulo }}</td>
-                    <td>{{ $dia->fecha_inicio->format('d/m/Y') }}</td>
-                    <td>{{ $dia->fecha_fin->format('d/m/Y') }}</td>
-                    <td>
-                        <form action="{{ route('dias-especiales.destroy', $dia->id) }}" method="POST" style="display:inline;">
-                            @csrf
-                            @method('DELETE')
-                            <button type="submit" class="btn-danger">Eliminar</button>
-                        </form>
-                    </td>
-                </tr>
-                @empty
-                <tr>
-                    <td colspan="5" style="text-align:center;">No hay días especiales registrados.</td>
-                </tr>
-                @endforelse
-            </tbody>
-        </table>
+        <div class="table-header-box">
+            <h2><i class="fa-solid fa-list-check"></i> Listado de días especiales registrados</h2>
+        </div>
+        <div class="table-responsive">
+            <table class="table-uco">
+                <thead>
+                    <tr>
+                        <th>Tipo de Día</th>
+                        <th>Título</th>
+                        <th>Fecha de Inicio</th>
+                        <th>Fecha de Fin</th>
+                        <th style="text-align: center; width: 120px;">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @forelse($diasEspeciales as $dia)
+                    <tr>
+                        <td><span class="event-pill event-{{ $dia->tipo }}">{{ ucfirst($dia->tipo) }}</span></td>
+                        <td style="font-weight: 600; color: #1e293b;">{{ $dia->titulo }}</td>
+                        <td><i class="fa-regular fa-calendar" style="color: #64748b; margin-right: 6px;"></i>{{ $dia->fecha_inicio->format('d/m/Y') }}</td>
+                        <td><i class="fa-regular fa-calendar" style="color: #64748b; margin-right: 6px;"></i>{{ $dia->fecha_fin->format('d/m/Y') }}</td>
+                        <td style="text-align: center;">
+                            <form action="{{ route('dias-especiales.destroy', $dia->id) }}" method="POST" class="form-eliminar" style="display:inline;">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" class="btn-danger-outline" title="Eliminar registro">
+                                    <i class="fa-solid fa-trash-can"></i> Eliminar
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    @empty
+                    <tr>
+                        <td colspan="5" class="empty-table-state">
+                            <i class="fa-solid fa-calendar-xmark"></i>
+                            <p>No hay días especiales registrados en la base de datos.</p>
+                        </td>
+                    </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
     </div>
 </div>
 @endsection
 
 @push('styles')
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@sweetalert2/theme-bootstrap-4/bootstrap-4.css">
+
 <style>
+    /* Nueva cabecera estilizada basándose en image_ed643f.png */
+    .dashboard-header-card {
+        background: #ffffff;
+        border-radius: 32px;
+        padding: 24px 20px;
+        text-align: center;
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
+        border-bottom: 4px solid #AA7F31; /* Borde dorado inferior exacto */
+        margin-bottom: 35px;
+    }
+    .dashboard-header-card h1 {
+        color: #124416; /* Verde institucional exacto */
+        font-size: 1.75rem;
+        font-weight: 700;
+        margin: 0 0 6px 0;
+        letter-spacing: -0.02em;
+    }
+    .dashboard-header-card p {
+        color: #576b85; /* Azul/grisáceo de subtítulo exacto */
+        font-size: 0.95rem;
+        margin: 0;
+        font-weight: 500;
+    }
+
+    /* Alertas de cabecera de Laravel */
+    .alert {
+        padding: 16px;
+        margin-bottom: 24px;
+        border-radius: 14px;
+        font-weight: 600;
+        font-size: 0.95rem;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        border: 1px solid transparent;
+        animation: fadeIn 0.3s ease-in-out;
+    }
+    .alert-success {
+        background-color: #f0fdf4;
+        border-color: #bbf7d0;
+        color: #166534;
+    }
+    .alert-danger {
+        background-color: #fef2f2;
+        border-color: #fecaca;
+        color: #991b1b;
+    }
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(-5px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Estilos personalizados para SweetAlert2 */
+    .swal2-popup {
+        border-radius: 20px !important;
+        padding: 2rem !important;
+        box-shadow: 0 25px 50px -12px rgba(0,0,0,0.15) !important;
+    }
+    .swal2-title {
+        color: #0f172a !important;
+        font-weight: 700 !important;
+        font-size: 1.5rem !important;
+    }
+    .swal2-html-container {
+        color: #64748b !important;
+        font-size: 0.98rem !important;
+    }
+    .swal2-confirm {
+        border-radius: 12px !important;
+        padding: 12px 28px !important;
+        font-weight: 600 !important;
+        background-color: #ef4444 !important;
+    }
+    .swal2-cancel {
+        border-radius: 12px !important;
+        padding: 12px 28px !important;
+        font-weight: 600 !important;
+        background-color: #3b82f6 !important;
+    }
+
+    /* Hero section */
     .special-days-hero {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-        gap: 18px;
-        margin-bottom: 24px;
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        gap: 20px;
+        margin-bottom: 30px;
     }
     .special-day-card {
         background: #ffffff;
-        border-radius: 22px;
-        padding: 22px;
-        box-shadow: 0 20px 45px rgba(15, 23, 42, 0.05);
+        border-radius: 16px;
+        padding: 20px;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
         display: flex;
         flex-direction: column;
-        gap: 10px;
-        min-height: 110px;
+        gap: 6px;
+        transition: transform 0.2s, box-shadow 0.2s;
+        border: 1px solid #f1f5f9;
     }
-    .special-day-descanso { border-left: 6px solid #124416; }
-    .special-day-festivo { border-left: 6px solid #AA7F31; }
-    .special-day-institucional { border-left: 6px solid #340C51; }
-    .special-day-card strong { font-size: 1rem; color: #0f172a; }
-    .special-day-card span { font-size: 0.95rem; color: #475569; }
+    .special-day-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05);
+    }
+    .special-day-descanso { border-left: 5px solid #124416; }
+    .special-day-festivo { border-left: 5px solid #AA7F31; }
+    .special-day-institucional { border-left: 5px solid #340C51; }
+    .special-day-card strong { font-size: 1rem; color: #1e293b; font-weight: 700; }
+    .special-day-card span { font-size: 0.85rem; color: #64748b; font-weight: 500; }
 
+    /* Formulario Grid */
     .special-days-form-grid {
         display: grid;
-        grid-template-columns: 1fr 1.4fr;
-        gap: 24px;
-        margin-bottom: 30px;
+        grid-template-columns: 1.1fr 0.9fr;
+        gap: 30px;
+        margin-bottom: 35px;
+        align-items: start;
     }
     .special-form-card,
     .special-calendar-card {
         background: #ffffff;
-        border-radius: 26px;
-        padding: 26px;
-        border: 1px solid #e5e7eb;
-        box-shadow: 0 16px 32px rgba(15, 23, 42, 0.06);
+        border-radius: 20px;
+        padding: 30px;
+        border: 1px solid #e2e8f0;
+        box-shadow: 0 4px 10px -1px rgba(15, 23, 42, 0.03);
     }
     .special-form-card h2,
     .special-calendar-card h2 {
         margin-top: 0;
-        color: #124416;
-        font-size: 1.2rem;
+        margin-bottom: 24px;
+        color: #0f172a;
+        font-size: 1.25rem;
+        font-weight: 700;
         display: flex;
         align-items: center;
-        gap: 0.75rem;
-    }
-    .special-form {
-        display: grid;
-        gap: 16px;
-    }
-    .form-group {
-        display: flex;
-        flex-direction: column;
         gap: 10px;
     }
-    .form-grid-2 {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 16px;
+    .special-form-card h2 i, .special-calendar-card h2 i {
+        color: #124416;
     }
-    .special-form label {
-        color: #334155;
-        font-weight: 700;
-        font-size: 0.95rem;
-    }
+    .special-form { display: grid; gap: 20px; }
+    .form-group { display: flex; flex-direction: column; gap: 8px; }
+    .form-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    .special-form label { color: #334155; font-weight: 600; font-size: 0.9rem; }
+    
     .special-form input,
     .special-form select,
     .special-form textarea {
         width: 100%;
-        padding: 14px 16px;
+        padding: 12px 14px;
         border: 1px solid #cbd5e1;
-        border-radius: 16px;
-        background: #f8fafc;
-        font-size: 0.96rem;
+        border-radius: 12px;
+        background: #fff;
+        font-size: 0.95rem;
         color: #0f172a;
+        transition: border-color 0.2s, box-shadow 0.2s;
+        outline: none;
     }
-    .special-form textarea { min-height: 120px; resize: vertical; }
+    .special-form input:focus,
+    .special-form select:focus,
+    .special-form textarea:focus {
+        border-color: #124416;
+        box-shadow: 0 0 0 4px rgba(18, 68, 22, 0.08);
+    }
+    .special-form textarea { min-height: 90px; resize: vertical; }
+    .readonly-input { background-color: #f8fafc !important; color: #64748b !important; cursor: not-allowed; }
+
+    /* Multiple select estético */
+    .select-wrapper select[multiple] {
+        padding: 8px;
+    }
+    .select-wrapper select[multiple] option {
+        padding: 8px 12px;
+        margin-bottom: 4px;
+        border-radius: 8px;
+    }
+    .select-wrapper select[multiple] option:checked {
+        background: rgba(18, 68, 22, 0.1) linear-gradient(0deg, rgba(18, 68, 22, 0.1) 0%, rgba(18, 68, 22, 0.1) 100%);
+        color: #124416;
+        font-weight: 600;
+    }
+
+    /* Summary pill box */
     .summary-pill {
         display: flex;
         justify-content: space-between;
+        align-items: center;
         gap: 12px;
-        flex-wrap: wrap;
-        padding: 16px 18px;
-        border-radius: 16px;
+        padding: 14px 20px;
+        border-radius: 12px;
         background: #f8fafc;
         border: 1px solid #e2e8f0;
-        color: #334155;
-        font-weight: 700;
+        color: #475569;
+        font-size: 0.9rem;
     }
-    .btn-primary,
-    .btn-danger {
+    .summary-pill strong { color: #0f172a; font-weight: 700; }
+    .badge { background: #124416; color: white !important; padding: 2px 10px; border-radius: 20px; font-size: 0.85rem;}
+
+    /* Botones */
+    .btn-primary {
         display: inline-flex;
         align-items: center;
         justify-content: center;
         gap: 8px;
-        width: fit-content;
+        width: 100%;
         border: none;
-        border-radius: 9999px;
-        padding: 12px 24px;
+        border-radius: 12px;
+        padding: 14px 24px;
         color: white;
-        font-weight: 700;
+        background-color: #124416;
+        font-weight: 600;
+        font-size: 1rem;
         cursor: pointer;
-        transition: background-color 0.2s ease, transform 0.2s ease;
+        transition: background-color 0.2s, transform 0.1s;
     }
-    .btn-primary { background-color: #124416; }
-    .btn-primary:hover { background-color: #0d3913; transform: translateY(-1px); }
-    .btn-danger { background-color: #ef4444; }
-    .btn-danger:hover { background-color: #dc2626; transform: translateY(-1px); }
-    .table-uco { width: 100%; border-collapse: collapse; }
-    .table-uco thead { background-color: #124416; color: #ffffff; }
-    .table-uco th,
-    .table-uco td { padding: 14px 16px; border-bottom: 1px solid #e2e8f0; }
+    .btn-primary:hover { background-color: #0d3210; }
+    .btn-primary:active { transform: scale(0.99); }
+
+    .btn-danger-outline {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        border: 1px solid #fca5a5;
+        border-radius: 8px;
+        padding: 6px 14px;
+        color: #dc2626;
+        background-color: #fff;
+        font-weight: 600;
+        font-size: 0.85rem;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    .btn-danger-outline:hover { background-color: #fef2f2; border-color: #ef4444; }
+
+    /* Contenedor de Tabla */
+    .table-wrapper {
+        background: #ffffff;
+        border-radius: 20px;
+        border: 1px solid #e2e8f0;
+        box-shadow: 0 4px 10px -1px rgba(15, 23, 42, 0.03);
+        overflow: hidden;
+    }
+    .table-header-box {
+        padding: 24px 30px;
+        border-bottom: 1px solid #e2e8f0;
+        background-color: #f8fafc;
+    }
+    .table-header-box h2 {
+        margin: 0;
+        color: #0f172a;
+        font-size: 1.15rem;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .table-responsive { overflow-x: auto; }
+    .table-uco { width: 100%; border-collapse: collapse; text-align: left; font-size: 0.95rem; }
+    .table-uco th { background-color: #fff; color: #64748b; font-weight: 600; padding: 14px 24px; border-bottom: 2px solid #e2e8f0; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em; }
+    .table-uco td { padding: 16px 24px; border-bottom: 1px solid #f1f5f9; color: #334155; }
     .table-uco tbody tr:hover { background: #f8fafc; }
+
+    /* Pillas de eventos */
     .event-pill {
         display: inline-flex;
-        padding: 6px 12px;
-        border-radius: 999px;
-        font-size: 0.82rem;
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 0.8rem;
         font-weight: 700;
         text-transform: capitalize;
     }
-    .event-descanso { background: rgba(18, 68, 22, 0.14); color: #124416; }
-    .event-festivo { background: rgba(170, 127, 49, 0.16); color: #AA7F31; }
-    .event-institucional { background: rgba(249, 115, 22, 0.16); color: #F97316; }
+    .event-descanal, .event-descanso { background: #dcfce7; color: #15803d; }
+    .event-festivo { background: #fef3c7; color: #a16207; }
+    .event-institucional { background: #f3e8ff; color: #6b21a8; }
+    .empty-table-state { text-align: center; padding: 40px !important; color: #94a3b8; }
+    .empty-table-state i { font-size: 2.5rem; margin-bottom: 12px; display: block; opacity: 0.7; }
 
-    #calendar-inline {
-        border-radius: 24px;
-        overflow: hidden;
+    /* Ajustes Flatpickr Calendario */
+    #calendar-inline-container {
+        display: flex;
+        justify-content: center;
+        background: #f8fafc;
+        padding: 16px;
+        border-radius: 16px;
         border: 1px solid #e2e8f0;
     }
-    .calendar-controls {
-        margin-bottom: 16px;
-        color: #475569;
-        font-size: 0.95rem;
-    }
+    #calendar-inline { width: 100%; border: none; }
+    .calendar-controls { margin-bottom: 16px; color: #64748b; font-size: 0.9rem; display: flex; align-items: center; gap: 8px;}
+    
+    .flatpickr-calendar.inline { box-shadow: none !important; background: transparent; }
     .flatpickr-day.selected,
     .flatpickr-day.startRange,
     .flatpickr-day.endRange {
         background: var(--selected-day-bg, #124416) !important;
         color: var(--selected-day-color, #ffffff) !important;
         border-color: var(--selected-day-bg, #124416) !important;
+        border-radius: 8px !important;
     }
-    .flatpickr-day.selected:hover {
-        background: var(--selected-day-bg, #124416) !important;
-        color: var(--selected-day-color, #ffffff) !important;
-    }
-    .flatpickr-day.today {
-        color: #124416;
-        font-weight: 700;
-    }
-
-    .flatpickr-day.has-special {
-        opacity: 1 !important;
-        color: inherit !important;
-    }
+    .flatpickr-day { border-radius: 8px !important; margin: 2px 0 !important; }
+    .flatpickr-day.today { color: #124416; font-weight: 700; border-color: transparent !important; background: rgba(18, 68, 22, 0.08); }
+    .flatpickr-day.has-special { opacity: 1 !important; color: inherit !important; }
 
     @media (max-width: 1080px) {
         .special-days-form-grid { grid-template-columns: 1fr; }
+    }
+
+    /* Clases prioritarias para forzar el pintado sólido de los días bloqueados/históricos */
+    .flatpickr-day.bloqueado-descanso, 
+    .flatpickr-day.bloqueado-descanso:hover,
+    .flatpickr-day.bloqueado-descanso.flatpickr-disabled {
+        background: #124416 !important;
+        color: #ffffff !important;
+        border-color: #124416 !important;
+        opacity: 1 !important;
+        cursor: not-allowed;
+        border-radius: 8px !important;
+    }
+
+    .flatpickr-day.bloqueado-festivo, 
+    .flatpickr-day.bloqueado-festivo:hover,
+    .flatpickr-day.bloqueado-festivo.flatpickr-disabled {
+        background: #AA7F31 !important;
+        color: #ffffff !important;
+        border-color: #AA7F31 !important;
+        opacity: 1 !important;
+        cursor: not-allowed;
+        border-radius: 8px !important;
+    }
+
+    .flatpickr-day.bloqueado-institucional, 
+    .flatpickr-day.bloqueado-institucional:hover,
+    .flatpickr-day.bloqueado-institucional.flatpickr-disabled {
+        background: #340C51 !important;
+        color: #ffffff !important;
+        border-color: #340C51 !important;
+        opacity: 1 !important;
+        cursor: not-allowed;
+        border-radius: 8px !important;
     }
 </style>
 @endpush
@@ -309,6 +533,8 @@
 @push('scripts')
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/es.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
 <script>
     const tipoSelect = document.getElementById('tipo');
     const selectionMode = document.getElementById('selection_mode');
@@ -320,30 +546,50 @@
     const inputFechaInicioDisplay = document.getElementById('fecha_inicio_display');
     const inputFechaFinDisplay = document.getElementById('fecha_fin_display');
 
-    const colors = {
-        descanso: '#124416',
-        festivo: '#AA7F31',
-        institucional: '#340C51'
-    };
-
-    const textColors = {
-        descanso: '#ffffff',
-        festivo: '#000000',
-        institucional: '#ffffff'
-    };
+    // Paleta de colores exacta del sistema
+    const colors = { descanso: '#124416', festivo: '#AA7F31', institucional: '#340C51' };
+    const textColors = { descanso: '#ffffff', festivo: '#ffffff', institucional: '#ffffff' };
 
     function updateSelectedColor() {
         const type = tipoSelect.value || 'descanso';
         document.documentElement.style.setProperty('--selected-day-bg', colors[type]);
         document.documentElement.style.setProperty('--selected-day-color', textColors[type]);
-        // when selecting descansos, disable festivo/institucional dates
+        
         if (fp) {
-            if (type === 'descanso') {
-                fp.set('disable', disabledForDescanso);
-            } else {
-                fp.set('disable', []);
+            if (type === 'descanso') { 
+                fp.set('disable', disabledForDescanso); 
+            } else { 
+                fp.set('disable', []); 
             }
+            // Ejecutamos nuestra función de repintado manual justo después de redibujar Flatpickr
+            fp.redraw();
+            colorearDiasBloqueados();
         }
+    }
+
+    // Fuerza el pintado de las clases recorriendo los elementos del DOM actuales del calendario
+    function colorearDiasBloqueados() {
+        if (!fp) return;
+        
+        const dayElements = fp.calendarContainer.querySelectorAll('.flatpickr-day');
+        
+        dayElements.forEach(dayElement => {
+            const ds = dayElement.dateObj ? fp.formatDate(dayElement.dateObj, 'Y-m-d') : null;
+            
+            if (ds && specialDateMap[ds]) {
+                const tipoDiaHistorial = specialDateMap[ds].tipo;
+                
+                dayElement.classList.remove('selected', 'startRange', 'endRange');
+                
+                if (tipoDiaHistorial === 'descanso') {
+                    dayElement.classList.add('bloqueado-descanso');
+                } else if (tipoDiaHistorial === 'festivo') {
+                    dayElement.classList.add('bloqueado-festivo');
+                } else if (tipoDiaHistorial === 'institucional') {
+                    dayElement.classList.add('bloqueado-institucional');
+                }
+            }
+        });
     }
 
     function formatDateDisplay(date) {
@@ -380,14 +626,35 @@
         return [firstDay, lastDay];
     }
 
-    function getDatesBetween(start, end) {
-        const dates = [];
-        const current = new Date(start);
-        while (current <= end) {
-            dates.push(new Date(current));
-            current.setDate(current.getDate() + 1);
-        }
-        return dates;
+   function getDatesBetween(start, end) {
+    const dates = [];
+    const current = new Date(start.getFullYear(), start.getMonth(), start.getDate());
+    const final = new Date(end.getFullYear(), end.getMonth(), end.getDate());
+
+    while (current <= final) {
+        dates.push(new Date(current));
+        current.setDate(current.getDate() + 1);
+    }
+    return dates;
+}
+
+   function parseYMDToLocal(dateStr) {
+    if (!dateStr) return null;
+    const cleanStr = String(dateStr).split('T')[0];
+    const parts = cleanStr.split('-').map(p => parseInt(p, 10));
+    
+    if (parts.length === 3) {
+        return new Date(parts[0], parts[1] - 1, parts[2]);
+    }
+    return new Date(cleanStr);
+}
+
+    function formatYMD(date) {
+        if (!date) return '';
+        const y = date.getFullYear();
+        const m = String(date.getMonth() + 1).padStart(2, '0');
+        const d = String(date.getDate()).padStart(2, '0');
+        return `${y}-${m}-${d}`;
     }
 
     function selectRange(start, end) {
@@ -413,9 +680,11 @@
             onDayCreate: function(dObj, dStr, dayElement) {
                 const ds = dayElement.dateObj ? fp.formatDate(dayElement.dateObj, 'Y-m-d') : null;
                 if (ds && specialDateMap[ds]) {
-                    dayElement.classList.add('has-special');
-                    dayElement.style.borderBottom = '3px solid ' + specialDateMap[ds];
-                    dayElement.style.backgroundColor = specialDateMap[ds] + '22';
+                    const tipoDiaHistorial = specialDateMap[ds].tipo;
+                    dayElement.classList.remove('selected', 'startRange', 'endRange');
+                    if (tipoDiaHistorial === 'descanso') dayElement.classList.add('bloqueado-descanso');
+                    if (tipoDiaHistorial === 'festivo') dayElement.classList.add('bloqueado-festivo');
+                    if (tipoDiaHistorial === 'institucional') dayElement.classList.add('bloqueado-institucional');
                 }
 
                 dayElement.dateObj && dayElement.addEventListener('click', function(e) {
@@ -423,7 +692,7 @@
                     const type = tipoSelect.value;
                     if (type === 'descanso' && disabledForDescansoSet.has(fp.formatDate(dayElement.dateObj, 'Y-m-d'))) {
                         e.preventDefault();
-                        alert('Esa fecha está marcada como festivo o vacaciones institucionales y no puede ser seleccionada como descanso.');
+                        Swal.fire({ icon: 'warning', title: 'Fecha bloqueada', text: 'Esa fecha está marcada como festivo o vacaciones institucionales y no puede ser seleccionada como descanso.' });
                         return;
                     }
 
@@ -431,7 +700,7 @@
                         const [start, end] = getWeekRange(dayElement.dateObj);
                         const dates = getDatesBetween(start, end).map(d => fp.formatDate(d, 'Y-m-d'));
                         if (type === 'descanso' && dates.some(d => disabledForDescansoSet.has(d))) {
-                            alert('La semana contiene días festivos/institucionales, no se puede seleccionar.');
+                            Swal.fire({ icon: 'error', title: 'Conflicto de fechas', text: 'La semana contiene días festivos o institucionales, no se puede seleccionar.' });
                             return;
                         }
                         selectRange(start, end);
@@ -439,39 +708,56 @@
                         const [start, end] = getMonthRange(dayElement.dateObj);
                         const dates = getDatesBetween(start, end).map(d => fp.formatDate(d, 'Y-m-d'));
                         if (type === 'descanso' && dates.some(d => disabledForDescansoSet.has(d))) {
-                            alert('El mes contiene días festivos/institucionales, no se puede seleccionar.');
+                            Swal.fire({ icon: 'error', title: 'Conflicto de fechas', text: 'El mes contiene días festivos o institucionales, no se puede seleccionar.' });
                             return;
                         }
                         selectRange(start, end);
                     }
                 });
             },
+            onMonthChange: function() {
+                setTimeout(colorearDiasBloqueados, 10);
+            },
+            onYearChange: function() {
+                setTimeout(colorearDiasBloqueados, 10);
+            },
             onChange: function(selectedDates) {
                 const mode = selectionMode.value;
-                if (mode === 'varios' || mode === 'personalizado') {
-                    updateFields(selectedDates);
+                if (mode === 'varios' || mode === 'personalizado') { 
+                    updateFields(selectedDates); 
                 }
-                if (selectedDates.length === 0) {
-                    updateFields([]);
+                if (selectedDates.length === 0) { 
+                    updateFields([]); 
                 }
+                fp.redraw();
+                colorearDiasBloqueados();
             }
         });
+
+        colorearDiasBloqueados();
     }
 
-    // Load existing special events to prevent conflicts client-side
-    const specialDateMap = {}; // date -> color
+    const specialDateMap = {};
     const disabledForDescanso = [];
     const disabledForDescansoSet = new Set();
+    
     fetch('/api/eventos-vacaciones').then(r => r.json()).then(events => {
         events.forEach(ev => {
             if (!ev.extendedProps || !ev.extendedProps.is_special) return;
-
-            const start = new Date(ev.start);
-            const end = ev.end ? new Date(ev.end) : start;
-            const dates = getDatesBetween(start, end).map(d => fp.formatDate(d, 'Y-m-d'));
+            
+            const start = parseYMDToLocal(ev.start);
+            let end = ev.end ? parseYMDToLocal(ev.end) : start;
+            
+            if (ev.end && ev.start !== ev.end) {
+                end.setDate(end.getDate() - 1);
+            }
+            
+            const dates = getDatesBetween(start, end).map(d => formatYMD(d));
+            
             dates.forEach(d => {
-                specialDateMap[d] = ev.backgroundColor || ev.color || specialDateMap[d] || '#ccc';
                 const tipo = ev.extendedProps.tipo;
+                specialDateMap[d] = { tipo: tipo };
+
                 if (tipo === 'festivo' || tipo === 'institucional') {
                     if (!disabledForDescansoSet.has(d)) {
                         disabledForDescanso.push(d);
@@ -482,60 +768,92 @@
         });
         createSpecialDayCalendar();
         updateSelectedColor();
-    }).catch(()=>{
-        createSpecialDayCalendar();
+    }).catch((err) => { 
+        console.error("Error al mapear días especiales:", err);
+        createSpecialDayCalendar(); 
     });
 
     selectionMode.addEventListener('change', function() {
         selectionText.textContent = this.options[this.selectedIndex].text;
         clearSelection();
+        colorearDiasBloqueados();
     });
 
-    tipoSelect.addEventListener('change', function() {
-        updateSelectedColor();
+    tipoSelect.addEventListener('change', function() { 
+        updateSelectedColor(); 
     });
-
+    
     updateSelectedColor();
 
-    // Validación cliente antes de enviar
+    // ==========================================
+    // VALIDACIONES DEL FORMULARIO DE GUARDADO
+    // ==========================================
     const form = document.querySelector('.special-form');
-    const aplicaTodosCheckbox = document.getElementById('aplica_todos');
     const empleadosSelect = document.getElementById('empleados');
 
     form.addEventListener('submit', function(e) {
+        const tipoDia = tipoSelect.value;
         const mode = selectionMode.value;
         const count = parseInt(selectedCount.textContent || '0', 10);
 
+        if (count === 0) {
+            e.preventDefault();
+            Swal.fire({ icon: 'info', title: 'Faltan fechas', text: 'Debes seleccionar al menos un día en el calendario antes de guardar.' });
+            return false;
+        }
+
         if (mode === 'semana' && count !== 7) {
             e.preventDefault();
-            alert('Seleccion semanal: debes elegir exactamente 7 días.');
+            Swal.fire({ icon: 'warning', title: 'Selección incompleta', text: 'Selección semanal: debes elegir exactamente 7 días.' });
             return false;
         }
 
         if (mode === 'mes') {
-            const start = inputFechaInicio.value ? new Date(inputFechaInicio.value) : null;
+            const start = inputFechaInicio.value ? parseYMDToLocal(inputFechaInicio.value) : null;
             if (!start) {
                 e.preventDefault();
-                alert('Seleccion por mes: selecciona una fecha dentro del mes deseado.');
+                Swal.fire({ icon: 'warning', title: 'Selección incompleta', text: 'Selección por mes: selecciona una fecha dentro del mes deseado.' });
                 return false;
             }
             const lastDay = new Date(start.getFullYear(), start.getMonth() + 1, 0).getDate();
             if (count !== lastDay) {
                 e.preventDefault();
-                alert('Seleccion por mes: debes seleccionar todos los dias del mes (' + lastDay + ').');
+                Swal.fire({ icon: 'warning', title: 'Días faltantes', text: 'Selección por mes: debes seleccionar todos los días del mes (' + lastDay + ').' });
                 return false;
             }
         }
 
-        // Si no aplica a todos, al menos un empleado debe estar seleccionado
-        if (!aplicaTodosCheckbox.checked) {
+        if (tipoDia === 'descanso') {
             const anySelected = Array.from(empleadosSelect.options).some(o => o.selected);
             if (!anySelected) {
                 e.preventDefault();
-                alert('Selecciona al menos un trabajador o marca "Aplica a todos".');
+                Swal.fire({ icon: 'info', title: 'Asignación requerida', text: 'Para el tipo "Descanso de trabajador" es obligatorio seleccionar al menos un trabajador.' });
                 return false;
             }
         }
+    });
+
+    // ==========================================
+    // ALERTA ESTÉTICA DE ELIMINACIÓN
+    // ==========================================
+    document.querySelectorAll('.form-eliminar').forEach(formEliminar => {
+        formEliminar.addEventListener('submit', function(e) {
+            e.preventDefault();
+            Swal.fire({
+                title: '¿Estás seguro?',
+                text: 'Esta acción eliminará el registro del día especial de forma permanente.',
+                icon: 'warning',
+                iconColor: '#f8bb86',
+                showCancelButton: true,
+                confirmButtonText: 'Sí, eliminar',
+                cancelButtonText: 'Cancelar',
+                reverseButtons: true   
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    formEliminar.submit(); 
+                }
+            });
+        });
     });
 </script>
 @endpush

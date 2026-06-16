@@ -433,14 +433,12 @@ function openEditModal(id, empleadoId) {
             return response.json();
         })
         .then(data => {
-
             Swal.close();
 
             const fechaFinPeriodo = new Date(data.fecha_fin + 'T23:59:59');
             const hoy = new Date();
 
             if (fechaFinPeriodo < hoy) {
-
                 Swal.fire({
                     icon: 'warning',
                     title: 'Período finalizado',
@@ -591,7 +589,6 @@ function guardarEdicion() {
 }
 
 function deletePeriodo(id) {
-
     Swal.fire({
         title: '¿Estás seguro?',
         text: 'Esta acción eliminará la solicitud y restaurará los días al balance del empleado.',

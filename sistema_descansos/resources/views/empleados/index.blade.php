@@ -387,7 +387,7 @@
         }
         .employees-header h2 {
             margin: 0 0 8px 0;
-            color: #2b0b4d; 
+            color: #340C51; 
             font-size: 1.8rem;
             font-weight: 700;
         }
