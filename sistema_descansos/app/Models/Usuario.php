@@ -13,7 +13,7 @@ class Usuario extends Authenticatable
 
     protected $table = 'usuario';
 
-    public $timestamps = false; // 👈 IMPORTANTE (arregla el error)
+    public $timestamps = false; 
 
     protected $primaryKey = 'correo';
     public $incrementing = false;
@@ -38,15 +38,23 @@ class Usuario extends Authenticatable
         'deleted_at' => 'datetime',
     ];
 
-    // Laravel usará esta contraseña para login
     public function getAuthPassword()
     {
         return $this->contrasena;
     }
 
+    public function getEmailForPasswordReset()
+    {
+        return $this->correo;
+    }
+
+    public function routeNotificationForMail($notification)
+    {
+        return $this->correo;
+    }
+
     protected static function booted()
     {
-        // Este evento se dispara automáticamente milisegundos antes de insertarse en la BD
         static::creating(function ($usuario) {
             $anioActual = Carbon::now()->year;
 
@@ -56,7 +64,6 @@ class Usuario extends Authenticatable
 
             $nuevoNumero = $ultimoUsuario ? ((int) substr($ultimoUsuario->id_acceso, -3)) + 1 : 1;
             
-            // Asigna el ID automáticamente
             $usuario->id_acceso = "UCO-{$anioActual}-" . str_pad($nuevoNumero, 3, '0', STR_PAD_LEFT);
         });
     }

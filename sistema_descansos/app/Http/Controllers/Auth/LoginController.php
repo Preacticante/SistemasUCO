@@ -10,12 +10,23 @@ use Carbon\Carbon; // <--- Importamos Carbon para manejar las fechas de forma na
 
 class LoginController extends Controller
 {
+    // ====================================================================
+    // MÉTODO AÑADIDO: Muestra la vista del formulario de login
+    // ====================================================================
     public function showLoginForm() {
         // Si ya está logeado, lo mandamos directo al panel
         if (session('logeado')) {
             return redirect()->route('panel');
         }
         return view('auth.login');
+    }
+
+    public function showLinkRequestForm() {
+        // Si ya está logeado, lo mandamos directo al panel
+        if (session('logeado')) {
+            return redirect()->route('panel');
+        }
+        return view('auth.forgot-password');
     }
 
     public function login(Request $request) {

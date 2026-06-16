@@ -151,7 +151,7 @@
 <body>
 
     <div class="login-box">
-        @php
+        <?php
             $path = public_path('img/logo_uco.png');
             $type = pathinfo($path, PATHINFO_EXTENSION);
             if(file_exists($path)){
@@ -159,31 +159,32 @@
                 $base64 = 'data:image/' . $type . ';base64,' . base64_encode($data);
                 echo '<img src="'.$base64.'" alt="UCO PREPA CONTEMPORÁNEA" class="logo">';
             }
-        @endphp
+        ?>
 
         <h2>Restablecer contraseña</h2>
         <p class="subtitle">Ingresa tu nueva contraseña para acceder al sistema.</p>
 
-        @if(session('status'))
+        <?php if(session('status')): ?>
             <div class="alert-success">
-                {{ session('status') }}
-            </div>
-        @endif
+                <?php echo e(session('status')); ?>
 
-        @if($errors->any())
+            </div>
+        <?php endif; ?>
+
+        <?php if($errors->any()): ?>
             <div class="error-list">
                 <ul style="margin: 0; padding-left: 1.25rem;">
-                    @foreach($errors->all() as $error)
-                        <li>{{ $error }}</li>
-                    @endforeach
+                    <?php $__currentLoopData = $errors->all(); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $error): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                        <li><?php echo e($error); ?></li>
+                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                 </ul>
             </div>
-        @endif
+        <?php endif; ?>
 
-        <form method="POST" action="{{ route('password.update') }}">
-            @csrf
-            <input type="hidden" name="token" value="{{ $token }}">
-            <input type="hidden" name="email" value="{{ request()->email }}">
+        <form method="POST" action="<?php echo e(route('password.update')); ?>">
+            <?php echo csrf_field(); ?>
+            <input type="hidden" name="token" value="<?php echo e($token); ?>">
+            <input type="hidden" name="email" value="<?php echo e(request()->email); ?>">
 
             <div class="form-group">
                 <label>NUEVA CONTRASEÑA</label>
@@ -199,9 +200,9 @@
         </form>
 
         <p class="help-text">
-            <a href="{{ route('login') }}">¿Recordaste tu contraseña? Volver al inicio</a>
+            <a href="<?php echo e(route('login')); ?>">¿Recordaste tu contraseña? Volver al inicio</a>
         </p>
     </div>
 
 </body>
-</html>
+</html><?php /**PATH /var/www/html/resources/views/auth/reset-password.blade.php ENDPATH**/ ?>

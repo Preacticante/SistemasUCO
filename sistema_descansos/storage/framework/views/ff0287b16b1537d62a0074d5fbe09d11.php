@@ -1,11 +1,56 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Restablecer contraseña | Control de Descansos UCO</title>
+    <title>Acceso | Control de Descansos UCO</title>
     
-    <style>
+</head>
+<body>
+
+    <div class="login-box">
+        <?php
+            $path = public_path('img/logo_uco.png');
+            $type = pathinfo($path, PATHINFO_EXTENSION);
+            if(file_exists($path)){
+                $data = file_get_contents($path);
+                $base64 = 'data:image/' . $type . ';base64,' . base64_encode($data);
+                echo '<img src="'.$base64.'" alt="UCO PREPA CONTEMPORÁNEA" class="logo">';
+            }
+        ?>
+
+        <h2>Centro de Control</h2>
+        <p class="subtitle">Inicia sesión con tu cuenta de administrador para acceder al panel de gestión de recursos humanos.</p>
+
+        <?php if($errors->any()): ?>
+            <div class="error-list">
+                <ul style="margin: 0; padding-left: 1.25rem;">
+                    <?php $__currentLoopData = $errors->all(); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $error): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                        <li><?php echo e($error); ?></li>
+                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                </ul>
+            </div>
+        <?php endif; ?>
+
+        <form action="<?php echo e(route('login.post')); ?>" method="POST">
+            <?php echo csrf_field(); ?>
+            <div class="form-group">
+                <label for="correo">Correo Electrónico</label>
+                <input id="correo" type="email" name="correo" required placeholder="admin@preparatoria.edu">
+            </div>
+            <div class="form-group">
+                <label for="contrasena">Contraseña</label>
+                <input id="contrasena" type="password" name="contrasena" required placeholder="••••••••">
+            </div>
+            <button type="submit">Acceder al Sistema</button>
+        </form>
+        <p class="help-text"><a href="<?php echo e(route('password.request')); ?>">¿Olvidaste tu contraseña?</a></p>
+    </div>
+
+</body>
+</html>
+
+<style>
         :root {
             font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
             color: #1f324f;
@@ -32,6 +77,7 @@
             width: 100%;
             max-width: 420px;
             text-align: center;
+            /* Sombra más pronunciada para despegar la tarjeta del fondo */
             box-shadow: 0 15px 35px rgba(0,0,0,0.3);
             border: 1px solid rgba(255, 255, 255, 0.1);
         }
@@ -126,16 +172,6 @@
             color: #AA7F31; 
         }
         
-        .alert-success {
-            background-color: #f0fdf4; 
-            color: #166534; 
-            padding: 12px 15px;
-            border-radius: 10px; 
-            margin-bottom: 25px; 
-            font-size: 0.85rem; 
-            border: 1px solid #bbf7d0;
-        }
-
         .error-list {
             background-color: #fef2f2; 
             color: #dc2626; 
@@ -146,62 +182,4 @@
             text-align: left;
             border: 1px solid #fecaca;
         }
-    </style>
-</head>
-<body>
-
-    <div class="login-box">
-        @php
-            $path = public_path('img/logo_uco.png');
-            $type = pathinfo($path, PATHINFO_EXTENSION);
-            if(file_exists($path)){
-                $data = file_get_contents($path);
-                $base64 = 'data:image/' . $type . ';base64,' . base64_encode($data);
-                echo '<img src="'.$base64.'" alt="UCO PREPA CONTEMPORÁNEA" class="logo">';
-            }
-        @endphp
-
-        <h2>Restablecer contraseña</h2>
-        <p class="subtitle">Ingresa tu nueva contraseña para acceder al sistema.</p>
-
-        @if(session('status'))
-            <div class="alert-success">
-                {{ session('status') }}
-            </div>
-        @endif
-
-        @if($errors->any())
-            <div class="error-list">
-                <ul style="margin: 0; padding-left: 1.25rem;">
-                    @foreach($errors->all() as $error)
-                        <li>{{ $error }}</li>
-                    @endforeach
-                </ul>
-            </div>
-        @endif
-
-        <form method="POST" action="{{ route('password.update') }}">
-            @csrf
-            <input type="hidden" name="token" value="{{ $token }}">
-            <input type="hidden" name="email" value="{{ request()->email }}">
-
-            <div class="form-group">
-                <label>NUEVA CONTRASEÑA</label>
-                <input type="password" name="password" placeholder="••••••••" required>
-            </div>
-
-            <div class="form-group">
-                <label>CONFIRMAR CONTRASEÑA</label>
-                <input type="password" name="password_confirmation" placeholder="••••••••" required>
-            </div>
-
-            <button type="submit">Guardar nueva contraseña</button>
-        </form>
-
-        <p class="help-text">
-            <a href="{{ route('login') }}">¿Recordaste tu contraseña? Volver al inicio</a>
-        </p>
-    </div>
-
-</body>
-</html>
+    </style><?php /**PATH /var/www/html/resources/views/auth/login.blade.php ENDPATH**/ ?>

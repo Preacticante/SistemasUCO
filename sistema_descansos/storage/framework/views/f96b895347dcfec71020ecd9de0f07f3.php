@@ -44,26 +44,26 @@
         <h1>¿Olvidaste tu contraseña?</h1>
         <p>Escribe tu correo institucional y te enviaremos un enlace para restablecerla.</p>
 
-        @if(session('status'))
-            <div class="alert">{{ session('status') }}</div>
-        @endif
+        <?php if(session('status')): ?>
+            <div class="alert"><?php echo e(session('status')); ?></div>
+        <?php endif; ?>
 
-        @if($errors->any())
+        <?php if($errors->any()): ?>
             <div class="error-list">
                 <ul>
-                    @foreach($errors->all() as $error)
-                        <li>{{ $error }}</li>
-                    @endforeach
+                    <?php $__currentLoopData = $errors->all(); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $error): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                        <li><?php echo e($error); ?></li>
+                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                 </ul>
             </div>
-        @endif
+        <?php endif; ?>
 
-        <form action="{{ route('password.email') }}" method="POST">
-            @csrf
+        <form action="<?php echo e(route('password.email')); ?>" method="POST">
+            <?php echo csrf_field(); ?>
             <input type="email" name="email" placeholder="Correo electrónico institucional" required>
             <button type="submit" class="btn-enviar">Enviar enlace</button>
-            <a href="{{ route('login') }}" class="btn-regresar">Regresar al Login</a>
+            <a href="<?php echo e(route('login')); ?>" class="btn-regresar">Regresar al Login</a>
         </form>
     </div>
 </body>
-</html>
+</html><?php /**PATH /var/www/html/resources/views/auth/forgot-password.blade.php ENDPATH**/ ?>
