@@ -423,12 +423,22 @@
         
         /* Colores de estados según tus imágenes */
         .calendar-day.selected-range {
-            background-color: #2b0b4d !important; /* Color Morado de Rangos Seleccionados */
+            background-color: #124416 !important; /* Color verde de selección */
             color: white !important;
             font-weight: bold;
         }
         .calendar-day.festivo-range {
             background-color: #a87e3b !important; /* Color Dorado/Café de Festivos */
+            color: white !important;
+            font-weight: bold;
+        }
+        .calendar-day.institucional-range {
+            background-color: #340c51 !important; /* Color Morado institucional */
+            color: white !important;
+            font-weight: bold;
+        }
+        .calendar-day.descanso-range {
+            background-color: #124416 !important; /* Color verde descanso */
             color: white !important;
             font-weight: bold;
         }
@@ -510,9 +520,65 @@ let currentYear = 2026;
 let currentMonth = 5; // Junio (0-indexed)
 let startDateSelected = null;
 let endDateSelected = null;
-let diasFestivosGlobales = []; 
+let diasFestivosGlobales = [];
+let specialDateMap = {};
 
 const monthNames = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
+
+function parseYMDToLocal(dateStr) {
+    if (!dateStr) return null;
+    const cleanStr = String(dateStr).split('T')[0];
+    const parts = cleanStr.split('-').map(p => parseInt(p, 10));
+    if (parts.length === 3) {
+        return new Date(parts[0], parts[1] - 1, parts[2]);
+    }
+    return new Date(cleanStr);
+}
+
+function formatYMD(date) {
+    if (!date) return '';
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+}
+
+function getDatesBetween(start, end) {
+    const dates = [];
+    const current = new Date(start.getFullYear(), start.getMonth(), start.getDate());
+    const final = new Date(end.getFullYear(), end.getMonth(), end.getDate());
+    while (current <= final) {
+        dates.push(new Date(current));
+        current.setDate(current.getDate() + 1);
+    }
+    return dates;
+}
+
+function loadSpecialDays() {
+    return fetch('/api/eventos-vacaciones')
+        .then(response => response.json())
+        .then(events => {
+            specialDateMap = {};
+            events.forEach(ev => {
+                if (!ev.extendedProps || !ev.extendedProps.is_special) return;
+
+                const start = parseYMDToLocal(ev.start);
+                let end = ev.end ? parseYMDToLocal(ev.end) : start;
+                if (ev.end && ev.start !== ev.end) {
+                    end.setDate(end.getDate() - 1);
+                }
+
+                getDatesBetween(start, end).forEach(date => {
+                    specialDateMap[formatYMD(date)] = {
+                        tipo: ev.extendedProps.tipo || 'especial'
+                    };
+                });
+            });
+        })
+        .catch(error => {
+            console.error('Error cargando días especiales:', error);
+        });
+}
 
 function openEditModal(id, empleadoId) {
     periodoEnEdicion = id;
@@ -569,7 +635,7 @@ function openEditModal(id, empleadoId) {
                 endDateSelected = null;
             }
 
-            renderCalendar();
+            loadSpecialDays().then(() => renderCalendar());
             document.getElementById('editModal').classList.add('show');
         })
         .catch(error => {
@@ -614,6 +680,22 @@ function renderCalendar() {
         dayDiv.innerText = day;
 
         const thisDate = new Date(currentYear, currentMonth, day);
+        const dateKey = formatYMD(thisDate);
+
+        const isSpecial = Boolean(specialDateMap[dateKey]);
+        if (isSpecial) {
+            const tipo = specialDateMap[dateKey].tipo;
+            if (tipo === 'festivo') {
+                dayDiv.classList.add('festivo-range');
+            } else if (tipo === 'institucional') {
+                dayDiv.classList.add('institucional-range');
+            } else if (tipo === 'descanso') {
+                dayDiv.classList.add('descanso-range');
+            } else {
+                dayDiv.classList.add('festivo-range');
+            }
+            dayDiv.classList.add('disabled');
+        }
 
         if (startDateSelected && endDateSelected && thisDate >= startDateSelected && thisDate <= endDateSelected) {
             dayDiv.classList.add('selected-range'); 
@@ -622,6 +704,15 @@ function renderCalendar() {
         }
 
         dayDiv.onclick = () => {
+            if (isSpecial) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Fecha no seleccionable',
+                    text: 'Los días especiales no se pueden seleccionar aquí.',
+                    confirmButtonColor: '#124416'
+                });
+                return;
+            }
             selectDate(thisDate);
         };
 
@@ -849,6 +940,8 @@ function deletePeriodo(id) {
 
 // Event listener asignado de forma segura al cargar el archivo
 document.addEventListener('DOMContentLoaded', () => {
+    loadSpecialDays();
+
     const modalElement = document.getElementById('editModal');
     if (modalElement) {
         modalElement.addEventListener('click', function(e) {
