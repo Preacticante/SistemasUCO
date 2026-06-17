@@ -28,7 +28,7 @@
     </div>
     
     <div class="table-container">
-        @php $canManage = session('email') === 'admin@sistema.com'; @endphp
+        @php $canManage = session('email') === 'dsancheze@prepauco.edu.mx'; @endphp
         <table class="tabla-empleados">
             <thead>
                 <tr>

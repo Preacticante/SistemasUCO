@@ -35,7 +35,7 @@
             <th style="text-align: center;">ACCIÓN</th>
         </tr>
     </thead>
-    @php $canManage = session('email') === 'admin@sistema.com'; @endphp
+    @php $canManage = session('email') === 'dsancheze@prepauco.edu.mx'; @endphp
     <tbody>
         @forelse($periodosVacacionales as $periodo)
             @php
@@ -469,7 +469,7 @@
     <div id="editModal" class="modal-edit">
         <div class="modal-edit-content">
             <h3><i class="fas fa-calendar-plus"></i> Registrar / Editar vacaciones</h3>
-            <p style="color: #64748b; font-size: 0.9rem; margin-top:-5px; margin-bottom:15px;">Selecciona los días en el calendario</p>
+            <p style="color: #64748b; font-size: 0.9rem; margin-top:-5px; margin-bottom:15px;">Selecciona los días a descontar día a día en el calendario</p>
             
             <form id="editForm">
                 @csrf
@@ -624,10 +624,8 @@ function openEditModal(id, empleadoId) {
             if(data.fecha_inicio && data.fecha_fin) {
                 const pInicio = data.fecha_inicio.split('-');
                 const pFin = data.fecha_fin.split('-');
-                
                 startDateSelected = new Date(pInicio[0], pInicio[1] - 1, pInicio[2]);
                 endDateSelected = new Date(pFin[0], pFin[1] - 1, pFin[2]);
-                
                 currentYear = parseInt(pInicio[0]);
                 currentMonth = parseInt(pInicio[1]) - 1;
             } else {
@@ -635,7 +633,9 @@ function openEditModal(id, empleadoId) {
                 endDateSelected = null;
             }
 
-            loadSpecialDays().then(() => renderCalendar());
+            loadSpecialDays().then(() => {
+                renderCalendar();
+            });
             document.getElementById('editModal').classList.add('show');
         })
         .catch(error => {
@@ -697,10 +697,12 @@ function renderCalendar() {
             dayDiv.classList.add('disabled');
         }
 
-        if (startDateSelected && endDateSelected && thisDate >= startDateSelected && thisDate <= endDateSelected) {
-            dayDiv.classList.add('selected-range'); 
-        } else if (startDateSelected && thisDate.getTime() === startDateSelected.getTime()) {
-            dayDiv.classList.add('selected-range'); 
+        const inRange = startDateSelected && endDateSelected && thisDate >= startDateSelected && thisDate <= endDateSelected;
+        const isStart = startDateSelected && thisDate.getTime() === startDateSelected.getTime();
+        const isEnd = endDateSelected && thisDate.getTime() === endDateSelected.getTime();
+
+        if (!isSpecial && (inRange || isStart || isEnd)) {
+            dayDiv.classList.add('selected-range');
         }
 
         dayDiv.onclick = () => {
@@ -740,6 +742,7 @@ function selectDate(date) {
         endDateSelected = null;
     } else if (startDateSelected && !endDateSelected) {
         if (date < startDateSelected) {
+            endDateSelected = startDateSelected;
             startDateSelected = date;
         } else {
             endDateSelected = date;
@@ -748,19 +751,21 @@ function selectDate(date) {
     renderCalendar();
 }
 
+function getCountableSelectedDates() {
+    if (!startDateSelected) return [];
+    const end = endDateSelected || startDateSelected;
+    return getDatesBetween(startDateSelected, end)
+        .map(formatYMD)
+        .filter(dateKey => !specialDateMap[dateKey]);
+}
+
 function updateSummary() {
     const summary = document.getElementById('daysSummary');
-    if (!summary) return; // <--- VÁLIDO: Evita que truene si no existe el contenedor de texto
+    if (!summary) return;
 
-    if (startDateSelected && endDateSelected) {
-        const diffTime = Math.abs(endDateSelected - startDateSelected);
-        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
-        summary.innerText = `Días seleccionados a descontar: ${diffDays} día${diffDays === 1 ? '' : 's'}`;
-    } else if (startDateSelected) {
-        summary.innerText = `Días seleccionados a descontar: 1 día`;
-    } else {
-        summary.innerText = `Días seleccionados a descontar: 0 días`;
-    }
+    const countableDates = getCountableSelectedDates();
+    const totalSelected = countableDates.length;
+    summary.innerText = `Días seleccionados a descontar: ${totalSelected} día${totalSelected === 1 ? '' : 's'}`;
 }
 
 function closeEditModal() {
@@ -785,7 +790,11 @@ function guardarEdicion() {
     let fechaInicioStr = "";
     let fechaFinStr = "";
 
-    if (inputInicio && inputFin && inputInicio.value && inputFin.value) {
+    if (startDateSelected) {
+        const finalEnd = endDateSelected || startDateSelected;
+        fechaInicioStr = formatYMD(startDateSelected);
+        fechaFinStr = formatYMD(finalEnd);
+    } else if (inputInicio && inputFin && inputInicio.value && inputFin.value) {
         const convertirAFormatovAlido = (fechaStr) => {
             const partes = fechaStr.includes('/') ? fechaStr.split('/') : fechaStr.split('-');
             if (partes.length === 3) {
@@ -800,30 +809,36 @@ function guardarEdicion() {
         };
         fechaInicioStr = convertirAFormatovAlido(inputInicio.value);
         fechaFinStr = convertirAFormatovAlido(inputFin.value);
-    } else if (startDateSelected) {
-        // Si usas el calendario dinámico
-        const finalEnd = endDateSelected ? endDateSelected : startDateSelected;
-        const formatDate = (d) => {
-            let month = '' + (d.getMonth() + 1);
-            let day = '' + d.getDate();
-            let year = d.getFullYear();
-            if (month.length < 2) month = '0' + month;
-            if (day.length < 2) day = '0' + day;
-            return [year, month, day].join('-');
-        };
-        fechaInicioStr = formatDate(startDateSelected);
-        fechaFinStr = formatDate(finalEnd);
     } else {
         Swal.fire({
             icon: 'warning',
             title: 'Campos incompletos',
-            text: 'Por favor selecciona un rango de días o introduce las fechas.',
+            text: 'Por favor selecciona al menos un día en el calendario.',
             confirmButtonColor: '#124416'
         });
-        return; // <--- VÁLIDO
+        return;
     }
 
     const observaciones = inputObservaciones ? inputObservaciones.value : '';
+    const countableDates = getCountableSelectedDates();
+
+    if (countableDates.length === 0) {
+        Swal.fire({
+            icon: 'warning',
+            title: 'Campos incompletos',
+            text: 'Por favor selecciona al menos un día verde en el calendario.',
+            confirmButtonColor: '#124416'
+        });
+        return;
+    }
+
+    const computeRangeBounds = (dateKeys) => {
+        const allDates = [...dateKeys];
+        allDates.sort();
+        return [allDates[0], allDates[allDates.length - 1]];
+    };
+
+    const [requestInicio, requestFin] = computeRangeBounds(countableDates);
 
     Swal.fire({
         title: 'Guardando cambios...',
@@ -843,8 +858,9 @@ function guardarEdicion() {
             'X-CSRF-TOKEN': csrfTokenHist
         },
         body: JSON.stringify({
-            fecha_inicio: fechaInicioStr,
-            fecha_fin: fechaFinStr,
+            fecha_inicio: requestInicio,
+            fecha_fin: requestFin,
+            multiple_dates: countableDates.sort().join(','),
             observaciones: observaciones
         })
     })
