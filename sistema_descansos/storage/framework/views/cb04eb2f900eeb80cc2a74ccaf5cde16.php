@@ -22,7 +22,7 @@
             <div class="card-header">
                 <i class="fa-solid fa-user-plus"></i> Nuevo / Editar Usuario
             </div>
-            <?php if(session('email') === 'admin@sistema.com'): ?>
+            <?php if(session('email') === 'dsancheze@prepauco.edu.mx'): ?>
             <form id="formUsuario" class="card-body" autocomplete="off">
                 <?php echo csrf_field(); ?>
                 <input type="hidden" id="usuario_id" name="usuario_id" value="">
@@ -34,7 +34,7 @@
 
                 <div class="form-group">
                     <label for="correo">Correo Electrónico</label>
-                    <input type="email" id="correo" name="correo" placeholder="Ej. admin@sistema.com" required>
+                    <input type="email" id="correo" name="correo" placeholder="Ej. dsancheze@prepauco.edu.mx" required>
                 </div>
 
                 <div class="form-group">

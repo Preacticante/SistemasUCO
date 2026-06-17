@@ -190,7 +190,7 @@
                 </li>
                 
                 
-                <?php if(session('email') === 'admin@sistema.com'): ?>
+                <?php if(session('email') === 'dsancheze@prepauco.edu.mx'): ?>
                 <li>
                     <a href="<?php echo e(route('perfiles.index')); ?>" class="<?php echo e(request()->routeIs('perfiles.*') ? 'active' : ''); ?>">
                         <i class="fa-solid fa-user-shield"></i> Perfiles
