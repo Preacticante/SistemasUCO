@@ -73,8 +73,8 @@
         <tbody>
             @forelse($periodosVacacionales as $periodo)
                 <tr>
-                    <td>{{ \Carbon\Carbon::parse($periodo->fecha_inicio)->format('d/m/Y') }}</td>
-                    <td>{{ \Carbon\Carbon::parse($periodo->fecha_fin)->format('d/m/Y') }}</td>
+                    <td>{{ $periodo->fecha_inicio ? \Carbon\Carbon::parse($periodo->fecha_inicio)->format('d/m/Y') : '' }}</td>
+                    <td>{{ $periodo->fecha_fin ? \Carbon\Carbon::parse($periodo->fecha_fin)->format('d/m/Y') : '' }}</td>
                     <td style="text-align: center; font-weight: bold;">{{ $periodo->dias }}</td>
                     <td>{{ $periodo->observaciones ?: 'Ninguna.' }}</td>
                 </tr>

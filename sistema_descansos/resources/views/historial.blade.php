@@ -40,9 +40,9 @@
         @forelse($periodosVacacionales as $periodo)
             @php
                 $empleado = $periodo->empleado;
-                $fechaFin = \Carbon\Carbon::parse($periodo->fecha_fin);
-                $yaTomado = $fechaFin->isPast();
-                $estado = $yaTomado ? 'Tomado' : 'Programado';
+                $fechaFin = $periodo->fecha_fin ? \Carbon\Carbon::parse($periodo->fecha_fin) : null;
+                $yaTomado = $fechaFin ? $fechaFin->isPast() : false;
+                $estado = $fechaFin ? ($yaTomado ? 'Tomado' : 'Programado') : '';
             @endphp
             <tr>
                 <td class="text-employee-name">
@@ -53,8 +53,8 @@
                     @endif
                 </td>
                 <td style="color: #64748b; font-weight: 500;">Vacaciones</td>
-                <td style="color: #334155;">{{ \Carbon\Carbon::parse($periodo->fecha_inicio)->format('d/m/Y') }}</td>
-                <td style="color: #334155;">{{ $fechaFin->format('d/m/Y') }}</td>
+                <td style="color: #334155;">{{ $periodo->fecha_inicio ? \Carbon\Carbon::parse($periodo->fecha_inicio)->format('d/m/Y') : '' }}</td>
+                <td style="color: #334155;">{{ $fechaFin ? $fechaFin->format('d/m/Y') : '' }}</td>
                 <td class="{{ $yaTomado ? 'text-muted-days' : 'text-danger-bold' }}">
                     {{ $periodo->dias }} día{{ $periodo->dias === 1 ? '' : 's' }}
                 </td>
