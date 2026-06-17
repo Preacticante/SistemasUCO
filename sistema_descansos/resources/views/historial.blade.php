@@ -35,7 +35,7 @@
             <th style="text-align: center;">ACCIÓN</th>
         </tr>
     </thead>
-    @php $canManage = session('email') === 'admin@sistema.com'; @endphp
+    @php $canManage = session('email') === 'dsancheze@prepauco.edu.mx'; @endphp
     <tbody>
         @forelse($periodosVacacionales as $periodo)
             @php

@@ -190,7 +190,7 @@
                 </li>
                 
                 {{-- CONDICIONAL: Solo se muestra el botón si el correo en sesión es el del administrador principal --}}
-                @if(session('email') === 'admin@sistema.com')
+                @if(session('email') === 'dsancheze@prepauco.edu.mx')
                 <li>
                     <a href="{{ route('perfiles.index') }}" class="{{ request()->routeIs('perfiles.*') ? 'active' : '' }}">
                         <i class="fa-solid fa-user-shield"></i> Perfiles

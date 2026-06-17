@@ -55,7 +55,7 @@
 
     <div class="special-days-form-grid">
         <article class="special-form-card">
-            <h2><i class="fa-solid fa-calendar-plus" style="color: #a9afaa;"></i> Registrar día especial</h2>
+            <h2><i class="fa-solid fa-calendar-plus"></i> Registrar día especial</h2>
             <form action="<?php echo e(route('dias-especiales.store')); ?>" method="POST" class="special-form">
                 <?php echo csrf_field(); ?>
                 <div class="form-grid-2">

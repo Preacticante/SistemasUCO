@@ -19,8 +19,8 @@ class UsuariosController extends Controller
             
             // Transformación de compatibilidad para el JavaScript de tu vista
             $sessionEmail = strtolower(session('email') ?? '');
-            // Solo el administrador global (admin@sistema.com) puede gestionar (editar/eliminar) desde la lista de perfiles
-            $isAdminSession = ($sessionEmail === 'admin@sistema.com');
+            // Solo el administrador global (dsancheze@prepauco.edu.mx) puede gestionar (editar/eliminar) desde la lista de perfiles
+            $isAdminSession = ($sessionEmail === 'dsancheze@prepauco.edu.mx');
             $usuarios = $usuariosRaw->map(function($u) use ($isAdminSession) {
                 $correo = $u->correo ?? '';
                 return [
@@ -44,7 +44,7 @@ class UsuariosController extends Controller
     {
         // Only admin can create users
         $sessionEmail = strtolower(session('email') ?? '');
-        if ($sessionEmail !== 'admin@sistema.com') {
+        if ($sessionEmail !== 'dsancheze@prepauco.edu.mx') {
             return response()->json(['success' => false, 'message' => 'No autorizado'], 403);
         }
 
@@ -97,7 +97,7 @@ class UsuariosController extends Controller
 
         // Authorization: only admin can update users
         $sessionEmail = strtolower(session('email') ?? '');
-        if ($sessionEmail !== 'admin@sistema.com') {
+        if ($sessionEmail !== 'dsancheze@prepauco.edu.mx') {
             return response()->json(['success' => false, 'message' => 'No autorizado'], 403);
         }
         try {
@@ -108,7 +108,7 @@ class UsuariosController extends Controller
                 return response()->json(['success' => false, 'message' => 'Usuario no encontrado.'], 404);
             }
 
-            if ($sessionEmail !== 'admin@sistema.com' && strtolower($usuario->correo) !== $sessionEmail) {
+            if ($sessionEmail !== 'dsancheze@prepauco.edu.mx' && strtolower($usuario->correo) !== $sessionEmail) {
                 return response()->json(['success' => false, 'message' => 'No autorizado'], 403);
             }
 
@@ -133,7 +133,7 @@ class UsuariosController extends Controller
     {
         // Authorization: only admin can delete users
         $sessionEmail = strtolower(session('email') ?? '');
-        if ($sessionEmail !== 'admin@sistema.com') {
+        if ($sessionEmail !== 'dsancheze@prepauco.edu.mx') {
             return response()->json(['success' => false, 'message' => 'No autorizado'], 403);
         }
         try {
