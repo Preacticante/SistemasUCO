@@ -40,9 +40,9 @@
         <?php $__empty_1 = true; $__currentLoopData = $periodosVacacionales; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $periodo): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
             <?php
                 $empleado = $periodo->empleado;
-                $fechaFin = \Carbon\Carbon::parse($periodo->fecha_fin);
-                $yaTomado = $fechaFin->isPast();
-                $estado = $yaTomado ? 'Tomado' : 'Programado';
+                $fechaFin = $periodo->fecha_fin ? \Carbon\Carbon::parse($periodo->fecha_fin) : null;
+                $yaTomado = $fechaFin ? $fechaFin->isPast() : false;
+                $estado = $fechaFin ? ($yaTomado ? 'Tomado' : 'Programado') : '';
             ?>
             <tr>
                 <td class="text-employee-name">
@@ -54,8 +54,8 @@
                     <?php endif; ?>
                 </td>
                 <td style="color: #64748b; font-weight: 500;">Vacaciones</td>
-                <td style="color: #334155;"><?php echo e(\Carbon\Carbon::parse($periodo->fecha_inicio)->format('d/m/Y')); ?></td>
-                <td style="color: #334155;"><?php echo e($fechaFin->format('d/m/Y')); ?></td>
+                <td style="color: #334155;"><?php echo e($periodo->fecha_inicio ? \Carbon\Carbon::parse($periodo->fecha_inicio)->format('d/m/Y') : ''); ?></td>
+                <td style="color: #334155;"><?php echo e($fechaFin ? $fechaFin->format('d/m/Y') : ''); ?></td>
                 <td class="<?php echo e($yaTomado ? 'text-muted-days' : 'text-danger-bold'); ?>">
                     <?php echo e($periodo->dias); ?> día<?php echo e($periodo->dias === 1 ? '' : 's'); ?>
 

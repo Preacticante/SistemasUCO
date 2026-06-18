@@ -833,9 +833,7 @@
         }
     });
 
-    // ==========================================
-    // ALERTA ESTÉTICA DE ELIMINACIÓN
-    // ==========================================
+    
     document.querySelectorAll('.form-eliminar').forEach(formEliminar => {
         formEliminar.addEventListener('submit', function(e) {
             e.preventDefault();
