@@ -372,7 +372,7 @@
                 <input type="text" name="name" id="input-edit-nombre" required class="modal-input" value="<?php echo e(old('name', $usuario->nombre_completo ?? $usuario->nombre ?? '')); ?>">
             </div>
             <div style="margin-bottom: 25px;">
-                <label style="color: #475569; font-weight: 600; font-size: 0.9rem;">Correo Electrónico</label>
+                <label style="color: #475569; font-weight: 600; font-size: 0.9rem;"></label>
                 <input type="email" name="email" id="input-edit-correo" required class="modal-input" value="<?php echo e(old('email', $usuario->correo ?? '')); ?>">
             </div>
             <div style="display: flex; justify-content: flex-end; gap: 10px;">

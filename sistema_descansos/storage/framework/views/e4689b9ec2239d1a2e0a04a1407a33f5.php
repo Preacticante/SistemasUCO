@@ -35,7 +35,7 @@
             <th style="text-align: center;">ACCIÓN</th>
         </tr>
     </thead>
-    <?php $canManage = session('email') === 'admin@sistema.com'; ?>
+    <?php $canManage = session('email') === 'dsancheze@prepauco.edu.mx'; ?>
     <tbody>
         <?php $__empty_1 = true; $__currentLoopData = $periodosVacacionales; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $periodo): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
             <?php

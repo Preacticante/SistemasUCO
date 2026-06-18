@@ -239,9 +239,19 @@
     .then(r => r.json())
     .then(events => {
         events.forEach(ev => {
-            const tipo = ev.extendedProps ? ev.extendedProps.tipo : null;
-            const start = ev.start ? new Date(ev.start) : null;
-            let end = ev.end ? new Date(ev.end) : start;
+             const tipo = ev.extendedProps ? ev.extendedProps.tipo : null;
+            
+            // SOLUCIÓN DEFINITIVA: Extraer Año, Mes y Día manualmente para evitar conversiones UTC
+            const parseLocal = (dateString) => {
+                if (!dateString) return null;
+                const justDate = dateString.split('T')[0].split(' ')[0]; 
+                const partes = justDate.split('-'); 
+                return new Date(partes[0], partes[1] - 1, partes[2]);
+            };
+
+            const start = ev.start ? parseLocal(ev.start) : null;
+            let end = ev.end ? parseLocal(ev.end) : start;
+            
             if (!start) return;
 
             if (ev.end && ev.start !== ev.end) {
