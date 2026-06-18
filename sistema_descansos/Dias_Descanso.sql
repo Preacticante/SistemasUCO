@@ -83,7 +83,7 @@ CREATE TABLE `dias_especiales` (
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=20 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -114,7 +114,7 @@ CREATE TABLE `empleados` (
   PRIMARY KEY (`id`),
   KEY `puesto_id` (`puesto_id`),
   CONSTRAINT `empleados_ibfk_1` FOREIGN KEY (`puesto_id`) REFERENCES `puestos` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=25 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=18 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -254,7 +254,7 @@ CREATE TABLE `migrations` (
   `migration` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
   `batch` int NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=11 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=12 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -263,7 +263,7 @@ CREATE TABLE `migrations` (
 
 LOCK TABLES `migrations` WRITE;
 /*!40000 ALTER TABLE `migrations` DISABLE KEYS */;
-INSERT INTO `migrations` VALUES (1,'0001_01_01_000000_create_users_table',1),(2,'0001_01_01_000001_create_cache_table',1),(3,'0001_01_01_000002_create_jobs_table',1),(4,'2026_05_20_000000_create_periodos_vacacionales_table',2),(5,'2024_05_21_000004_add_fecha_regreso_to_periodos_vacacionales_table',3),(6,'2024_05_21_000005_add_dias_to_periodos_vacacionales_table',3),(7,'2026_06_11_000000_add_observaciones_to_periodos_vacacionales_table',4),(8,'2026_06_12_120000_add_deleted_at_columns',5),(9,'2026_06_12_000001_create_dias_especiales_table',6),(10,'2026_06_12_000002_add_aplicado_a_to_dias_especiales_table',7);
+INSERT INTO `migrations` VALUES (1,'0001_01_01_000000_create_users_table',1),(2,'0001_01_01_000001_create_cache_table',1),(3,'0001_01_01_000002_create_jobs_table',1),(4,'2026_05_20_000000_create_periodos_vacacionales_table',2),(5,'2024_05_21_000004_add_fecha_regreso_to_periodos_vacacionales_table',3),(6,'2024_05_21_000005_add_dias_to_periodos_vacacionales_table',3),(7,'2026_06_11_000000_add_observaciones_to_periodos_vacacionales_table',4),(8,'2026_06_12_120000_add_deleted_at_columns',5),(9,'2026_06_12_000001_create_dias_especiales_table',6),(10,'2026_06_12_000002_add_aplicado_a_to_dias_especiales_table',7),(11,'2026_06_17_185053_make_dates_nullable_in_periodos_vacacionales_table',8);
 /*!40000 ALTER TABLE `migrations` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -288,7 +288,7 @@ CREATE TABLE `password_reset_tokens` (
 
 LOCK TABLES `password_reset_tokens` WRITE;
 /*!40000 ALTER TABLE `password_reset_tokens` DISABLE KEYS */;
-INSERT INTO `password_reset_tokens` VALUES ('ah9267992@gmail.com','$2y$12$DTyS2w9k0N9XWKx/YfHmQua.fRPgjiMJUjx9zP9TGztp5ASeEXmXS','2026-06-17 14:56:02'),('aleon0927@gmail.com','$2y$12$srcWLwbL2vPGqK/Yz2oFO.cHR5LEJYbvuifq.5g0OGvT3aMJMJLHS','2026-06-16 16:27:16');
+INSERT INTO `password_reset_tokens` VALUES ('ah9267992@gmail.com','$2y$12$Pxy.fQdRTkL/lQhCHoyk..xXwNLms/JUvABj8ZGvMIHCwVr3DlLBC','2026-06-17 15:18:05'),('aleon0927@gmail.com','$2y$12$srcWLwbL2vPGqK/Yz2oFO.cHR5LEJYbvuifq.5g0OGvT3aMJMJLHS','2026-06-16 16:27:16');
 /*!40000 ALTER TABLE `password_reset_tokens` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -302,9 +302,9 @@ DROP TABLE IF EXISTS `periodos_vacacionales`;
 CREATE TABLE `periodos_vacacionales` (
   `id` bigint unsigned NOT NULL AUTO_INCREMENT,
   `empleado_id` int NOT NULL,
-  `fecha_inicio` date NOT NULL,
-  `fecha_fin` date NOT NULL,
-  `fecha_regreso` date NOT NULL,
+  `fecha_inicio` date DEFAULT NULL,
+  `fecha_fin` date DEFAULT NULL,
+  `fecha_regreso` date DEFAULT NULL,
   `dias` int NOT NULL,
   `anio_calendario` int NOT NULL,
   `observaciones` text COLLATE utf8mb4_unicode_ci,
@@ -312,7 +312,7 @@ CREATE TABLE `periodos_vacacionales` (
   PRIMARY KEY (`id`),
   KEY `periodos_vacacionales_empleado_id_index` (`empleado_id`),
   CONSTRAINT `periodos_vacacionales_ibfk_1` FOREIGN KEY (`empleado_id`) REFERENCES `empleados` (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=12 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -321,6 +321,7 @@ CREATE TABLE `periodos_vacacionales` (
 
 LOCK TABLES `periodos_vacacionales` WRITE;
 /*!40000 ALTER TABLE `periodos_vacacionales` DISABLE KEYS */;
+INSERT INTO `periodos_vacacionales` VALUES (7,14,NULL,NULL,NULL,1,2026,'Descuento Febrero sin fechas',NULL),(8,14,NULL,NULL,NULL,3,2026,'Descuento Marzo sin fechas',NULL),(9,14,NULL,NULL,NULL,4,2026,'Descuento Mayo sin fechas',NULL),(10,8,NULL,NULL,NULL,6,2026,'Descuento Marzo sin fechas',NULL),(11,3,NULL,NULL,NULL,3,2026,'Descuento Marzo sin fechas',NULL);
 /*!40000 ALTER TABLE `periodos_vacacionales` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -337,7 +338,7 @@ CREATE TABLE `puestos` (
   `deleted_at` timestamp NULL DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `nombre` (`nombre`)
-) ENGINE=InnoDB AUTO_INCREMENT=22 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -346,7 +347,7 @@ CREATE TABLE `puestos` (
 
 LOCK TABLES `puestos` WRITE;
 /*!40000 ALTER TABLE `puestos` DISABLE KEYS */;
-INSERT INTO `puestos` VALUES (1,'Intendente',NULL),(2,'Ejecutivo de Mantenimiento',NULL),(3,'Ejecutivo de Seguridad',NULL),(4,'Auxiliar de Mantenimiento',NULL),(5,'Ayudante General',NULL),(6,'Guardia de Seguridad',NULL),(7,'barrendero','2026-06-12 15:31:22'),(9,'barrender',NULL),(11,'barren',NULL),(12,'k.h',NULL),(13,'ñkñ',NULL),(14,'REGRE',NULL),(15,'TJYTYJ',NULL),(16,'ERTSGSEGFGFSB',NULL),(18,'gfd','2026-06-15 20:03:00'),(19,'h.h','2026-06-12 15:27:50'),(20,'ergrg','2026-06-12 15:27:36'),(21,'sths','2026-06-12 15:27:14');
+INSERT INTO `puestos` VALUES (1,'Intendente',NULL),(2,'Ejecutivo de Mantenimiento',NULL),(3,'Ejecutivo de Seguridad',NULL),(4,'Auxiliar de Mantenimiento',NULL),(5,'Ayudante General',NULL),(6,'Guardia de Seguridad',NULL);
 /*!40000 ALTER TABLE `puestos` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -370,7 +371,7 @@ CREATE TABLE `registros_descanso` (
   PRIMARY KEY (`id`),
   KEY `empleado_id` (`empleado_id`),
   CONSTRAINT `registros_descanso_ibfk_1` FOREIGN KEY (`empleado_id`) REFERENCES `empleados` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -379,6 +380,7 @@ CREATE TABLE `registros_descanso` (
 
 LOCK TABLES `registros_descanso` WRITE;
 /*!40000 ALTER TABLE `registros_descanso` DISABLE KEYS */;
+INSERT INTO `registros_descanso` VALUES (1,14,2026,2,1,NULL,NULL,NULL,NULL),(2,14,2026,3,3,NULL,NULL,NULL,NULL),(3,14,2026,5,4,NULL,NULL,NULL,NULL),(4,8,2026,3,6,NULL,NULL,NULL,NULL),(5,3,2026,3,3,NULL,NULL,NULL,NULL);
 /*!40000 ALTER TABLE `registros_descanso` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -408,7 +410,7 @@ CREATE TABLE `sessions` (
 
 LOCK TABLES `sessions` WRITE;
 /*!40000 ALTER TABLE `sessions` DISABLE KEYS */;
-INSERT INTO `sessions` VALUES ('4KcskS9NxxuXqTOhv7SpHGhPIEE8XUXjVXqXcFr7',NULL,'172.18.0.1','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36 Edg/149.0.0.0','eyJfdG9rZW4iOiJ4YmdBcWxqZGJVM2kzS3NnMjVNcU5hMDJuMnAzQ1RvTHBpV0g2QnJCIiwiX3ByZXZpb3VzIjp7InVybCI6Imh0dHA6XC9cL2xvY2FsaG9zdFwvZW1wbGVhZG9zIiwicm91dGUiOiJlbXBsZWFkb3MuaW5kZXgifSwiX2ZsYXNoIjp7Im9sZCI6W10sIm5ldyI6W119LCJsb2dlYWRvIjp0cnVlLCJ1c2VyX2lkIjpudWxsLCJub21icmUiOiJsaWMuIiwiZW1haWwiOiJhZG1pbkBzaXN0ZW1hLmNvbSJ9',1781707082),('hIw1aUXeF9CX2Zfhiiao2wsfAuByKMcK0SPufSN7',NULL,'172.18.0.1','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36 Edg/149.0.0.0','eyJfdG9rZW4iOiIweUNsMkduZTI4Q253RUlRWE9IUUVrODdtcENkZlhjbE05eE8zb2poIiwiX3ByZXZpb3VzIjp7InVybCI6Imh0dHA6XC9cL2xvY2FsaG9zdFwvZW1wbGVhZG9zXC8yNFwvdmFjYWNpb25lc1wvaGlzdG9yaWFsXC9wZGYiLCJyb3V0ZSI6ImVtcGxlYWRvcy52YWNhY2lvbmVzLmhpc3RvcmlhbC5wZGYifSwiX2ZsYXNoIjp7Im9sZCI6W10sIm5ldyI6W119LCJsb2dlYWRvIjp0cnVlLCJ1c2VyX2lkIjpudWxsLCJub21icmUiOiJsaWMuIiwiZW1haWwiOiJhZG1pbkBzaXN0ZW1hLmNvbSJ9',1781643357);
+INSERT INTO `sessions` VALUES ('uZqwX9vFJi3f6wHyf7p1cMuTfVDcpcPRyta6MPUr',NULL,'172.18.0.1','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36 Edg/149.0.0.0','eyJfdG9rZW4iOiJqSXV5M2FtSXNVeVlDbDdaVDFxTHZhZ1l4Z1BHaTNNNGp1UFZKNm5lIiwiX3ByZXZpb3VzIjp7InVybCI6Imh0dHA6XC9cL2xvY2FsaG9zdFwvZW1wbGVhZG9zP3BhZ2U9MiIsInJvdXRlIjoiZW1wbGVhZG9zLmluZGV4In0sIl9mbGFzaCI6eyJvbGQiOltdLCJuZXciOltdfSwibG9nZWFkbyI6dHJ1ZSwidXNlcl9pZCI6bnVsbCwibm9tYnJlIjoiTGljLiBELiBTYW5jaGV6IiwiZW1haWwiOiJkc2FuY2hlemVAcHJlcGF1Y28uZWR1Lm14In0=',1781794091);
 /*!40000 ALTER TABLE `sessions` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -438,7 +440,7 @@ CREATE TABLE `usuario` (
 
 LOCK TABLES `usuario` WRITE;
 /*!40000 ALTER TABLE `usuario` DISABLE KEYS */;
-INSERT INTO `usuario` VALUES ('lic.','admin@sistema.com','$2y$12$tgaLUwskCFTC0EGcFFr3fuyfgoqEQY6iZlI3zg9SDhgz/qQb9oUou','2026-06-17 14:32:41','UCO-2026-005','admin','2026-06-09 00:00:00',NULL),('Alex','ah9267992@gmail.com','$2y$12$KM3uN8UwfChxbYzt3YHYYO.ohMiFIFAXbSNH5peUkLRCxjTtbzW2C','2026-06-16 20:56:15','UCO-2026-006','Sistemas','2026-06-15 00:00:00',NULL),('angel','aleon0927@gmail.com','$2y$12$KI7tBkYdzOYlo0qnfiAUa.lloi0MhNxhFsVM3QsTXjVsfaMB3YjMW','2026-06-16 15:17:40','UCO-2026-001','encargado','2026-06-05 06:00:00',NULL);
+INSERT INTO `usuario` VALUES ('Lic. D. Sanchez','dsancheze@prepauco.edu.mx','$2y$12$Hkj8vPDwthVhJGWSh/iO..ZuyIpJlO3pX7O84msP/30xpiMZVF0kO','2026-06-18 08:35:19','UCO-26-001',NULL,'2026-06-17 16:05:20',NULL);
 /*!40000 ALTER TABLE `usuario` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
@@ -451,4 +453,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2026-06-17 15:04:33
+-- Dump completed on 2026-06-18 14:58:49
