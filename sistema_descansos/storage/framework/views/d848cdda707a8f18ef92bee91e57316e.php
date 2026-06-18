@@ -73,8 +73,8 @@
         <tbody>
             <?php $__empty_1 = true; $__currentLoopData = $periodosVacacionales; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $periodo): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
                 <tr>
-                    <td><?php echo e(\Carbon\Carbon::parse($periodo->fecha_inicio)->format('d/m/Y')); ?></td>
-                    <td><?php echo e(\Carbon\Carbon::parse($periodo->fecha_fin)->format('d/m/Y')); ?></td>
+                    <td><?php echo e($periodo->fecha_inicio ? \Carbon\Carbon::parse($periodo->fecha_inicio)->format('d/m/Y') : ''); ?></td>
+                    <td><?php echo e($periodo->fecha_fin ? \Carbon\Carbon::parse($periodo->fecha_fin)->format('d/m/Y') : ''); ?></td>
                     <td style="text-align: center; font-weight: bold;"><?php echo e($periodo->dias); ?></td>
                     <td><?php echo e($periodo->observaciones ?: 'Ninguna.'); ?></td>
                 </tr>

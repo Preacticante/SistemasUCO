@@ -461,8 +461,8 @@ Route::get('/periodos/{id}', function ($id) {
     return response()->json([
         'id' => $periodo->id,
         'empleado_nombre' => $periodo->empleado ? $periodo->empleado->nombre . ' ' . $periodo->empleado->apellido_paterno : 'N/A',
-        'fecha_inicio' => Carbon::parse($periodo->fecha_inicio)->format('Y-m-d'),
-        'fecha_fin' => Carbon::parse($periodo->fecha_fin)->format('Y-m-d'),
+        'fecha_inicio' => $periodo->fecha_inicio ? Carbon::parse($periodo->fecha_inicio)->format('Y-m-d') : null,
+        'fecha_fin' => $periodo->fecha_fin ? Carbon::parse($periodo->fecha_fin)->format('Y-m-d') : null,
         'dias' => $periodo->dias,
         'observaciones' => $periodo->observaciones ?? ''
     ]);
@@ -479,15 +479,15 @@ Route::get('/api/eventos-vacaciones', function () {
         ->map(function ($p) {
             return [
                 'title' => $p->empleado ? $p->empleado->nombre . ' ' . substr($p->empleado->apellido_paterno, 0, 1) . '.' : 'Vacaciones Institucionales',
-                'start' => \Illuminate\Support\Carbon::parse($p->fecha_inicio)->toDateString(),
-                'end'   => \Illuminate\Support\Carbon::parse($p->fecha_fin)->addDay()->toDateString(),
+                'start' => $p->fecha_inicio ? \Illuminate\Support\Carbon::parse($p->fecha_inicio)->toDateString() : null,
+                'end'   => $p->fecha_fin ? \Illuminate\Support\Carbon::parse($p->fecha_fin)->addDay()->toDateString() : null,
                 'backgroundColor' => '#F97316',
                 'borderColor'     => '#F97316',
                 'textColor'       => '#ffffff',
                 'classNames'      => ['evento-moderno', 'evento-vacacion-general'],
                 'extendedProps'   => ['tipo' => 'periodo_vacacional', 'is_special' => false],
             ];
-        })->toBase();
+        })->filter(function($e) { return !empty($e['start']) && !empty($e['end']); })->toBase();
 
     $especiales = DiaEspecial::orderBy('fecha_inicio', 'desc')->get()->map(function ($dia) {
         return [

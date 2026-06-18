@@ -90,7 +90,7 @@
                     : (is_array($periodosVacacionales) ? reset($periodosVacacionales) : null));
             @endphp
 
-            @if($ultimoPeriodo)
+            @if($ultimoPeriodo && $ultimoPeriodo->fecha_inicio && $ultimoPeriodo->fecha_fin && $ultimoPeriodo->fecha_regreso)
                 <tr>
                     <td>{{ $anioActual }}</td>
                     <td style="font-weight: bold;">{{ \Carbon\Carbon::parse($ultimoPeriodo->fecha_inicio)->diffInDays(\Carbon\Carbon::parse($ultimoPeriodo->fecha_fin)) + 1 }}</td>
