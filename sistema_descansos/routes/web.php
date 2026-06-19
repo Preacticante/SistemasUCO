@@ -482,18 +482,18 @@ Route::get('/api/eventos-vacaciones', function () {
         ->flatMap(function ($p) {
             // Paleta sin azules ni rojos (tonos verdes, morados, naranjas, marrones, teal)
             $palette = [
-                '#124416', // verde oscuro
-                '#16a34a', // verde
-                '#059669', // esmeralda
-                '#10b981', // verde claro
-                '#0ea5a4', // teal
-                '#7c3aed', // morado
-                '#6d28d9', // morado oscuro
-                '#a87e3b', // dorado/marron
-                '#92400e', // marron oscuro
-                '#d97706', // naranja oscuro
-                '#8b5cf6', // lavanda
-                '#4c1d95', // morado profundo
+                '#124416', 
+                '#ee7a9d', 
+                '#059669', 
+                '#b91081', 
+                '#0b4e4e', 
+                '#7c3aed', 
+                '#671e69', 
+                '#a87e3b', 
+                '#92400e', 
+                '#d97706', 
+                '#fcda7f', 
+                '#4c1d95',
             ];
 
             // Determinista por empleado id (si no existe, por texto del título)
