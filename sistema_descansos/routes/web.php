@@ -480,11 +480,31 @@ Route::get('/api/eventos-vacaciones', function () {
         })
         ->get()
         ->flatMap(function ($p) {
+            // Paleta sin azules ni rojos (tonos verdes, morados, naranjas, marrones, teal)
+            $palette = [
+                '#124416', // verde oscuro
+                '#16a34a', // verde
+                '#059669', // esmeralda
+                '#10b981', // verde claro
+                '#0ea5a4', // teal
+                '#7c3aed', // morado
+                '#6d28d9', // morado oscuro
+                '#a87e3b', // dorado/marron
+                '#92400e', // marron oscuro
+                '#d97706', // naranja oscuro
+                '#8b5cf6', // lavanda
+                '#4c1d95', // morado profundo
+            ];
+
+            // Determinista por empleado id (si no existe, por texto del título)
+            $key = $p->empleado_id ?: ($p->empleado ? crc32($p->empleado->nombre . $p->empleado->apellido_paterno) : rand());
+            $color = $palette[$key % count($palette)];
+
             $title = $p->empleado ? $p->empleado->nombre . ' ' . substr($p->empleado->apellido_paterno, 0, 1) . '.' : 'Vacaciones Institucionales';
             $baseEvent = [
                 'title' => $title,
-                'backgroundColor' => '#F97316',
-                'borderColor'     => '#F97316',
+                'backgroundColor' => $color,
+                'borderColor'     => $color,
                 'textColor'       => '#ffffff',
                 'classNames'      => ['evento-moderno', 'evento-vacacion-general'],
                 'extendedProps'   => ['tipo' => 'periodo_vacacional', 'is_special' => false],
