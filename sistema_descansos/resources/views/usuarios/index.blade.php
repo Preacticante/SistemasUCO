@@ -76,7 +76,10 @@
 .profiles-container {
     font-family: 'Nunito Sans', sans-serif;
     color: #334155;
-    padding: 10px;
+    padding: 15px;
+    max-width: 1400px;
+    margin: 0 auto;
+    box-sizing: border-box;
 }
 
 .profiles-header { 
@@ -99,18 +102,21 @@
     font-size: 0.95rem;
 }
 
+/* --- CAMBIO CRÍTICO: Diseño de rejilla flexible --- */
 .profiles-layout { 
-    display: flex; 
+    display: grid;
+    grid-template-columns: 1fr 1fr;
     gap: 24px; 
     align-items: flex-start; 
 }
+
 .profiles-list-card, .profiles-form-card { 
     background: white; 
     border-radius: 16px; 
     box-shadow: 0 10px 25px rgba(0,0,0,0.03); 
-    flex: 1; 
     overflow: hidden;
     border-bottom: 4px solid #b38e36;
+    min-width: 0; /* Evita que el contenedor crezca más que su padre en Grid */
 }
 
 .card-header { 
@@ -127,13 +133,22 @@
 }
 
 .card-body { padding: 24px; }
-.list-body { max-height: 480px; overflow-y: auto; padding: 20px; }
+
+/* Ajustes del cuerpo de la lista */
+.list-body { 
+    max-height: 520px; 
+    overflow-y: auto; 
+    padding: 20px; 
+}
 .empty { text-align: center; color: #64748b; padding: 20px; font-style: italic; }
+
 
 .usuario-item { 
     display: flex; 
     justify-content: space-between; 
     align-items: center; 
+    flex-wrap: wrap; 
+    gap: 16px;
     padding: 16px; 
     border-radius: 12px; 
     background-color: #f3effa; 
@@ -145,6 +160,14 @@
     transform: translateY(-2px);
     box-shadow: 0 4px 12px rgba(0,0,0,0.05);
 }
+
+/* Control para que el texto de metadatos respete los límites */
+.usuario-item .meta {
+    flex: 1;
+    min-width: 180px; /* Ancho mínimo para mantener legibilidad */
+    word-break: break-all; /* Rompe el correo si se reduce demasiado la pantalla */
+}
+
 .usuario-item .id-badge {
     background-color: #11431c;
     color: white;
@@ -164,18 +187,30 @@
     font-size: 0.85rem;
     color: #475569;
     margin-top: 2px;
+    line-height: 1.4;
 }
 
-.usuario-item .acciones { display: flex; gap: 8px; }
-.btn-accion { border: none; padding: 8px 12px; border-radius: 8px; cursor: pointer; font-size: 0.9rem; transition: background 0.2s; }
+.usuario-item .acciones { 
+    display: flex; 
+    gap: 8px; 
+    flex-shrink: 0; /* Evita que los botones se achiquen */
+}
+.btn-accion { 
+    border: none; 
+    padding: 10px 14px; 
+    border-radius: 8px; 
+    cursor: pointer; 
+    font-size: 0.9rem; 
+    transition: background 0.2s; 
+}
 .btn-edit { background-color: #e2d9f3; color: #5b21b6; }
 .btn-edit:hover { background-color: #d8b4fe; }
 .btn-eliminar { background-color: #fee2e2; color: #991b1b; }
 .btn-eliminar:hover { background-color: #fca5a5; }
 
-/* Estado deshabilitado para acciones no permitidas */
 .btn-disabled { opacity: 0.45; cursor: not-allowed; pointer-events: none; }
 
+/* Inputs del Formulario */
 .form-group { margin-bottom: 20px; padding: 0 4px; }
 .form-group label { 
     display: block; 
@@ -203,7 +238,13 @@
     box-shadow: 0 0 0 3px rgba(17, 67, 28, 0.15);
 }
 
-.modal-actions { display: flex; flex-direction: column; gap: 10px; padding: 0 4px; margin-top: 24px; }
+.modal-actions { 
+    display: flex; 
+    flex-direction: column; 
+    gap: 10px; 
+    padding: 0 4px; 
+    margin-top: 24px; 
+}
 .btn-submit {
     background-color: #11431c; 
     color: white;
@@ -219,6 +260,8 @@
     gap: 8px;
     box-shadow: 0 4px 10px rgba(17, 67, 28, 0.2);
     transition: background-color 0.2s, transform 0.1s;
+    width: 100%;
+    box-sizing: border-box;
 }
 .btn-submit:hover { background-color: #0b2d13; }
 .btn-submit:active { transform: scale(0.98); }
@@ -237,14 +280,37 @@
     align-items: center;
     gap: 8px;
     transition: background-color 0.2s;
+    width: 100%;
+    box-sizing: border-box;
 }
 .btn-cancel:hover { background-color: #f8fafc; }
 
-@media (max-width: 900px) { 
-    .profiles-layout { flex-direction: column; } 
-    .profiles-list-card, .profiles-form-card { width: 100%; }
+
+@media (max-width: 992px) { 
+    .profiles-layout { 
+        grid-template-columns: 1fr; 
+    } 
+}
+
+@media (max-width: 480px) {
+    .profiles-container { padding: 5px; }
+    .profiles-header { padding: 16px; }
+    .profiles-header h2 { font-size: 1.3rem; }
+    .profiles-header p { font-size: 0.85rem; }
+    .card-body, .list-body { padding: 12px; }
+    
+    .usuario-item {
+        flex-direction: column; /* Hace que las acciones bajen por completo en móviles pequeños */
+        align-items: flex-start;
+        gap: 12px;
+    }
+    .usuario-item .acciones {
+        width: 100%;
+        justify-content: flex-end; /* Alinea los botones a la derecha en móviles */
+    }
 }
 </style>
+
 <?php $__env->stopPush(); ?>
 
 <?php $__env->startPush('scripts'); ?>
