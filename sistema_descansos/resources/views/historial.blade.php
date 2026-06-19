@@ -171,8 +171,7 @@ let empleadoEnEdicion = null;
 // Variables de estado del calendario interactivo
 let currentYear = 2026;
 let currentMonth = 5; // Junio (0-indexed)
-let startDateSelected = null;
-let endDateSelected = null;
+let selectedDates = [];
 let diasFestivosGlobales = [];
 let specialDateMap = {};
 
@@ -274,16 +273,23 @@ function openEditModal(id, empleadoId) {
             document.getElementById('editEmpleado').value = data.empleado_nombre || 'N/A';
             document.getElementById('editObservaciones').value = data.observaciones || '';
 
-            if(data.fecha_inicio && data.fecha_fin) {
+            if (Array.isArray(data.multiple_dates) && data.multiple_dates.length > 0) {
+                selectedDates = data.multiple_dates.slice().sort();
+                const firstDate = parseYMDToLocal(selectedDates[0]);
+                if (firstDate) {
+                    currentYear = firstDate.getFullYear();
+                    currentMonth = firstDate.getMonth();
+                }
+            } else if (data.fecha_inicio && data.fecha_fin) {
                 const pInicio = data.fecha_inicio.split('-');
                 const pFin = data.fecha_fin.split('-');
-                startDateSelected = new Date(pInicio[0], pInicio[1] - 1, pInicio[2]);
-                endDateSelected = new Date(pFin[0], pFin[1] - 1, pFin[2]);
-                currentYear = parseInt(pInicio[0]);
-                currentMonth = parseInt(pInicio[1]) - 1;
+                const inicio = new Date(pInicio[0], pInicio[1] - 1, pInicio[2]);
+                const fin = new Date(pFin[0], pFin[1] - 1, pFin[2]);
+                selectedDates = getDatesBetween(inicio, fin).map(formatYMD);
+                currentYear = inicio.getFullYear();
+                currentMonth = inicio.getMonth();
             } else {
-                startDateSelected = null;
-                endDateSelected = null;
+                selectedDates = [];
             }
 
             loadSpecialDays().then(() => {
@@ -350,11 +356,8 @@ function renderCalendar() {
             dayDiv.classList.add('disabled');
         }
 
-        const inRange = startDateSelected && endDateSelected && thisDate >= startDateSelected && thisDate <= endDateSelected;
-        const isStart = startDateSelected && thisDate.getTime() === startDateSelected.getTime();
-        const isEnd = endDateSelected && thisDate.getTime() === endDateSelected.getTime();
-
-        if (!isSpecial && (inRange || isStart || isEnd)) {
+        const isSelected = selectedDates.includes(dateKey);
+        if (!isSpecial && isSelected) {
             dayDiv.classList.add('selected-range');
         }
 
@@ -390,26 +393,19 @@ function changeMonth(direction) {
 }
 
 function selectDate(date) {
-    if (!startDateSelected || (startDateSelected && endDateSelected)) {
-        startDateSelected = date;
-        endDateSelected = null;
-    } else if (startDateSelected && !endDateSelected) {
-        if (date < startDateSelected) {
-            endDateSelected = startDateSelected;
-            startDateSelected = date;
-        } else {
-            endDateSelected = date;
-        }
+    const dateKey = formatYMD(date);
+    const index = selectedDates.indexOf(dateKey);
+    if (index === -1) {
+        selectedDates.push(dateKey);
+    } else {
+        selectedDates.splice(index, 1);
     }
+    selectedDates.sort();
     renderCalendar();
 }
 
 function getCountableSelectedDates() {
-    if (!startDateSelected) return [];
-    const end = endDateSelected || startDateSelected;
-    return getDatesBetween(startDateSelected, end)
-        .map(formatYMD)
-        .filter(dateKey => !specialDateMap[dateKey]);
+    return selectedDates.filter(dateKey => !specialDateMap[dateKey]);
 }
 
 function updateSummary() {
@@ -427,51 +423,13 @@ function closeEditModal() {
     
     periodoEnEdicion = null;
     empleadoEnEdicion = null;
-    startDateSelected = null;
-    endDateSelected = null;
+    selectedDates = [];
 }
 
 function guardarEdicion() {
     if (!periodoEnEdicion) return; // <--- VÁLIDO
 
-    // Intentar buscar los controles de fecha por ID o por atributo Name
-    const inputInicio = document.getElementById('editFechaInicio') || document.querySelector('input[name="fecha_inicio"]');
-    const inputFin = document.getElementById('editFechaFin') || document.querySelector('input[name="fecha_fin"]');
     const inputObservaciones = document.getElementById('editObservaciones');
-
-    // Si los inputs de texto no existen en este formulario, usamos los datos guardados del calendario interactivo
-    let fechaInicioStr = "";
-    let fechaFinStr = "";
-
-    if (startDateSelected) {
-        const finalEnd = endDateSelected || startDateSelected;
-        fechaInicioStr = formatYMD(startDateSelected);
-        fechaFinStr = formatYMD(finalEnd);
-    } else if (inputInicio && inputFin && inputInicio.value && inputFin.value) {
-        const convertirAFormatovAlido = (fechaStr) => {
-            const partes = fechaStr.includes('/') ? fechaStr.split('/') : fechaStr.split('-');
-            if (partes.length === 3) {
-                if (partes[0].length <= 2 && partes[2].length === 4) {
-                    return `${partes[2]}-${partes[1].padStart(2, '0')}-${partes[0].padStart(2, '0')}`;
-                }
-                if (partes[0].length === 4) {
-                    return `${partes[0]}-${partes[1].padStart(2, '0')}-${partes[2].padStart(2, '0')}`;
-                }
-            }
-            return fechaStr;
-        };
-        fechaInicioStr = convertirAFormatovAlido(inputInicio.value);
-        fechaFinStr = convertirAFormatovAlido(inputFin.value);
-    } else {
-        Swal.fire({
-            icon: 'warning',
-            title: 'Campos incompletos',
-            text: 'Por favor selecciona al menos un día en el calendario.',
-            confirmButtonColor: '#124416'
-        });
-        return;
-    }
-
     const observaciones = inputObservaciones ? inputObservaciones.value : '';
     const countableDates = getCountableSelectedDates();
 

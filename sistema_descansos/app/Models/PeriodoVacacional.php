@@ -22,7 +22,8 @@ class PeriodoVacacional extends Model
         'fecha_fin', 
         'fecha_regreso', 
         'dias', 
-        'observaciones'
+        'observaciones',
+        'multiple_dates',
     ];
 
     /**
@@ -35,6 +36,7 @@ class PeriodoVacacional extends Model
         'fecha_regreso' => 'date:Y-m-d',
         'dias'          => 'integer',
         'empleado_id'   => 'integer',
+        'multiple_dates' => 'array',
         'deleted_at'    => 'datetime',
     ];
 
