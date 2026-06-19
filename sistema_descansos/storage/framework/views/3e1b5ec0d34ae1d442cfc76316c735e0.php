@@ -80,15 +80,16 @@
                 </div>
 
                 <div class="form-group">
-                    <label for="titulo">Título descriptivo</label>
+                    <label for="titulo">Título </label>
                     <input id="titulo" type="text" name="titulo" placeholder="Ej: Descanso semanal" value="<?php echo e(old('titulo')); ?>" required>
                 </div>
 
-                <div class="form-grid-2">
+                <div class="form-grid-2" style="margin: 5px 0;">
                     <div class="form-group">
                         <label>Fecha Inicio</label>
                         <input id="fecha_inicio_display" class="readonly-input" type="text" readonly placeholder="dd/mm/yyyy">
                     </div>
+                    
                     <div class="form-group">
                         <label>Fecha Fin</label>
                         <input id="fecha_fin_display" class="readonly-input" type="text" readonly placeholder="dd/mm/yyyy">
@@ -96,7 +97,19 @@
                 </div>
 
                 <div class="form-group">
-                    <label for="empleados">Asignar trabajadores</label>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px;">
+                        <label for="empleados">Asignar trabajadores</label>
+                        
+                        <div id="bulk-select-container" style="display: none; gap: 10px; font-size: 0.85rem;">
+                            <button type="button" id="btn-select-all" style="background: none; border: none; color: #AA7F31; font-weight: 700; cursor: pointer; padding: 0;">
+                                <i class="fa-solid fa-check-double"></i> Seleccionar todos
+                            </button>
+                            <span style="color: #cbd5e1;">|</span>
+                            <button type="button" id="btn-deselect-all" style="background: none; border: none; color: #64748b; font-weight: 600; cursor: pointer; padding: 0;">
+                                <i class="fa-solid fa-xmark"></i> Deseleccionar todos
+                            </button>
+                        </div>
+                    </div>
                     <div class="select-wrapper">
                         <select id="empleados" name="empleados[]" multiple size="5">
                             <?php $__currentLoopData = $empleados; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $emp): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
@@ -104,6 +117,7 @@
                             <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                         </select>
                     </div>
+                    
                 </div>
 
                 <input type="hidden" id="multiple_dates" name="multiple_dates" value="<?php echo e(old('multiple_dates')); ?>">
@@ -189,31 +203,29 @@
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@sweetalert2/theme-bootstrap-4/bootstrap-4.css">
 
 <style>
-    /* Nueva cabecera estilizada basándose en image_ed643f.png */
     .dashboard-header-card {
         background: #ffffff;
         border-radius: 32px;
         padding: 24px 20px;
         text-align: center;
         box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
-        border-bottom: 4px solid #AA7F31; /* Borde dorado inferior exacto */
+        border-bottom: 4px solid #AA7F31;
         margin-bottom: 35px;
     }
     .dashboard-header-card h1 {
-        color: #124416; /* Verde institucional exacto */
+        color: #124416;
         font-size: 1.75rem;
         font-weight: 700;
         margin: 0 0 6px 0;
         letter-spacing: -0.02em;
     }
     .dashboard-header-card p {
-        color: #576b85; /* Azul/grisáceo de subtítulo exacto */
+        color: #576b85;
         font-size: 0.95rem;
         margin: 0;
         font-weight: 500;
     }
 
-    /* Alertas de cabecera de Laravel */
     .alert {
         padding: 16px;
         margin-bottom: 24px;
@@ -226,50 +238,14 @@
         border: 1px solid transparent;
         animation: fadeIn 0.3s ease-in-out;
     }
-    .alert-success {
-        background-color: #f0fdf4;
-        border-color: #bbf7d0;
-        color: #166534;
-    }
-    .alert-danger {
-        background-color: #fef2f2;
-        border-color: #fecaca;
-        color: #991b1b;
-    }
+    .alert-success { background-color: #f0fdf4; border-color: #bbf7d0; color: #166534; }
+    .alert-danger { background-color: #fef2f2; border-color: #fecaca; color: #991b1b; }
+    
     @keyframes fadeIn {
         from { opacity: 0; transform: translateY(-5px); }
         to { opacity: 1; transform: translateY(0); }
     }
 
-    /* Estilos personalizados para SweetAlert2 */
-    .swal2-popup {
-        border-radius: 20px !important;
-        padding: 2rem !important;
-        box-shadow: 0 25px 50px -12px rgba(0,0,0,0.15) !important;
-    }
-    .swal2-title {
-        color: #0f172a !important;
-        font-weight: 700 !important;
-        font-size: 1.5rem !important;
-    }
-    .swal2-html-container {
-        color: #64748b !important;
-        font-size: 0.98rem !important;
-    }
-    .swal2-confirm {
-        border-radius: 12px !important;
-        padding: 12px 28px !important;
-        font-weight: 600 !important;
-        background-color: #ef4444 !important;
-    }
-    .swal2-cancel {
-        border-radius: 12px !important;
-        padding: 12px 28px !important;
-        font-weight: 600 !important;
-        background-color: #3b82f6 !important;
-    }
-
-    /* Hero section */
     .special-days-hero {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
@@ -287,17 +263,12 @@
         transition: transform 0.2s, box-shadow 0.2s;
         border: 1px solid #f1f5f9;
     }
-    .special-day-card:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05);
-    }
     .special-day-descanso { border-left: 5px solid #124416; }
     .special-day-festivo { border-left: 5px solid #AA7F31; }
     .special-day-institucional { border-left: 5px solid #340C51; }
     .special-day-card strong { font-size: 1rem; color: #1e293b; font-weight: 700; }
     .special-day-card span { font-size: 0.85rem; color: #64748b; font-weight: 500; }
 
-    /* Formulario Grid */
     .special-days-form-grid {
         display: grid;
         grid-template-columns: 1.1fr 0.9fr;
@@ -305,6 +276,7 @@
         margin-bottom: 35px;
         align-items: start;
     }
+    
     .special-form-card,
     .special-calendar-card {
         background: #ffffff;
@@ -312,7 +284,9 @@
         padding: 30px;
         border: 1px solid #e2e8f0;
         box-shadow: 0 4px 10px -1px rgba(15, 23, 42, 0.03);
+        box-sizing: border-box;
     }
+    
     .special-form-card h2,
     .special-calendar-card h2 {
         margin-top: 0;
@@ -324,17 +298,22 @@
         align-items: center;
         gap: 10px;
     }
-    .special-form-card h2 i, .special-calendar-card h2 i {
-        color: #124416;
-    }
-    .special-form { display: grid; gap: 20px; }
-    .form-group { display: flex; flex-direction: column; gap: 8px; }
-    .form-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-    .special-form label { color: #334155; font-weight: 600; font-size: 0.9rem; }
+    .special-form-card h2 i, .special-calendar-card h2 i { color: #124416; }
     
-    .special-form input,
+    .special-form { display: flex; flex-direction: column; gap: 20px; }
+    .form-group { display: flex; flex-direction: column; gap: 8px; width: 100%; box-sizing: border-box; }
+    
+    .form-grid-2 { 
+        display: grid; 
+        grid-template-columns: 1fr 1fr; 
+        gap: 20px; 
+        width: 100%;
+        box-sizing: border-box;
+    }
+    
     .special-form select,
-    .special-form textarea {
+    .special-form textarea,
+    .special-form input {
         width: 100%;
         padding: 12px 14px;
         border: 1px solid #cbd5e1;
@@ -344,6 +323,7 @@
         color: #0f172a;
         transition: border-color 0.2s, box-shadow 0.2s;
         outline: none;
+        box-sizing: border-box;
     }
     .special-form input:focus,
     .special-form select:focus,
@@ -354,22 +334,14 @@
     .special-form textarea { min-height: 90px; resize: vertical; }
     .readonly-input { background-color: #f8fafc !important; color: #64748b !important; cursor: not-allowed; }
 
-    /* Multiple select estético */
-    .select-wrapper select[multiple] {
-        padding: 8px;
-    }
-    .select-wrapper select[multiple] option {
-        padding: 8px 12px;
-        margin-bottom: 4px;
-        border-radius: 8px;
-    }
+    .select-wrapper select[multiple] { padding: 8px; }
+    .select-wrapper select[multiple] option { padding: 8px 12px; margin-bottom: 4px; border-radius: 8px; cursor: pointer; }
     .select-wrapper select[multiple] option:checked {
         background: rgba(18, 68, 22, 0.1) linear-gradient(0deg, rgba(18, 68, 22, 0.1) 0%, rgba(18, 68, 22, 0.1) 100%);
         color: #124416;
         font-weight: 600;
     }
 
-    /* Summary pill box */
     .summary-pill {
         display: flex;
         justify-content: space-between;
@@ -382,10 +354,8 @@
         color: #475569;
         font-size: 0.9rem;
     }
-    .summary-pill strong { color: #0f172a; font-weight: 700; }
     .badge { background: #124416; color: white !important; padding: 2px 10px; border-radius: 20px; font-size: 0.85rem;}
 
-    /* Botones */
     .btn-primary {
         display: inline-flex;
         align-items: center;
@@ -422,7 +392,6 @@
     }
     .btn-danger-outline:hover { background-color: #fef2f2; border-color: #ef4444; }
 
-    /* Contenedor de Tabla */
     .table-wrapper {
         background: #ffffff;
         border-radius: 20px;
@@ -430,103 +399,94 @@
         box-shadow: 0 4px 10px -1px rgba(15, 23, 42, 0.03);
         overflow: hidden;
     }
-    .table-header-box {
-        padding: 24px 30px;
-        border-bottom: 1px solid #e2e8f0;
-        background-color: #f8fafc;
-    }
-    .table-header-box h2 {
-        margin: 0;
-        color: #0f172a;
-        font-size: 1.15rem;
-        font-weight: 700;
-        display: flex;
-        align-items: center;
-        gap: 8px;
-    }
+    .table-header-box { padding: 24px 30px; border-bottom: 1px solid #e2e8f0; background-color: #f8fafc; }
+    .table-header-box h2 { margin: 0; color: #0f172a; font-size: 1.15rem; font-weight: 700; display: flex; align-items: center; gap: 8px; }
     .table-responsive { overflow-x: auto; }
     .table-uco { width: 100%; border-collapse: collapse; text-align: left; font-size: 0.95rem; }
     .table-uco th { background-color: #fff; color: #64748b; font-weight: 600; padding: 14px 24px; border-bottom: 2px solid #e2e8f0; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em; }
     .table-uco td { padding: 16px 24px; border-bottom: 1px solid #f1f5f9; color: #334155; }
     .table-uco tbody tr:hover { background: #f8fafc; }
 
-    /* Pillas de eventos */
-    .event-pill {
-        display: inline-flex;
-        padding: 4px 12px;
-        border-radius: 20px;
-        font-size: 0.8rem;
-        font-weight: 700;
-        text-transform: capitalize;
-    }
+    .event-pill { display: inline-flex; padding: 4px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: 700; text-transform: capitalize; }
     .event-descanal, .event-descanso { background: #dcfce7; color: #15803d; }
     .event-festivo { background: #fef3c7; color: #a16207; }
     .event-institucional { background: #f3e8ff; color: #6b21a8; }
     .empty-table-state { text-align: center; padding: 40px !important; color: #94a3b8; }
     .empty-table-state i { font-size: 2.5rem; margin-bottom: 12px; display: block; opacity: 0.7; }
 
-    /* Ajustes Flatpickr Calendario */
+    /* REESTRUCTURACIÓN DE DISEÑO EN FLATPICKR PARA RELLENAR TODO EL MARCO GRIS */
     #calendar-inline-container {
-        display: flex;
-        justify-content: center;
+        display: block;
         background: #f8fafc;
-        padding: 16px;
+        padding: 24px;
         border-radius: 16px;
         border: 1px solid #e2e8f0;
+        width: 100%;
+        box-sizing: border-box;
     }
-    #calendar-inline { width: 100%; border: none; }
-    .calendar-controls { margin-bottom: 16px; color: #64748b; font-size: 0.9rem; display: flex; align-items: center; gap: 8px;}
     
+    #calendar-inline, 
+    .flatpickr-calendar.inline,
+    .flatpickr-months,
+    .flatpickr-innerContainer,
+    .flatpickr-rContainer,
+    .flatpickr-days,
+    .dayContainer { 
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: 100% !important;
+        box-sizing: border-box !important;
+        display: flex !important;
+        flex-direction: column !important;
+    }
+
+    .flatpickr-weekdays, .flatpickr-weekdaycontainer {
+        display: flex !important;
+        width: 100% !important;
+    }
+    
+    .flatpickr-weekday {
+        flex: 1 !important;
+        max-width: 100% !important;
+    }
+
+    .dayContainer {
+        flex-direction: row !important;
+        flex-wrap: wrap !important;
+    }
+
+    /* Cada número se estira proporcionalmente al 100% de la caja disponible */
+    .flatpickr-day { 
+        flex: 1 0 14.28% !important;
+        max-width: 14.28% !important;
+        height: auto !important;
+        aspect-ratio: 1 / 1 !important;
+        margin: 0 !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        border-radius: 8px !important;
+        box-sizing: border-box !important;
+        font-size: 1.05rem !important;
+    }
+
+    .calendar-controls { margin-bottom: 16px; color: #64748b; font-size: 0.9rem; display: flex; align-items: center; gap: 8px;}
     .flatpickr-calendar.inline { box-shadow: none !important; background: transparent; }
-    .flatpickr-day.selected,
-    .flatpickr-day.startRange,
-    .flatpickr-day.endRange {
+    
+    .flatpickr-day.selected, .flatpickr-day.startRange, .flatpickr-day.endRange {
         background: var(--selected-day-bg, #124416) !important;
         color: var(--selected-day-color, #ffffff) !important;
         border-color: var(--selected-day-bg, #124416) !important;
-        border-radius: 8px !important;
     }
-    .flatpickr-day { border-radius: 8px !important; margin: 2px 0 !important; }
     .flatpickr-day.today { color: #124416; font-weight: 700; border-color: transparent !important; background: rgba(18, 68, 22, 0.08); }
-    .flatpickr-day.has-special { opacity: 1 !important; color: inherit !important; }
 
     @media (max-width: 1080px) {
         .special-days-form-grid { grid-template-columns: 1fr; }
     }
 
-    /* Clases prioritarias para forzar el pintado sólido de los días bloqueados/históricos */
-    .flatpickr-day.bloqueado-descanso, 
-    .flatpickr-day.bloqueado-descanso:hover,
-    .flatpickr-day.bloqueado-descanso.flatpickr-disabled {
-        background: #124416 !important;
-        color: #ffffff !important;
-        border-color: #124416 !important;
-        opacity: 1 !important;
-        cursor: not-allowed;
-        border-radius: 8px !important;
-    }
-
-    .flatpickr-day.bloqueado-festivo, 
-    .flatpickr-day.bloqueado-festivo:hover,
-    .flatpickr-day.bloqueado-festivo.flatpickr-disabled {
-        background: #AA7F31 !important;
-        color: #ffffff !important;
-        border-color: #AA7F31 !important;
-        opacity: 1 !important;
-        cursor: not-allowed;
-        border-radius: 8px !important;
-    }
-
-    .flatpickr-day.bloqueado-institucional, 
-    .flatpickr-day.bloqueado-institucional:hover,
-    .flatpickr-day.bloqueado-institucional.flatpickr-disabled {
-        background: #340C51 !important;
-        color: #ffffff !important;
-        border-color: #340C51 !important;
-        opacity: 1 !important;
-        cursor: not-allowed;
-        border-radius: 8px !important;
-    }
+    .flatpickr-day.bloqueado-descanso, .flatpickr-day.bloqueado-descanso:hover { background: #124416 !important; color: #ffffff !important; border-color: #124416 !important; opacity: 1 !important; cursor: not-allowed; }
+    .flatpickr-day.bloqueado-festivo, .flatpickr-day.bloqueado-festivo:hover { background: #AA7F31 !important; color: #ffffff !important; border-color: #AA7F31 !important; opacity: 1 !important; cursor: not-allowed; }
+    .flatpickr-day.bloqueado-institucional, .flatpickr-day.bloqueado-institucional:hover { background: #340C51 !important; color: #ffffff !important; border-color: #340C51 !important; opacity: 1 !important; cursor: not-allowed; }
 </style>
 <?php $__env->stopPush(); ?>
 
@@ -545,8 +505,33 @@
     const inputFechaFin = document.getElementById('fecha_fin');
     const inputFechaInicioDisplay = document.getElementById('fecha_inicio_display');
     const inputFechaFinDisplay = document.getElementById('fecha_fin_display');
+    const selectEmpleados = document.getElementById('empleados');
+    const bulkSelectContainer = document.getElementById('bulk-select-container');
+    const btnSelectAll = document.getElementById('btn-select-all');
+    const btnDeselectAll = document.getElementById('btn-deselect-all');
 
-    // Paleta de colores exacta del sistema
+    function toggleBulkSelect() {
+        if (tipoSelect.value === 'festivo') {
+            bulkSelectContainer.style.display = 'flex';
+        } else {
+            bulkSelectContainer.style.display = 'none';
+        }
+    }
+
+    // Acción: Seleccionar todos
+    btnSelectAll.addEventListener('click', function() {
+        for (let i = 0; i < selectEmpleados.options.length; i++) {
+            selectEmpleados.options[i].selected = true;
+        }
+    });
+
+    // Acción: Deseleccionar todos
+    btnDeselectAll.addEventListener('click', function() {
+        for (let i = 0; i < selectEmpleados.options.length; i++) {
+            selectEmpleados.options[i].selected = false;
+        }
+    });
+
     const colors = { descanso: '#124416', festivo: '#AA7F31', institucional: '#340C51' };
     const textColors = { descanso: '#ffffff', festivo: '#ffffff', institucional: '#ffffff' };
 
@@ -555,39 +540,26 @@
         document.documentElement.style.setProperty('--selected-day-bg', colors[type]);
         document.documentElement.style.setProperty('--selected-day-color', textColors[type]);
         
+        toggleBulkSelect();
+        
         if (fp) {
-            if (type === 'descanso') { 
-                fp.set('disable', disabledForDescanso); 
-            } else { 
-                fp.set('disable', []); 
-            }
-            // Ejecutamos nuestra función de repintado manual justo después de redibujar Flatpickr
+            if (type === 'descanso') { fp.set('disable', disabledForDescanso); } else { fp.set('disable', []); }
             fp.redraw();
             colorearDiasBloqueados();
         }
     }
 
-    // Fuerza el pintado de las clases recorriendo los elementos del DOM actuales del calendario
     function colorearDiasBloqueados() {
         if (!fp) return;
-        
         const dayElements = fp.calendarContainer.querySelectorAll('.flatpickr-day');
-        
         dayElements.forEach(dayElement => {
             const ds = dayElement.dateObj ? fp.formatDate(dayElement.dateObj, 'Y-m-d') : null;
-            
             if (ds && specialDateMap[ds]) {
                 const tipoDiaHistorial = specialDateMap[ds].tipo;
-                
                 dayElement.classList.remove('selected', 'startRange', 'endRange');
-                
-                if (tipoDiaHistorial === 'descanso') {
-                    dayElement.classList.add('bloqueado-descanso');
-                } else if (tipoDiaHistorial === 'festivo') {
-                    dayElement.classList.add('bloqueado-festivo');
-                } else if (tipoDiaHistorial === 'institucional') {
-                    dayElement.classList.add('bloqueado-institucional');
-                }
+                if (tipoDiaHistorial === 'descanso') dayElement.classList.add('bloqueado-descanso');
+                if (tipoDiaHistorial === 'festivo') dayElement.classList.add('bloqueado-festivo');
+                if (tipoDiaHistorial === 'institucional') dayElement.classList.add('bloqueado-institucional');
             }
         });
     }
@@ -626,28 +598,24 @@
         return [firstDay, lastDay];
     }
 
-   function getDatesBetween(start, end) {
-    const dates = [];
-    const current = new Date(start.getFullYear(), start.getMonth(), start.getDate());
-    const final = new Date(end.getFullYear(), end.getMonth(), end.getDate());
-
-    while (current <= final) {
-        dates.push(new Date(current));
-        current.setDate(current.getDate() + 1);
+    function getDatesBetween(start, end) {
+        const dates = [];
+        const current = new Date(start.getFullYear(), start.getMonth(), start.getDate());
+        const final = new Date(end.getFullYear(), end.getMonth(), end.getDate());
+        while (current <= final) {
+            dates.push(new Date(current));
+            current.setDate(current.getDate() + 1);
+        }
+        return dates;
     }
-    return dates;
-}
 
-   function parseYMDToLocal(dateStr) {
-    if (!dateStr) return null;
-    const cleanStr = String(dateStr).split('T')[0];
-    const parts = cleanStr.split('-').map(p => parseInt(p, 10));
-    
-    if (parts.length === 3) {
-        return new Date(parts[0], parts[1] - 1, parts[2]);
+    function parseYMDToLocal(dateStr) {
+        if (!dateStr) return null;
+        const cleanStr = String(dateStr).split('T')[0];
+        const parts = cleanStr.split('-').map(p => parseInt(p, 10));
+        if (parts.length === 3) return new Date(parts[0], parts[1] - 1, parts[2]);
+        return new Date(cleanStr);
     }
-    return new Date(cleanStr);
-}
 
     function formatYMD(date) {
         if (!date) return '';
@@ -657,16 +625,14 @@
         return `${y}-${m}-${d}`;
     }
 
+    // Vincula rangos completos de fechas según la selección
     function selectRange(start, end) {
         const dates = getDatesBetween(start, end);
         fp.setDate(dates, true, 'Y-m-d');
         updateFields(dates);
     }
 
-    function clearSelection() {
-        fp.clear();
-        updateFields([]);
-    }
+    function clearSelection() { fp.clear(); updateFields([]); }
 
     let fp;
 
@@ -692,7 +658,7 @@
                     const type = tipoSelect.value;
                     if (type === 'descanso' && disabledForDescansoSet.has(fp.formatDate(dayElement.dateObj, 'Y-m-d'))) {
                         e.preventDefault();
-                        Swal.fire({ icon: 'warning', title: 'Fecha bloqueada', text: 'Esa fecha está marcada como festivo o vacaciones institucionales y no puede ser seleccionada como descanso.' });
+                        Swal.fire({ icon: 'warning', title: 'Fecha bloqueada', text: 'Esa fecha está marcada como festivo o vacaciones institucionales.' });
                         return;
                     }
 
@@ -700,7 +666,7 @@
                         const [start, end] = getWeekRange(dayElement.dateObj);
                         const dates = getDatesBetween(start, end).map(d => fp.formatDate(d, 'Y-m-d'));
                         if (type === 'descanso' && dates.some(d => disabledForDescansoSet.has(d))) {
-                            Swal.fire({ icon: 'error', title: 'Conflicto de fechas', text: 'La semana contiene días festivos o institucionales, no se puede seleccionar.' });
+                            Swal.fire({ icon: 'error', title: 'Conflicto de fechas', text: 'La semana contiene días festivos o institucionales.' });
                             return;
                         }
                         selectRange(start, end);
@@ -708,32 +674,23 @@
                         const [start, end] = getMonthRange(dayElement.dateObj);
                         const dates = getDatesBetween(start, end).map(d => fp.formatDate(d, 'Y-m-d'));
                         if (type === 'descanso' && dates.some(d => disabledForDescansoSet.has(d))) {
-                            Swal.fire({ icon: 'error', title: 'Conflicto de fechas', text: 'El mes contiene días festivos o institucionales, no se puede seleccionar.' });
+                            Swal.fire({ icon: 'error', title: 'Conflicto de fechas', text: 'El mes contiene días festivos o institucionales.' });
                             return;
                         }
                         selectRange(start, end);
                     }
                 });
             },
-            onMonthChange: function() {
-                setTimeout(colorearDiasBloqueados, 10);
-            },
-            onYearChange: function() {
-                setTimeout(colorearDiasBloqueados, 10);
-            },
+            onMonthChange: function() { setTimeout(colorearDiasBloqueados, 10); },
+            onYearChange: function() { setTimeout(colorearDiasBloqueados, 10); },
             onChange: function(selectedDates) {
                 const mode = selectionMode.value;
-                if (mode === 'varios' || mode === 'personalizado') { 
-                    updateFields(selectedDates); 
-                }
-                if (selectedDates.length === 0) { 
-                    updateFields([]); 
-                }
+                if (mode === 'varios' || mode === 'personalizado') updateFields(selectedDates);
+                if (selectedDates.length === 0) updateFields([]);
                 fp.redraw();
                 colorearDiasBloqueados();
             }
         });
-
         colorearDiasBloqueados();
     }
 
@@ -744,20 +701,14 @@
     fetch('/api/eventos-vacaciones').then(r => r.json()).then(events => {
         events.forEach(ev => {
             if (!ev.extendedProps || !ev.extendedProps.is_special) return;
-            
             const start = parseYMDToLocal(ev.start);
             let end = ev.end ? parseYMDToLocal(ev.end) : start;
-            
-            if (ev.end && ev.start !== ev.end) {
-                end.setDate(end.getDate() - 1);
-            }
-            
+            if (ev.end && ev.start !== ev.end) end.setDate(end.getDate() - 1);
             const dates = getDatesBetween(start, end).map(d => formatYMD(d));
             
             dates.forEach(d => {
                 const tipo = ev.extendedProps.tipo;
                 specialDateMap[d] = { tipo: tipo };
-
                 if (tipo === 'festivo' || tipo === 'institucional') {
                     if (!disabledForDescansoSet.has(d)) {
                         disabledForDescanso.push(d);
@@ -779,79 +730,17 @@
         colorearDiasBloqueados();
     });
 
-    tipoSelect.addEventListener('change', function() { 
-        updateSelectedColor(); 
-    });
-    
+    tipoSelect.addEventListener('change', function() { updateSelectedColor(); });
     updateSelectedColor();
 
-    // ==========================================
-    // VALIDACIONES DEL FORMULARIO DE GUARDADO
-    // ==========================================
     const form = document.querySelector('.special-form');
-    const empleadosSelect = document.getElementById('empleados');
-
     form.addEventListener('submit', function(e) {
-        const tipoDia = tipoSelect.value;
-        const mode = selectionMode.value;
         const count = parseInt(selectedCount.textContent || '0', 10);
-
         if (count === 0) {
             e.preventDefault();
             Swal.fire({ icon: 'info', title: 'Faltan fechas', text: 'Debes seleccionar al menos un día en el calendario antes de guardar.' });
             return false;
         }
-
-        if (mode === 'semana' && count !== 7) {
-            e.preventDefault();
-            Swal.fire({ icon: 'warning', title: 'Selección incompleta', text: 'Selección semanal: debes elegir exactamente 7 días.' });
-            return false;
-        }
-
-        if (mode === 'mes') {
-            const start = inputFechaInicio.value ? parseYMDToLocal(inputFechaInicio.value) : null;
-            if (!start) {
-                e.preventDefault();
-                Swal.fire({ icon: 'warning', title: 'Selección incompleta', text: 'Selección por mes: selecciona una fecha dentro del mes deseado.' });
-                return false;
-            }
-            const lastDay = new Date(start.getFullYear(), start.getMonth() + 1, 0).getDate();
-            if (count !== lastDay) {
-                e.preventDefault();
-                Swal.fire({ icon: 'warning', title: 'Días faltantes', text: 'Selección por mes: debes seleccionar todos los días del mes (' + lastDay + ').' });
-                return false;
-            }
-        }
-
-        if (tipoDia === 'descanso') {
-            const anySelected = Array.from(empleadosSelect.options).some(o => o.selected);
-            if (!anySelected) {
-                e.preventDefault();
-                Swal.fire({ icon: 'info', title: 'Asignación requerida', text: 'Para el tipo "Descanso de trabajador" es obligatorio seleccionar al menos un trabajador.' });
-                return false;
-            }
-        }
-    });
-
-    
-    document.querySelectorAll('.form-eliminar').forEach(formEliminar => {
-        formEliminar.addEventListener('submit', function(e) {
-            e.preventDefault();
-            Swal.fire({
-                title: '¿Estás seguro?',
-                text: 'Esta acción eliminará el registro del día especial de forma permanente.',
-                icon: 'warning',
-                iconColor: '#f8bb86',
-                showCancelButton: true,
-                confirmButtonText: 'Sí, eliminar',
-                cancelButtonText: 'Cancelar',
-                reverseButtons: true   
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    formEliminar.submit(); 
-                }
-            });
-        });
     });
 </script>
 <?php $__env->stopPush(); ?>
