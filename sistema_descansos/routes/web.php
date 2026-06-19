@@ -270,20 +270,22 @@ Route::post('/empleados/{empleado}/vacaciones', function (Request $request, Empl
     $diasPeriodo = $diasNuevos;
 
     try {
-        DB::transaction(function () use ($diasPorMes, $empleado, $anioActual, $inicio, $fin, $request, $diasPeriodo) {
+        DB::transaction(function () use ($diasPorMes, $empleado, $anioActual, $inicio, $fin, $request, $diasPeriodo, $selectedDates) {
             foreach ($diasPorMes as $mes => $cantidad) {
                 $registro = RegistroDescanso::firstOrNew(['empleado_id' => $empleado->id, 'anio_calendario' => $anioActual, 'mes' => $mes]);
                 $registro->dias_tomados = ($registro->dias_tomados ?? 0) + $cantidad;
                 $registro->save();
             }
+
             PeriodoVacacional::create([
-                'empleado_id' => $empleado->id, 
+                'empleado_id' => $empleado->id,
                 'anio_calendario' => $anioActual,
-                'fecha_inicio' => $request->fecha_inicio, 
-                'fecha_fin' => $request->fecha_fin,
-                'fecha_regreso' => $fin->copy()->addDay()->toDateString(), 
-                'dias' => $diasPeriodo, 
+                'fecha_inicio' => $inicio->toDateString(),
+                'fecha_fin' => $fin->toDateString(),
+                'fecha_regreso' => $fin->copy()->addDay()->toDateString(),
+                'dias' => $diasPeriodo,
                 'observaciones' => $request->input('observaciones'),
+                'multiple_dates' => $selectedDates,
             ]);
         });
     } catch (\Exception $e) {
@@ -464,6 +466,7 @@ Route::get('/periodos/{id}', function ($id) {
         'fecha_inicio' => $periodo->fecha_inicio ? Carbon::parse($periodo->fecha_inicio)->format('Y-m-d') : null,
         'fecha_fin' => $periodo->fecha_fin ? Carbon::parse($periodo->fecha_fin)->format('Y-m-d') : null,
         'dias' => $periodo->dias,
+        'multiple_dates' => $periodo->multiple_dates ?? [],
         'observaciones' => $periodo->observaciones ?? ''
     ]);
 });
@@ -476,17 +479,54 @@ Route::get('/api/eventos-vacaciones', function () {
             $q->whereNull('deleted_at');
         })
         ->get()
-        ->map(function ($p) {
-            return [
-                'title' => $p->empleado ? $p->empleado->nombre . ' ' . substr($p->empleado->apellido_paterno, 0, 1) . '.' : 'Vacaciones Institucionales',
-                'start' => $p->fecha_inicio ? \Illuminate\Support\Carbon::parse($p->fecha_inicio)->toDateString() : null,
-                'end'   => $p->fecha_fin ? \Illuminate\Support\Carbon::parse($p->fecha_fin)->addDay()->toDateString() : null,
-                'backgroundColor' => '#F97316',
-                'borderColor'     => '#F97316',
+        ->flatMap(function ($p) {
+            // Paleta sin azules ni rojos (tonos verdes, morados, naranjas, marrones, teal)
+            $palette = [
+                '#124416', 
+                '#ee7a9d', 
+                '#059669', 
+                '#b91081', 
+                '#0b4e4e', 
+                '#7c3aed', 
+                '#671e69', 
+                '#a87e3b', 
+                '#92400e', 
+                '#d97706', 
+                '#fcda7f', 
+                '#4c1d95',
+            ];
+
+            // Determinista por empleado id (si no existe, por texto del título)
+            $key = $p->empleado_id ?: ($p->empleado ? crc32($p->empleado->nombre . $p->empleado->apellido_paterno) : rand());
+            $color = $palette[$key % count($palette)];
+
+            $title = $p->empleado ? $p->empleado->nombre . ' ' . substr($p->empleado->apellido_paterno, 0, 1) . '.' : 'Vacaciones Institucionales';
+            $baseEvent = [
+                'title' => $title,
+                'backgroundColor' => $color,
+                'borderColor'     => $color,
                 'textColor'       => '#ffffff',
                 'classNames'      => ['evento-moderno', 'evento-vacacion-general'],
                 'extendedProps'   => ['tipo' => 'periodo_vacacional', 'is_special' => false],
             ];
+
+            if (!empty($p->multiple_dates) && is_array($p->multiple_dates)) {
+                return collect($p->multiple_dates)->map(function ($date) use ($baseEvent) {
+                    return array_merge($baseEvent, [
+                        'start' => $date,
+                        'end'   => \Illuminate\Support\Carbon::parse($date)->addDay()->toDateString(),
+                    ]);
+                });
+            }
+
+            if ($p->fecha_inicio && $p->fecha_fin) {
+                return [[
+                    'start' => \Illuminate\Support\Carbon::parse($p->fecha_inicio)->toDateString(),
+                    'end'   => \Illuminate\Support\Carbon::parse($p->fecha_fin)->addDay()->toDateString(),
+                ] + $baseEvent];
+            }
+
+            return [];
         })->filter(function($e) { return !empty($e['start']) && !empty($e['end']); })->toBase();
 
     $especiales = DiaEspecial::orderBy('fecha_inicio', 'desc')->get()->map(function ($dia) {
@@ -537,11 +577,12 @@ Route::put('/periodos/{id}', function (Request $request, $id) {
             $finReq = Carbon::parse($request->input('fecha_fin'));
             $selectedDates = [];
 
-            // CORRECCIÓN: Si viene 'multiple_dates' estructurado, lo usamos; si no, calculamos el rango real
+            // Si viene 'multiple_dates' estructurado, lo usamos; si no, intentamos usar el arreglo guardado o el rango completo.
             if ($request->filled('multiple_dates') && trim($request->input('multiple_dates')) !== '') {
                 $selectedDates = array_filter(array_map('trim', explode(',', $request->input('multiple_dates'))));
+            } elseif (!empty($periodo->multiple_dates)) {
+                $selectedDates = array_filter($periodo->multiple_dates);
             } else {
-                // Si el calendario no mandó mapeo de días, tomamos el rango de fechas de forma inclusiva
                 for ($d = $inicioReq->copy(); $d->lte($finReq); $d->addDay()) {
                     $selectedDates[] = $d->toDateString();
                 }
@@ -552,7 +593,6 @@ Route::put('/periodos/{id}', function (Request $request, $id) {
             }
 
             sort($selectedDates);
-
             $inicioNuevo = Carbon::parse($selectedDates[0]);
             $finNuevo = Carbon::parse(end($selectedDates));
 
@@ -560,19 +600,9 @@ Route::put('/periodos/{id}', function (Request $request, $id) {
                 return response()->json(['error' => "Las fechas editadas deben estar dentro del año {$anioActual}."], 422);
             }
 
-            // Contar días laborables o seleccionados reales
-            $diasNuevos = 0;
-            foreach ($selectedDates as $sd) {
-                $cd = Carbon::parse($sd);
-                // Si el rango se autogeneró por falta de multiple_dates, omitimos fines de semana para el conteo de días cobrables
-                if (!$request->filled('multiple_dates') && $cd->isWeekend()) {
-                    continue;
-                }
-                $diasNuevos++;
-            }
-
+            $diasNuevos = count($selectedDates);
             if ($diasNuevos === 0) {
-                return response()->json(['error' => 'El rango seleccionado solo contiene días inhábiles o fines de semana.'], 422);
+                return response()->json(['error' => 'Debe seleccionar al menos un día válido.'], 422);
             }
 
             $empleado = Empleado::find($empleadoId);
@@ -583,7 +613,6 @@ Route::put('/periodos/{id}', function (Request $request, $id) {
             $diasTomadosTotales = RegistroDescanso::where('empleado_id', $empleadoId)
                 ->where('anio_calendario', $anioActual)
                 ->sum('dias_tomados');
-            
             $diasTomadosSinEstePeriodo = $diasTomadosTotales - $periodo->dias;
 
             if (($diasTomadosSinEstePeriodo + $diasNuevos) > $diasDerecho) {
@@ -591,19 +620,23 @@ Route::put('/periodos/{id}', function (Request $request, $id) {
                 return response()->json(['error' => "El empleado solo tiene {$disponibles} día(s) disponible(s). No puedes asignarle {$diasNuevos} días."], 422);
             }
 
-            // Revertir días viejos del RegistroDescanso anterior
-            $inicioViejo = Carbon::parse($periodo->fecha_inicio);
-            $finViejo = Carbon::parse($periodo->fecha_fin);
-            
+            // Revertir los días viejos del RegistroDescanso usando los días reales guardados.
             $diasPorMesViejos = [];
-            $diasARevertir = $periodo->dias;
-            for ($fecha = $inicioViejo->copy(); $fecha->lte($finViejo); $fecha->addDay()) {
-                if ($diasARevertir <= 0) break;
-                if (!$fecha->isWeekend()) {
-                    $mes = $fecha->month;
-                    $diasPorMesViejos[$mes] = ($diasPorMesViejos[$mes] ?? 0) + 1;
-                    $diasARevertir--;
+            $diasViejos = [];
+            if (!empty($periodo->multiple_dates)) {
+                $diasViejos = $periodo->multiple_dates;
+            } else {
+                $inicioViejo = Carbon::parse($periodo->fecha_inicio);
+                $finViejo = Carbon::parse($periodo->fecha_fin);
+                for ($fecha = $inicioViejo->copy(); $fecha->lte($finViejo); $fecha->addDay()) {
+                    $diasViejos[] = $fecha->toDateString();
                 }
+            }
+
+            foreach ($diasViejos as $fechaVieja) {
+                $fecha = Carbon::parse($fechaVieja);
+                $mes = $fecha->month;
+                $diasPorMesViejos[$mes] = ($diasPorMesViejos[$mes] ?? 0) + 1;
             }
 
             foreach ($diasPorMesViejos as $mes => $cantidad) {
@@ -619,9 +652,6 @@ Route::put('/periodos/{id}', function (Request $request, $id) {
             $diasPorMesNuevos = [];
             foreach ($selectedDates as $selectedDate) {
                 $fechaObj = Carbon::parse($selectedDate);
-                if (!$request->filled('multiple_dates') && $fechaObj->isWeekend()) {
-                    continue; // No sumarle días tomados si es fin de semana calculado automáticamente
-                }
                 $mesN = $fechaObj->month;
                 $diasPorMesNuevos[$mesN] = ($diasPorMesNuevos[$mesN] ?? 0) + 1;
             }
@@ -632,13 +662,13 @@ Route::put('/periodos/{id}', function (Request $request, $id) {
                 $registro->save();
             }
 
-            // Actualizar el periodo vacacional
-            $periodo->fecha_inicio = $request->fecha_inicio;
-            $periodo->fecha_fin = $request->fecha_fin;
+            $periodo->fecha_inicio = $inicioNuevo->toDateString();
+            $periodo->fecha_fin = $finNuevo->toDateString();
             $periodo->dias = $diasNuevos;
+            $periodo->multiple_dates = $selectedDates;
             $periodo->observaciones = $request->has('observaciones') ? $request->input('observaciones') : $periodo->observaciones;
             $periodo->fecha_regreso = $finNuevo->copy()->addDay()->toDateString();
-            $periodo->save(); 
+            $periodo->save();
 
             \Log::info('Periodo actualizado con éxito', ['id' => $periodo->id]);
 

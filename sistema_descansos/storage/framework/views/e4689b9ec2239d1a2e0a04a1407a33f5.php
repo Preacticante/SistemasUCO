@@ -37,12 +37,14 @@
     </thead>
     <?php $canManage = session('email') === 'dsancheze@prepauco.edu.mx'; ?>
     <tbody>
-        <?php $__empty_1 = true; $__currentLoopData = $periodosVacacionales; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $periodo): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
+       <?php $__empty_1 = true; $__currentLoopData = $periodosVacacionales; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $periodo): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
             <?php
                 $empleado = $periodo->empleado;
                 $fechaFin = $periodo->fecha_fin ? \Carbon\Carbon::parse($periodo->fecha_fin) : null;
-                $yaTomado = $fechaFin ? $fechaFin->isPast() : false;
-                $estado = $fechaFin ? ($yaTomado ? 'Tomado' : 'Programado') : '';
+                
+                // Nueva lógica: si no tiene fecha, asumimos que es un descuento ya aplicado ("Tomado")
+                $yaTomado = $fechaFin ? $fechaFin->isPast() : true; 
+                $estado = $fechaFin ? ($yaTomado ? 'Tomado' : 'Programado') : 'Tomado';
             ?>
             <tr>
                 <td class="text-employee-name">
@@ -118,7 +120,470 @@
         <?php endif; ?>
     </div>
 
-    <style>
+   
+
+    <div id="editModal" class="modal-edit">
+        <div class="modal-edit-content">
+            <h3><i class="fas fa-calendar-plus"></i> Registrar / Editar vacaciones</h3>
+            <p style="color: #64748b; font-size: 0.9rem; margin-top:-5px; margin-bottom:15px;">Selecciona los días a descontar día a día en el calendario</p>
+            
+            <form id="editForm">
+                <?php echo csrf_field(); ?>
+                <div class="form-group">
+                    <label for="editEmpleado">Empleado:</label>
+                    <input type="text" id="editEmpleado" readonly style="background-color: #f8fafc; color: #64748b; font-weight: 500;">
+                </div>
+
+                <div class="form-group">
+                    <label>Calendario de fechas:</label>
+                    <div class="calendar-container">
+                        <div class="calendar-header">
+                            <button type="button" onclick="changeMonth(-1)"><i class="fas fa-chevron-left"></i></button>
+                            <span id="calendarMonthYear">Junio 2026</span>
+                            <button type="button" onclick="changeMonth(1)"><i class="fas fa-chevron-right"></i></button>
+                        </div>
+                        <div class="calendar-grid" id="calendarGrid">
+                            </div>
+                    </div>
+                    <div class="selected-days-summary" id="daysSummary">
+                        Días seleccionados a descontar: 0 días
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="editObservaciones">Observaciones:</label>
+                    <textarea id="editObservaciones" rows="3" placeholder="Escribe aquí algún comentario o motivo sobre el cambio de período..."></textarea>
+                </div>
+
+                <div class="modal-edit-buttons">
+                    <button type="button" class="btn-cancel" onclick="closeEditModal()">Cancelar</button>
+                    <button type="button" class="btn-save" onclick="guardarEdicion()">Guardar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+<?php $__env->stopSection(); ?>
+
+<?php $__env->startPush('scripts'); ?>
+<script>
+
+let csrfTokenHist = "<?php echo e(csrf_token()); ?>";
+let periodoEnEdicion = null;
+let empleadoEnEdicion = null;
+
+// Variables de estado del calendario interactivo
+let currentYear = 2026;
+let currentMonth = 5; // Junio (0-indexed)
+let selectedDates = [];
+let diasFestivosGlobales = [];
+let specialDateMap = {};
+
+const monthNames = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
+
+function parseYMDToLocal(dateStr) {
+    if (!dateStr) return null;
+    const cleanStr = String(dateStr).split('T')[0];
+    const parts = cleanStr.split('-').map(p => parseInt(p, 10));
+    if (parts.length === 3) {
+        return new Date(parts[0], parts[1] - 1, parts[2]);
+    }
+    return new Date(cleanStr);
+}
+
+function formatYMD(date) {
+    if (!date) return '';
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+}
+
+function getDatesBetween(start, end) {
+    const dates = [];
+    const current = new Date(start.getFullYear(), start.getMonth(), start.getDate());
+    const final = new Date(end.getFullYear(), end.getMonth(), end.getDate());
+    while (current <= final) {
+        dates.push(new Date(current));
+        current.setDate(current.getDate() + 1);
+    }
+    return dates;
+}
+
+function loadSpecialDays() {
+    return fetch('/api/eventos-vacaciones')
+        .then(response => response.json())
+        .then(events => {
+            specialDateMap = {};
+            events.forEach(ev => {
+                if (!ev.extendedProps || !ev.extendedProps.is_special) return;
+
+                const start = parseYMDToLocal(ev.start);
+                let end = ev.end ? parseYMDToLocal(ev.end) : start;
+                if (ev.end && ev.start !== ev.end) {
+                    end.setDate(end.getDate() - 1);
+                }
+
+                getDatesBetween(start, end).forEach(date => {
+                    specialDateMap[formatYMD(date)] = {
+                        tipo: ev.extendedProps.tipo || 'especial'
+                    };
+                });
+            });
+        })
+        .catch(error => {
+            console.error('Error cargando días especiales:', error);
+        });
+}
+
+function openEditModal(id, empleadoId) {
+    periodoEnEdicion = id;
+    empleadoEnEdicion = empleadoId;
+
+    Swal.fire({
+        title: 'Cargando...',
+        text: 'Obteniendo información del período',
+        allowOutsideClick: false,
+        allowEscapeKey: false,
+        didOpen: () => {
+            Swal.showLoading();
+        }
+    });
+
+    fetch(`/periodos/${id}`)
+        .then(response => {
+            if (!response.ok) throw new Error('Error fetching periodo');
+            return response.json();
+        })
+        .then(data => {
+            Swal.close();
+
+            const fechaFinPeriodo = new Date(data.fecha_fin + 'T23:59:59');
+            const hoy = new Date();
+
+            if (fechaFinPeriodo < hoy) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Período finalizado',
+                    text: 'Este período vacacional ya concluyó y no puede modificarse.',
+                    confirmButtonColor: '#124416'
+                });
+
+                periodoEnEdicion = null;
+                empleadoEnEdicion = null;
+                return; // <--- Este return es VÁLIDO porque está dentro de la función .then()
+            }
+
+            document.getElementById('editEmpleado').value = data.empleado_nombre || 'N/A';
+            document.getElementById('editObservaciones').value = data.observaciones || '';
+
+            if (Array.isArray(data.multiple_dates) && data.multiple_dates.length > 0) {
+                selectedDates = data.multiple_dates.slice().sort();
+                const firstDate = parseYMDToLocal(selectedDates[0]);
+                if (firstDate) {
+                    currentYear = firstDate.getFullYear();
+                    currentMonth = firstDate.getMonth();
+                }
+            } else if (data.fecha_inicio && data.fecha_fin) {
+                const pInicio = data.fecha_inicio.split('-');
+                const pFin = data.fecha_fin.split('-');
+                const inicio = new Date(pInicio[0], pInicio[1] - 1, pInicio[2]);
+                const fin = new Date(pFin[0], pFin[1] - 1, pFin[2]);
+                selectedDates = getDatesBetween(inicio, fin).map(formatYMD);
+                currentYear = inicio.getFullYear();
+                currentMonth = inicio.getMonth();
+            } else {
+                selectedDates = [];
+            }
+
+            loadSpecialDays().then(() => {
+                renderCalendar();
+            });
+            document.getElementById('editModal').classList.add('show');
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'No se pudo cargar el período.',
+                confirmButtonColor: '#dc2626'
+            });
+        });
+}
+
+function renderCalendar() {
+    const grid = document.getElementById('calendarGrid');
+    if (!grid) return; // <--- VÁLIDO: Retorno seguro si no existe el elemento en el DOM
+    
+    document.getElementById('calendarMonthYear').innerText = `${monthNames[currentMonth]} ${currentYear}`;
+    grid.innerHTML = '';
+
+    const daysLetters = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
+    daysLetters.forEach(d => {
+        const dDiv = document.createElement('div');
+        dDiv.className = 'day-name';
+        dDiv.innerText = d;
+        grid.appendChild(dDiv);
+    });
+
+    const firstDayIndex = new Date(currentYear, currentMonth, 1).getDay(); 
+    const totalDays = new Date(currentYear, currentMonth + 1, 0).getDate();
+    let startOffset = firstDayIndex === 0 ? 6 : firstDayIndex - 1;
+
+    for(let i = 0; i < startOffset; i++) {
+        const emptyDiv = document.createElement('div');
+        emptyDiv.className = 'calendar-day empty';
+        grid.appendChild(emptyDiv);
+    }
+
+    for(let day = 1; day <= totalDays; day++) {
+        const dayDiv = document.createElement('div');
+        dayDiv.className = 'calendar-day';
+        dayDiv.innerText = day;
+
+        const thisDate = new Date(currentYear, currentMonth, day);
+        const dateKey = formatYMD(thisDate);
+
+        const isSpecial = Boolean(specialDateMap[dateKey]);
+        if (isSpecial) {
+            const tipo = specialDateMap[dateKey].tipo;
+            if (tipo === 'festivo') {
+                dayDiv.classList.add('festivo-range');
+            } else if (tipo === 'institucional') {
+                dayDiv.classList.add('institucional-range');
+            } else if (tipo === 'descanso') {
+                dayDiv.classList.add('descanso-range');
+            } else {
+                dayDiv.classList.add('festivo-range');
+            }
+            dayDiv.classList.add('disabled');
+        }
+
+        const isSelected = selectedDates.includes(dateKey);
+        if (!isSpecial && isSelected) {
+            dayDiv.classList.add('selected-range');
+        }
+
+        dayDiv.onclick = () => {
+            if (isSpecial) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Fecha no seleccionable',
+                    text: 'Los días especiales no se pueden seleccionar aquí.',
+                    confirmButtonColor: '#124416'
+                });
+                return;
+            }
+            selectDate(thisDate);
+        };
+
+        grid.appendChild(dayDiv);
+    }
+
+    updateSummary();
+}
+
+function changeMonth(direction) {
+    currentMonth += direction;
+    if (currentMonth < 0) {
+        currentMonth = 11;
+        currentYear--;
+    } else if (currentMonth > 11) {
+        currentMonth = 0;
+        currentYear++;
+    }
+    renderCalendar();
+}
+
+function selectDate(date) {
+    const dateKey = formatYMD(date);
+    const index = selectedDates.indexOf(dateKey);
+    if (index === -1) {
+        selectedDates.push(dateKey);
+    } else {
+        selectedDates.splice(index, 1);
+    }
+    selectedDates.sort();
+    renderCalendar();
+}
+
+function getCountableSelectedDates() {
+    return selectedDates.filter(dateKey => !specialDateMap[dateKey]);
+}
+
+function updateSummary() {
+    const summary = document.getElementById('daysSummary');
+    if (!summary) return;
+
+    const countableDates = getCountableSelectedDates();
+    const totalSelected = countableDates.length;
+    summary.innerText = `Días seleccionados a descontar: ${totalSelected} día${totalSelected === 1 ? '' : 's'}`;
+}
+
+function closeEditModal() {
+    const modal = document.getElementById('editModal');
+    if (modal) modal.classList.remove('show');
+    
+    periodoEnEdicion = null;
+    empleadoEnEdicion = null;
+    selectedDates = [];
+}
+
+function guardarEdicion() {
+    if (!periodoEnEdicion) return; // <--- VÁLIDO
+
+    const inputObservaciones = document.getElementById('editObservaciones');
+    const observaciones = inputObservaciones ? inputObservaciones.value : '';
+    const countableDates = getCountableSelectedDates();
+
+    if (countableDates.length === 0) {
+        Swal.fire({
+            icon: 'warning',
+            title: 'Campos incompletos',
+            text: 'Por favor selecciona al menos un día verde en el calendario.',
+            confirmButtonColor: '#124416'
+        });
+        return;
+    }
+
+    const computeRangeBounds = (dateKeys) => {
+        const allDates = [...dateKeys];
+        allDates.sort();
+        return [allDates[0], allDates[allDates.length - 1]];
+    };
+
+    const [requestInicio, requestFin] = computeRangeBounds(countableDates);
+
+    Swal.fire({
+        title: 'Guardando cambios...',
+        text: 'Por favor espera',
+        allowOutsideClick: false,
+        allowEscapeKey: false,
+        didOpen: () => {
+            Swal.showLoading();
+        }
+    });
+
+    fetch(`/periodos/${periodoEnEdicion}`, {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'X-CSRF-TOKEN': csrfTokenHist
+        },
+        body: JSON.stringify({
+            fecha_inicio: requestInicio,
+            fecha_fin: requestFin,
+            multiple_dates: countableDates.sort().join(','),
+            observaciones: observaciones
+        })
+    })
+    .then(async response => {
+        const data = await response.json();
+        if (!response.ok) {
+            if (response.status === 422 && data.errors) {
+                let errorMessages = Object.values(data.errors).flat().join('\n');
+                throw new Error(errorMessages);
+            }
+            throw new Error(data.error || data.message || 'Error del servidor');
+        }
+        return data;
+    })
+    .then(data => {
+        Swal.fire({
+            icon: 'success',
+            title: '¡Actualizado!',
+            text: 'El período vacacional fue recalculado y modificado correctamente.',
+            confirmButtonColor: '#124416'
+        }).then(() => {
+            closeEditModal();
+            location.reload();
+        });
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        Swal.fire({
+            icon: 'error',
+            title: 'Validación de datos fallida',
+            text: error.message,
+            confirmButtonColor: '#dc2626'
+        });
+    });
+}
+
+function deletePeriodo(id) {
+    Swal.fire({
+        title: '¿Estás seguro?',
+        text: 'Esta acción eliminará la solicitud y restaurará los días al balance del empleado.',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#dc2626',
+        cancelButtonColor: '#e2e8f0',
+        confirmButtonText: 'Sí, eliminar',
+        cancelButtonText: '<span style="color:#334155">Cancelar</span>'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            Swal.fire({
+                title: 'Eliminando...',
+                text: 'Por favor espera',
+                allowOutsideClick: false,
+                allowEscapeKey: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+
+            fetch(`/periodos/${id}`, {
+                method: 'DELETE',
+                headers: {
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': csrfTokenHist
+                }
+            })
+            .then(async response => {
+                const data = await response.json();
+                if (!response.ok) throw new Error(data.error || 'Error del servidor');
+                return data;
+            })
+            .then(data => {
+                Swal.fire({
+                    title: '¡Eliminado!',
+                    text: 'Los días se han restaurado correctamente.',
+                    icon: 'success',
+                    confirmButtonColor: '#124416'
+                }).then(() => {
+                    location.reload();
+                });
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'No se pudo eliminar: ' + error.message,
+                    confirmButtonColor: '#dc2626'
+                });
+            });
+        }
+    });
+}
+
+// Event listener asignado de forma segura al cargar el archivo
+document.addEventListener('DOMContentLoaded', () => {
+    loadSpecialDays();
+
+    const modalElement = document.getElementById('editModal');
+    if (modalElement) {
+        modalElement.addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeEditModal();
+            }
+        });
+    }
+});
+
+</script>
+ <style>
         /* Contenedor de la cabecera superior */
         .panel-principal-header {
             background: white; 
@@ -468,509 +933,5 @@
             margin-top: 8px;
         }
     </style>
-
-    <div id="editModal" class="modal-edit">
-        <div class="modal-edit-content">
-            <h3><i class="fas fa-calendar-plus"></i> Registrar / Editar vacaciones</h3>
-            <p style="color: #64748b; font-size: 0.9rem; margin-top:-5px; margin-bottom:15px;">Selecciona los días a descontar día a día en el calendario</p>
-            
-            <form id="editForm">
-                <?php echo csrf_field(); ?>
-                <div class="form-group">
-                    <label for="editEmpleado">Empleado:</label>
-                    <input type="text" id="editEmpleado" readonly style="background-color: #f8fafc; color: #64748b; font-weight: 500;">
-                </div>
-
-                <div class="form-group">
-                    <label>Calendario de fechas:</label>
-                    <div class="calendar-container">
-                        <div class="calendar-header">
-                            <button type="button" onclick="changeMonth(-1)"><i class="fas fa-chevron-left"></i></button>
-                            <span id="calendarMonthYear">Junio 2026</span>
-                            <button type="button" onclick="changeMonth(1)"><i class="fas fa-chevron-right"></i></button>
-                        </div>
-                        <div class="calendar-grid" id="calendarGrid">
-                            </div>
-                    </div>
-                    <div class="selected-days-summary" id="daysSummary">
-                        Días seleccionados a descontar: 0 días
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    <label for="editObservaciones">Observaciones:</label>
-                    <textarea id="editObservaciones" rows="3" placeholder="Escribe aquí algún comentario o motivo sobre el cambio de período..."></textarea>
-                </div>
-
-                <div class="modal-edit-buttons">
-                    <button type="button" class="btn-cancel" onclick="closeEditModal()">Cancelar</button>
-                    <button type="button" class="btn-save" onclick="guardarEdicion()">Guardar</button>
-                </div>
-            </form>
-        </div>
-    </div>
-<?php $__env->stopSection(); ?>
-
-<?php $__env->startPush('scripts'); ?>
-<script>
-
-let csrfTokenHist = "<?php echo e(csrf_token()); ?>";
-let periodoEnEdicion = null;
-let empleadoEnEdicion = null;
-
-// Variables de estado del calendario interactivo
-let currentYear = 2026;
-let currentMonth = 5; // Junio (0-indexed)
-let startDateSelected = null;
-let endDateSelected = null;
-let diasFestivosGlobales = [];
-let specialDateMap = {};
-
-const monthNames = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
-
-function parseYMDToLocal(dateStr) {
-    if (!dateStr) return null;
-    const cleanStr = String(dateStr).split('T')[0];
-    const parts = cleanStr.split('-').map(p => parseInt(p, 10));
-    if (parts.length === 3) {
-        return new Date(parts[0], parts[1] - 1, parts[2]);
-    }
-    return new Date(cleanStr);
-}
-
-function formatYMD(date) {
-    if (!date) return '';
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-    return `${year}-${month}-${day}`;
-}
-
-function getDatesBetween(start, end) {
-    const dates = [];
-    const current = new Date(start.getFullYear(), start.getMonth(), start.getDate());
-    const final = new Date(end.getFullYear(), end.getMonth(), end.getDate());
-    while (current <= final) {
-        dates.push(new Date(current));
-        current.setDate(current.getDate() + 1);
-    }
-    return dates;
-}
-
-function loadSpecialDays() {
-    return fetch('/api/eventos-vacaciones')
-        .then(response => response.json())
-        .then(events => {
-            specialDateMap = {};
-            events.forEach(ev => {
-                if (!ev.extendedProps || !ev.extendedProps.is_special) return;
-
-                const start = parseYMDToLocal(ev.start);
-                let end = ev.end ? parseYMDToLocal(ev.end) : start;
-                if (ev.end && ev.start !== ev.end) {
-                    end.setDate(end.getDate() - 1);
-                }
-
-                getDatesBetween(start, end).forEach(date => {
-                    specialDateMap[formatYMD(date)] = {
-                        tipo: ev.extendedProps.tipo || 'especial'
-                    };
-                });
-            });
-        })
-        .catch(error => {
-            console.error('Error cargando días especiales:', error);
-        });
-}
-
-function openEditModal(id, empleadoId) {
-    periodoEnEdicion = id;
-    empleadoEnEdicion = empleadoId;
-
-    Swal.fire({
-        title: 'Cargando...',
-        text: 'Obteniendo información del período',
-        allowOutsideClick: false,
-        allowEscapeKey: false,
-        didOpen: () => {
-            Swal.showLoading();
-        }
-    });
-
-    fetch(`/periodos/${id}`)
-        .then(response => {
-            if (!response.ok) throw new Error('Error fetching periodo');
-            return response.json();
-        })
-        .then(data => {
-            Swal.close();
-
-            const fechaFinPeriodo = new Date(data.fecha_fin + 'T23:59:59');
-            const hoy = new Date();
-
-            if (fechaFinPeriodo < hoy) {
-                Swal.fire({
-                    icon: 'warning',
-                    title: 'Período finalizado',
-                    text: 'Este período vacacional ya concluyó y no puede modificarse.',
-                    confirmButtonColor: '#124416'
-                });
-
-                periodoEnEdicion = null;
-                empleadoEnEdicion = null;
-                return; // <--- Este return es VÁLIDO porque está dentro de la función .then()
-            }
-
-            document.getElementById('editEmpleado').value = data.empleado_nombre || 'N/A';
-            document.getElementById('editObservaciones').value = data.observaciones || '';
-
-            if(data.fecha_inicio && data.fecha_fin) {
-                const pInicio = data.fecha_inicio.split('-');
-                const pFin = data.fecha_fin.split('-');
-                startDateSelected = new Date(pInicio[0], pInicio[1] - 1, pInicio[2]);
-                endDateSelected = new Date(pFin[0], pFin[1] - 1, pFin[2]);
-                currentYear = parseInt(pInicio[0]);
-                currentMonth = parseInt(pInicio[1]) - 1;
-            } else {
-                startDateSelected = null;
-                endDateSelected = null;
-            }
-
-            loadSpecialDays().then(() => {
-                renderCalendar();
-            });
-            document.getElementById('editModal').classList.add('show');
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            Swal.fire({
-                icon: 'error',
-                title: 'Error',
-                text: 'No se pudo cargar el período.',
-                confirmButtonColor: '#dc2626'
-            });
-        });
-}
-
-function renderCalendar() {
-    const grid = document.getElementById('calendarGrid');
-    if (!grid) return; // <--- VÁLIDO: Retorno seguro si no existe el elemento en el DOM
-    
-    document.getElementById('calendarMonthYear').innerText = `${monthNames[currentMonth]} ${currentYear}`;
-    grid.innerHTML = '';
-
-    const daysLetters = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
-    daysLetters.forEach(d => {
-        const dDiv = document.createElement('div');
-        dDiv.className = 'day-name';
-        dDiv.innerText = d;
-        grid.appendChild(dDiv);
-    });
-
-    const firstDayIndex = new Date(currentYear, currentMonth, 1).getDay(); 
-    const totalDays = new Date(currentYear, currentMonth + 1, 0).getDate();
-    let startOffset = firstDayIndex === 0 ? 6 : firstDayIndex - 1;
-
-    for(let i = 0; i < startOffset; i++) {
-        const emptyDiv = document.createElement('div');
-        emptyDiv.className = 'calendar-day empty';
-        grid.appendChild(emptyDiv);
-    }
-
-    for(let day = 1; day <= totalDays; day++) {
-        const dayDiv = document.createElement('div');
-        dayDiv.className = 'calendar-day';
-        dayDiv.innerText = day;
-
-        const thisDate = new Date(currentYear, currentMonth, day);
-        const dateKey = formatYMD(thisDate);
-
-        const isSpecial = Boolean(specialDateMap[dateKey]);
-        if (isSpecial) {
-            const tipo = specialDateMap[dateKey].tipo;
-            if (tipo === 'festivo') {
-                dayDiv.classList.add('festivo-range');
-            } else if (tipo === 'institucional') {
-                dayDiv.classList.add('institucional-range');
-            } else if (tipo === 'descanso') {
-                dayDiv.classList.add('descanso-range');
-            } else {
-                dayDiv.classList.add('festivo-range');
-            }
-            dayDiv.classList.add('disabled');
-        }
-
-        const inRange = startDateSelected && endDateSelected && thisDate >= startDateSelected && thisDate <= endDateSelected;
-        const isStart = startDateSelected && thisDate.getTime() === startDateSelected.getTime();
-        const isEnd = endDateSelected && thisDate.getTime() === endDateSelected.getTime();
-
-        if (!isSpecial && (inRange || isStart || isEnd)) {
-            dayDiv.classList.add('selected-range');
-        }
-
-        dayDiv.onclick = () => {
-            if (isSpecial) {
-                Swal.fire({
-                    icon: 'warning',
-                    title: 'Fecha no seleccionable',
-                    text: 'Los días especiales no se pueden seleccionar aquí.',
-                    confirmButtonColor: '#124416'
-                });
-                return;
-            }
-            selectDate(thisDate);
-        };
-
-        grid.appendChild(dayDiv);
-    }
-
-    updateSummary();
-}
-
-function changeMonth(direction) {
-    currentMonth += direction;
-    if (currentMonth < 0) {
-        currentMonth = 11;
-        currentYear--;
-    } else if (currentMonth > 11) {
-        currentMonth = 0;
-        currentYear++;
-    }
-    renderCalendar();
-}
-
-function selectDate(date) {
-    if (!startDateSelected || (startDateSelected && endDateSelected)) {
-        startDateSelected = date;
-        endDateSelected = null;
-    } else if (startDateSelected && !endDateSelected) {
-        if (date < startDateSelected) {
-            endDateSelected = startDateSelected;
-            startDateSelected = date;
-        } else {
-            endDateSelected = date;
-        }
-    }
-    renderCalendar();
-}
-
-function getCountableSelectedDates() {
-    if (!startDateSelected) return [];
-    const end = endDateSelected || startDateSelected;
-    return getDatesBetween(startDateSelected, end)
-        .map(formatYMD)
-        .filter(dateKey => !specialDateMap[dateKey]);
-}
-
-function updateSummary() {
-    const summary = document.getElementById('daysSummary');
-    if (!summary) return;
-
-    const countableDates = getCountableSelectedDates();
-    const totalSelected = countableDates.length;
-    summary.innerText = `Días seleccionados a descontar: ${totalSelected} día${totalSelected === 1 ? '' : 's'}`;
-}
-
-function closeEditModal() {
-    const modal = document.getElementById('editModal');
-    if (modal) modal.classList.remove('show');
-    
-    periodoEnEdicion = null;
-    empleadoEnEdicion = null;
-    startDateSelected = null;
-    endDateSelected = null;
-}
-
-function guardarEdicion() {
-    if (!periodoEnEdicion) return; // <--- VÁLIDO
-
-    // Intentar buscar los controles de fecha por ID o por atributo Name
-    const inputInicio = document.getElementById('editFechaInicio') || document.querySelector('input[name="fecha_inicio"]');
-    const inputFin = document.getElementById('editFechaFin') || document.querySelector('input[name="fecha_fin"]');
-    const inputObservaciones = document.getElementById('editObservaciones');
-
-    // Si los inputs de texto no existen en este formulario, usamos los datos guardados del calendario interactivo
-    let fechaInicioStr = "";
-    let fechaFinStr = "";
-
-    if (startDateSelected) {
-        const finalEnd = endDateSelected || startDateSelected;
-        fechaInicioStr = formatYMD(startDateSelected);
-        fechaFinStr = formatYMD(finalEnd);
-    } else if (inputInicio && inputFin && inputInicio.value && inputFin.value) {
-        const convertirAFormatovAlido = (fechaStr) => {
-            const partes = fechaStr.includes('/') ? fechaStr.split('/') : fechaStr.split('-');
-            if (partes.length === 3) {
-                if (partes[0].length <= 2 && partes[2].length === 4) {
-                    return `${partes[2]}-${partes[1].padStart(2, '0')}-${partes[0].padStart(2, '0')}`;
-                }
-                if (partes[0].length === 4) {
-                    return `${partes[0]}-${partes[1].padStart(2, '0')}-${partes[2].padStart(2, '0')}`;
-                }
-            }
-            return fechaStr;
-        };
-        fechaInicioStr = convertirAFormatovAlido(inputInicio.value);
-        fechaFinStr = convertirAFormatovAlido(inputFin.value);
-    } else {
-        Swal.fire({
-            icon: 'warning',
-            title: 'Campos incompletos',
-            text: 'Por favor selecciona al menos un día en el calendario.',
-            confirmButtonColor: '#124416'
-        });
-        return;
-    }
-
-    const observaciones = inputObservaciones ? inputObservaciones.value : '';
-    const countableDates = getCountableSelectedDates();
-
-    if (countableDates.length === 0) {
-        Swal.fire({
-            icon: 'warning',
-            title: 'Campos incompletos',
-            text: 'Por favor selecciona al menos un día verde en el calendario.',
-            confirmButtonColor: '#124416'
-        });
-        return;
-    }
-
-    const computeRangeBounds = (dateKeys) => {
-        const allDates = [...dateKeys];
-        allDates.sort();
-        return [allDates[0], allDates[allDates.length - 1]];
-    };
-
-    const [requestInicio, requestFin] = computeRangeBounds(countableDates);
-
-    Swal.fire({
-        title: 'Guardando cambios...',
-        text: 'Por favor espera',
-        allowOutsideClick: false,
-        allowEscapeKey: false,
-        didOpen: () => {
-            Swal.showLoading();
-        }
-    });
-
-    fetch(`/periodos/${periodoEnEdicion}`, {
-        method: 'PUT',
-        headers: {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json',
-            'X-CSRF-TOKEN': csrfTokenHist
-        },
-        body: JSON.stringify({
-            fecha_inicio: requestInicio,
-            fecha_fin: requestFin,
-            multiple_dates: countableDates.sort().join(','),
-            observaciones: observaciones
-        })
-    })
-    .then(async response => {
-        const data = await response.json();
-        if (!response.ok) {
-            if (response.status === 422 && data.errors) {
-                let errorMessages = Object.values(data.errors).flat().join('\n');
-                throw new Error(errorMessages);
-            }
-            throw new Error(data.error || data.message || 'Error del servidor');
-        }
-        return data;
-    })
-    .then(data => {
-        Swal.fire({
-            icon: 'success',
-            title: '¡Actualizado!',
-            text: 'El período vacacional fue recalculado y modificado correctamente.',
-            confirmButtonColor: '#124416'
-        }).then(() => {
-            closeEditModal();
-            location.reload();
-        });
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        Swal.fire({
-            icon: 'error',
-            title: 'Validación de datos fallida',
-            text: error.message,
-            confirmButtonColor: '#dc2626'
-        });
-    });
-}
-
-function deletePeriodo(id) {
-    Swal.fire({
-        title: '¿Estás seguro?',
-        text: 'Esta acción eliminará la solicitud y restaurará los días al balance del empleado.',
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#dc2626',
-        cancelButtonColor: '#e2e8f0',
-        confirmButtonText: 'Sí, eliminar',
-        cancelButtonText: '<span style="color:#334155">Cancelar</span>'
-    }).then((result) => {
-        if (result.isConfirmed) {
-            Swal.fire({
-                title: 'Eliminando...',
-                text: 'Por favor espera',
-                allowOutsideClick: false,
-                allowEscapeKey: false,
-                didOpen: () => {
-                    Swal.showLoading();
-                }
-            });
-
-            fetch(`/periodos/${id}`, {
-                method: 'DELETE',
-                headers: {
-                    'Accept': 'application/json',
-                    'X-CSRF-TOKEN': csrfTokenHist
-                }
-            })
-            .then(async response => {
-                const data = await response.json();
-                if (!response.ok) throw new Error(data.error || 'Error del servidor');
-                return data;
-            })
-            .then(data => {
-                Swal.fire({
-                    title: '¡Eliminado!',
-                    text: 'Los días se han restaurado correctamente.',
-                    icon: 'success',
-                    confirmButtonColor: '#124416'
-                }).then(() => {
-                    location.reload();
-                });
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Error',
-                    text: 'No se pudo eliminar: ' + error.message,
-                    confirmButtonColor: '#dc2626'
-                });
-            });
-        }
-    });
-}
-
-// Event listener asignado de forma segura al cargar el archivo
-document.addEventListener('DOMContentLoaded', () => {
-    loadSpecialDays();
-
-    const modalElement = document.getElementById('editModal');
-    if (modalElement) {
-        modalElement.addEventListener('click', function(e) {
-            if (e.target === this) {
-                closeEditModal();
-            }
-        });
-    }
-});
-
-</script>
 <?php $__env->stopPush(); ?>
 <?php echo $__env->make('layouts.app', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH /var/www/html/resources/views/historial.blade.php ENDPATH**/ ?>
