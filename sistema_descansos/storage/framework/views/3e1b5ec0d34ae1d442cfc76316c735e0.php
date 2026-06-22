@@ -58,25 +58,14 @@
             <h2><i class="fa-solid fa-calendar-plus"></i> Registrar día especial</h2>
             <form action="<?php echo e(route('dias-especiales.store')); ?>" method="POST" class="special-form">
                 <?php echo csrf_field(); ?>
-                <div class="form-grid-2">
-                    <div class="form-group">
-                        <label for="tipo">Tipo de día</label>
-                        <select id="tipo" name="tipo" required>
-                            <option value="">Selecciona un tipo</option>
-                            <option value="descanso">Descanso de trabajador</option>
-                            <option value="festivo">Día festivo</option>
-                            <option value="institucional">Vacaciones institucionales</option>
-                        </select>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="selection_mode">Modalidad de Selección</label>
-                        <select id="selection_mode" name="selection_mode">
-                            <option value="personalizado">Personalizado</option>
-                            <option value="semana">Por semana</option>
-                            <option value="mes">Por mes</option>
-                        </select>
-                    </div>
+                <div class="form-group">
+                    <label for="tipo">Tipo de día</label>
+                    <select id="tipo" name="tipo" required>
+                        <option value="">Selecciona un tipo</option>
+                        <option value="descanso">Descanso de trabajador</option>
+                        <option value="festivo">Día festivo</option>
+                        <option value="institucional">Vacaciones institucionales</option>
+                    </select>
                 </div>
 
                 <div class="form-group">
@@ -100,14 +89,15 @@
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px;">
                         <label for="empleados">Asignar trabajadores</label>
                         
-                        <div id="bulk-select-container" style="display: none; gap: 10px; font-size: 0.85rem;">
-                            <button type="button" id="btn-select-all" style="background: none; border: none; color: #AA7F31; font-weight: 700; cursor: pointer; padding: 0;">
+                        
+                        <div id="bulk-select-container" style="display: none; align-items: center; gap: 8px; font-size: 0.9rem; font-weight: 600;">
+                            <span id="btn-select-all" style="color: #AA7F31; cursor: pointer; display: inline-flex; align-items: center; gap: 4px;">
                                 <i class="fa-solid fa-check-double"></i> Seleccionar todos
-                            </button>
-                            <span style="color: #cbd5e1;">|</span>
-                            <button type="button" id="btn-deselect-all" style="background: none; border: none; color: #64748b; font-weight: 600; cursor: pointer; padding: 0;">
+                            </span>
+                            <span style="color: #cbd5e1; font-weight: 400;">|</span>
+                            <span id="btn-deselect-all" style="color: #64748b; cursor: pointer; display: inline-flex; align-items: center; gap: 4px;">
                                 <i class="fa-solid fa-xmark"></i> Deseleccionar todos
-                            </button>
+                            </span>
                         </div>
                     </div>
                     <div class="select-wrapper">
@@ -117,7 +107,6 @@
                             <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                         </select>
                     </div>
-                    
                 </div>
 
                 <input type="hidden" id="multiple_dates" name="multiple_dates" value="<?php echo e(old('multiple_dates')); ?>">
@@ -131,7 +120,6 @@
 
                 <div class="summary-pill">
                     <span>Días seleccionados: <strong id="selected-count" class="badge">0</strong></span>
-                    <span>Modo activo: <strong id="selection-type-text">Personalizado</strong></span>
                 </div>
 
                 <button type="submit" class="btn-primary">
@@ -414,7 +402,7 @@
     .empty-table-state { text-align: center; padding: 40px !important; color: #94a3b8; }
     .empty-table-state i { font-size: 2.5rem; margin-bottom: 12px; display: block; opacity: 0.7; }
 
-    /* REESTRUCTURACIÓN DE DISEÑO EN FLATPICKR PARA RELLENAR TODO EL MARCO GRIS */
+    /* REESTRUCTURACIÓN DE DISEÑO EN FLATPICKR */
     #calendar-inline-container {
         display: block;
         background: #f8fafc;
@@ -455,7 +443,6 @@
         flex-wrap: wrap !important;
     }
 
-    /* Cada número se estira proporcionalmente al 100% de la caja disponible */
     .flatpickr-day { 
         flex: 1 0 14.28% !important;
         max-width: 14.28% !important;
@@ -470,7 +457,7 @@
         font-size: 1.05rem !important;
     }
 
-    .calendar-controls { margin-bottom: 16px; color: #64748b; font-size: 0.9rem; display: flex; align-items: center; gap: 8px;}
+    .calendar-controls { margin-bottom: 16px; color: #1c4722; font-size: 0.9rem; display: flex; align-items: center; gap: 8px;}
     .flatpickr-calendar.inline { box-shadow: none !important; background: transparent; }
     
     .flatpickr-day.selected, .flatpickr-day.startRange, .flatpickr-day.endRange {
@@ -497,8 +484,6 @@
 
 <script>
     const tipoSelect = document.getElementById('tipo');
-    const selectionMode = document.getElementById('selection_mode');
-    const selectionText = document.getElementById('selection-type-text');
     const selectedCount = document.getElementById('selected-count');
     const inputHiddenDates = document.getElementById('multiple_dates');
     const inputFechaInicio = document.getElementById('fecha_inicio');
@@ -507,30 +492,6 @@
     const inputFechaFinDisplay = document.getElementById('fecha_fin_display');
     const selectEmpleados = document.getElementById('empleados');
     const bulkSelectContainer = document.getElementById('bulk-select-container');
-    const btnSelectAll = document.getElementById('btn-select-all');
-    const btnDeselectAll = document.getElementById('btn-deselect-all');
-
-    function toggleBulkSelect() {
-        if (tipoSelect.value === 'festivo') {
-            bulkSelectContainer.style.display = 'flex';
-        } else {
-            bulkSelectContainer.style.display = 'none';
-        }
-    }
-
-    // Acción: Seleccionar todos
-    btnSelectAll.addEventListener('click', function() {
-        for (let i = 0; i < selectEmpleados.options.length; i++) {
-            selectEmpleados.options[i].selected = true;
-        }
-    });
-
-    // Acción: Deseleccionar todos
-    btnDeselectAll.addEventListener('click', function() {
-        for (let i = 0; i < selectEmpleados.options.length; i++) {
-            selectEmpleados.options[i].selected = false;
-        }
-    });
 
     const colors = { descanso: '#124416', festivo: '#AA7F31', institucional: '#340C51' };
     const textColors = { descanso: '#ffffff', festivo: '#ffffff', institucional: '#ffffff' };
@@ -540,14 +501,28 @@
         document.documentElement.style.setProperty('--selected-day-bg', colors[type]);
         document.documentElement.style.setProperty('--selected-day-color', textColors[type]);
         
-        toggleBulkSelect();
-        
+        // Muestra u oculta la barra de selección según el tipo de día "festivo"
+        if (type === 'festivo') {
+            bulkSelectContainer.style.display = 'flex';
+        } else {
+            bulkSelectContainer.style.display = 'none';
+        }
+
         if (fp) {
             if (type === 'descanso') { fp.set('disable', disabledForDescanso); } else { fp.set('disable', []); }
             fp.redraw();
             colorearDiasBloqueados();
         }
     }
+
+    // Funcionalidades de los botones Seleccionar/Deseleccionar todos
+    document.getElementById('btn-select-all').addEventListener('click', function() {
+        Array.from(selectEmpleados.options).forEach(option => option.selected = true);
+    });
+
+    document.getElementById('btn-deselect-all').addEventListener('click', function() {
+        Array.from(selectEmpleados.options).forEach(option => option.selected = false);
+    });
 
     function colorearDiasBloqueados() {
         if (!fp) return;
@@ -583,21 +558,6 @@
         selectedCount.textContent = dateStrings.length;
     }
 
-    function getWeekRange(date) {
-        const dayIndex = date.getDay();
-        const monday = new Date(date);
-        monday.setDate(date.getDate() - ((dayIndex + 6) % 7));
-        const sunday = new Date(monday);
-        sunday.setDate(monday.getDate() + 6);
-        return [monday, sunday];
-    }
-
-    function getMonthRange(date) {
-        const firstDay = new Date(date.getFullYear(), date.getMonth(), 1);
-        const lastDay = new Date(date.getFullYear(), date.getMonth() + 1, 0);
-        return [firstDay, lastDay];
-    }
-
     function getDatesBetween(start, end) {
         const dates = [];
         const current = new Date(start.getFullYear(), start.getMonth(), start.getDate());
@@ -625,15 +585,6 @@
         return `${y}-${m}-${d}`;
     }
 
-    // Vincula rangos completos de fechas según la selección
-    function selectRange(start, end) {
-        const dates = getDatesBetween(start, end);
-        fp.setDate(dates, true, 'Y-m-d');
-        updateFields(dates);
-    }
-
-    function clearSelection() { fp.clear(); updateFields([]); }
-
     let fp;
 
     function createSpecialDayCalendar() {
@@ -654,38 +605,18 @@
                 }
 
                 dayElement.dateObj && dayElement.addEventListener('click', function(e) {
-                    const mode = selectionMode.value;
                     const type = tipoSelect.value;
                     if (type === 'descanso' && disabledForDescansoSet.has(fp.formatDate(dayElement.dateObj, 'Y-m-d'))) {
                         e.preventDefault();
                         Swal.fire({ icon: 'warning', title: 'Fecha bloqueada', text: 'Esa fecha está marcada como festivo o vacaciones institucionales.' });
                         return;
                     }
-
-                    if (mode === 'semana') {
-                        const [start, end] = getWeekRange(dayElement.dateObj);
-                        const dates = getDatesBetween(start, end).map(d => fp.formatDate(d, 'Y-m-d'));
-                        if (type === 'descanso' && dates.some(d => disabledForDescansoSet.has(d))) {
-                            Swal.fire({ icon: 'error', title: 'Conflicto de fechas', text: 'La semana contiene días festivos o institucionales.' });
-                            return;
-                        }
-                        selectRange(start, end);
-                    } else if (mode === 'mes') {
-                        const [start, end] = getMonthRange(dayElement.dateObj);
-                        const dates = getDatesBetween(start, end).map(d => fp.formatDate(d, 'Y-m-d'));
-                        if (type === 'descanso' && dates.some(d => disabledForDescansoSet.has(d))) {
-                            Swal.fire({ icon: 'error', title: 'Conflicto de fechas', text: 'El mes contiene días festivos o institucionales.' });
-                            return;
-                        }
-                        selectRange(start, end);
-                    }
                 });
             },
             onMonthChange: function() { setTimeout(colorearDiasBloqueados, 10); },
             onYearChange: function() { setTimeout(colorearDiasBloqueados, 10); },
             onChange: function(selectedDates) {
-                const mode = selectionMode.value;
-                if (mode === 'varios' || mode === 'personalizado') updateFields(selectedDates);
+                updateFields(selectedDates);
                 if (selectedDates.length === 0) updateFields([]);
                 fp.redraw();
                 colorearDiasBloqueados();
@@ -722,12 +653,6 @@
     }).catch((err) => { 
         console.error("Error al mapear días especiales:", err);
         createSpecialDayCalendar(); 
-    });
-
-    selectionMode.addEventListener('change', function() {
-        selectionText.textContent = this.options[this.selectedIndex].text;
-        clearSelection();
-        colorearDiasBloqueados();
     });
 
     tipoSelect.addEventListener('change', function() { updateSelectedColor(); });

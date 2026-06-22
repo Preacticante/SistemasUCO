@@ -161,7 +161,7 @@
         <div class="vobo-row">
             <div class="signature-space-vobo"></div>
             <div class="vobo-col">
-                <div class="signature-line">reviso y autorizo</div>
+                <div class="signature-line">revisó y autorizó</div>
                 <div class="signature-details">L.C. Diana Sánchez Espino</div>
                 <div class="signature-details" style="color: #555;">Contralora Corporativa</div>
             </div>
