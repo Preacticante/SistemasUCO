@@ -457,7 +457,7 @@
         font-size: 1.05rem !important;
     }
 
-    .calendar-controls { margin-bottom: 16px; color: #1c4722; font-size: 0.9rem; display: flex; align-items: center; gap: 8px;}
+    .calendar-controls { margin-bottom: 16px; color: #648b69; font-size: 0.9rem; display: flex; align-items: center; gap: 8px;}
     .flatpickr-calendar.inline { box-shadow: none !important; background: transparent; }
     
     .flatpickr-day.selected, .flatpickr-day.startRange, .flatpickr-day.endRange {
