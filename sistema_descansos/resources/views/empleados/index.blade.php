@@ -14,7 +14,7 @@
         <div class="button-add-employee">
             <button onclick="abrirModal('modalAgregar')" class="btn-add">
                 <i class="fa-solid fa-user-plus"></i> 
-                <span class="btn-text">Agregar Empleado</span>
+                <span class="btn-text">Agregar empleado</span>
             </button>
         </div>
 
@@ -94,7 +94,7 @@
 {{-- MODAL AGREGAR --}}
 <div id="modalAgregar" class="modal">
     <div class="modal-content">
-        <h3 class="modal-header add"><i class="fa-solid fa-user-plus"></i> Nuevo Empleado</h3>
+        <h3 class="modal-header add"><i class="fa-solid fa-user-plus"></i> Nuevo empleado</h3>
         <form action="{{ route('empleados.store') }}" method="POST">
             @csrf 
             <div class="form-group"><label>Nombre(s)</label><input type="text" name="nombre" required></div>
@@ -122,7 +122,7 @@
 {{-- MODAL EDITAR --}}
 <div id="modalEditar" class="modal">
     <div class="modal-content">
-        <h3 class="modal-header edit"><i class="fa-solid fa-user-pen"></i> Editar Empleado</h3>
+        <h3 class="modal-header edit"><i class="fa-solid fa-user-pen"></i> Editar empleado</h3>
         <form id="formEditar" method="POST">
             @csrf @method('PUT')
             <div class="form-group"><label>Nombre(s)</label><input type="text" name="nombre" id="edit_nombre" required></div>
