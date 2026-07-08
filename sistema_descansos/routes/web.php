@@ -331,10 +331,13 @@ Route::get('/empleados/{empleado}/vacaciones/pdf', function (Request $request, E
             'anio' => $aj->anio,
             'dias' => $aj->dias,
             'usado' => $used,
+            'restante' => max(0, $aj->dias - $used),
             'motivo' => $aj->motivo ?? null,
         ]);
         $remainingTaken -= $used;
-        if ($remainingTaken <= 0) break;
+        if ($remainingTaken <= 0) {
+            $remainingTaken = 0;
+        }
     }
     // If still taken days remain, attribute them to the base derecho (current year entitlement)
     $usadoBase = 0;
@@ -361,6 +364,11 @@ Route::get('/empleados/{empleado}/vacaciones/pdf', function (Request $request, E
     }
 
     $periodoAnio = $periodoSeleccionado?->anio_calendario ?? $anioActual;
+    $periodoVisual = $periodoAnio;
+    $periodoResidual = $ajustesUsados->firstWhere('restante', '>', 0);
+    if ($periodoResidual) {
+        $periodoVisual = $periodoResidual->anio;
+    }
 
     $meses = [
         1 => 'Enero', 2 => 'Febrero', 3 => 'Marzo', 4 => 'Abril', 5 => 'Mayo', 6 => 'Junio',
@@ -370,7 +378,7 @@ Route::get('/empleados/{empleado}/vacaciones/pdf', function (Request $request, E
     $puesto = $empleado->puesto_id ? Puesto::find($empleado->puesto_id) : null;
     $fecha = Carbon::now();
 
-    $html = view('empleados.pdf', compact('empleado', 'anioActual', 'antiguedadAnios', 'diasDerecho', 'diasTomados', 'diasRestantes', 'registros', 'periodosVacacionales', 'periodoSeleccionado', 'periodoAnio', 'meses', 'puesto', 'fecha', 'ajustesPorAnio', 'ajustesUsados', 'usadoBase'))->render();
+    $html = view('empleados.pdf', compact('empleado', 'anioActual', 'antiguedadAnios', 'diasDerecho', 'diasTomados', 'diasRestantes', 'registros', 'periodosVacacionales', 'periodoSeleccionado', 'periodoAnio', 'periodoVisual', 'meses', 'puesto', 'fecha', 'ajustesPorAnio', 'ajustesUsados', 'usadoBase'))->render();
 
     $dompdf = new Dompdf;
     $dompdf->loadHtml($html);

@@ -14,16 +14,16 @@
             font-family: 'Arial', sans-serif;
             font-size: 11px;
             color: #000;
-            line-height: 1.2;
+            line-height: 1.4;
             background-color: #fff;
             padding: 0;
         }
 
         .container {
-            width: 210mm;
-            height: 297mm;
+            width: calc(100% - 16px);
+            max-width: 190mm;
             margin: 0 auto;
-            padding: 20px;
+            padding: 16px 10px 30px;
             background: white;
         }
 
@@ -31,7 +31,7 @@
         .header {
             display: table;
             width: 100%;
-            margin-bottom: 15px;
+            margin-bottom: 12px;
         }
 
         .header-cell {
@@ -40,7 +40,7 @@
         }
 
         .logo-cell {
-            width: 100px;
+            width: 90px;
             text-align: left;
         }
 
@@ -50,42 +50,45 @@
         }
 
         .title-cell {
-            width: 60%;
+            width: auto;
             text-align: center;
-            padding: 0 20px;
+            padding: 0 10px;
             vertical-align: middle;
         }
 
         .title-cell h1 {
             font-size: 13px;
             font-weight: bold;
-            line-height: 1.2;
+            line-height: 1.1;
             margin: 0;
         }
 
         .date-cell {
-            width: 140px;
+            width: 120px;
             text-align: right;
         }
 
         .date-label {
             font-size: 10px;
             margin-bottom: 2px;
+            display: block;
         }
 
         .date-value {
             border-bottom: 1px solid #000;
-            padding: 2px 4px;
+            padding: 2px 6px;
             font-weight: bold;
             font-size: 10px;
             text-align: center;
+            display: inline-block;
+            min-width: 70px;
         }
 
         /* ========== INTRO TEXT ========== */
         .intro-text {
             font-size: 10px;
             text-align: justify;
-            margin: 10px 0;
+            margin: 20px 0;
             line-height: 1.3;
         }
 
@@ -93,7 +96,7 @@
         .info-table {
             width: 100%;
             border-collapse: collapse;
-            margin: 10px 0;
+            margin: 20px 0;
             border: 1px solid #000;
         }
 
@@ -103,55 +106,59 @@
 
         .info-table td {
             border: 1px solid #000;
-            padding: 6px 8px;
+            padding: 6px 12px;
             font-size: 10px;
         }
 
         .info-table .label {
             font-weight: bold;
-            width: 12%;
-            background-color: #f0f0f0;
+            width: 14%;
+            background-color: #f7f7f7;
         }
 
         .info-table .value {
-            width: 88%;
+            width: 86%;
         }
 
         /* ========== BALANCES ROW ========== */
         .balance-row {
             display: flex;
-            justify-content: space-between;
+            justify-content: flex-start;
             align-items: center;
-            margin: 8px 0;
+            margin: 15px 0;
             font-size: 10px;
-            gap: 10px;
+            gap: 12px;
             flex-wrap: wrap;
         }
 
         .balance-item {
-            display: flex;
+            display: inline-flex;
             align-items: center;
-            gap: 5px;
+            gap: 6px;
+            flex-wrap: wrap;
+            min-width: 220px;
         }
 
         .balance-label {
             font-weight: bold;
+            white-space: nowrap;
         }
 
         .balance-box {
             border: 1px solid #000;
             padding: 4px 8px;
             font-weight: bold;
-            min-width: 30px;
+            min-width: 32px;
             text-align: center;
             font-size: 11px;
+            background-color: #fff;
         }
 
         /* ========== TABLE TITLE ========== */
         .table-title {
             font-weight: bold;
             font-size: 10px;
-            margin: 10px 0 5px 0;
+            margin: 25px 0 10px 0;
             text-align: center;
         }
 
@@ -159,24 +166,26 @@
         .vacation-table {
             width: 100%;
             border-collapse: collapse;
-            margin: 5px 0 8px 0;
+            margin: 12px 0 25px 0;
             border: 1px solid #000;
+        }
+
+        .vacation-table th,
+        .vacation-table td {
+            border: 1px solid #000;
+            padding: 8px 6px;
+            font-size: 9px;
+            text-align: center;
+            line-height: 1.2;
+            vertical-align: middle;
         }
 
         .vacation-table th {
-            border: 1px solid #000;
-            padding: 5px 2px;
             font-weight: bold;
-            font-size: 9px;
-            text-align: center;
-            background-color: #fff;
+            background-color: #fafafa;
         }
 
         .vacation-table td {
-            border: 1px solid #000;
-            padding: 5px 2px;
-            font-size: 9px;
-            text-align: center;
             height: 20px;
         }
 
@@ -184,67 +193,68 @@
         .observations-title {
             font-weight: bold;
             font-size: 10px;
-            margin: 8px 0 5px 0;
+            margin: 20px 0 6px 0;
         }
 
         .observations-box {
             border: 1px solid #000;
-            padding: 8px;
-            min-height: 45px;
+            padding: 10px;
+            min-height: 60px;
             font-size: 10px;
             text-align: left;
-            line-height: 1.3;
+            line-height: 1.4;
+            background-color: #fff;
         }
 
         /* ========== DISCLAIMER ========== */
         .disclaimer {
             font-size: 9px;
-            margin-top: 6px;
+            margin-top: 15px;
             text-align: justify;
             line-height: 1.2;
         }
 
-        /* ========== SIGNATURES ========== */
+       /* ========== SIGNATURES ========== */
         .signatures-section {
-            margin-top: 40px;
-        }
-
-        .signatures-row {
-            display: table;
+            margin-top: 75px;
             width: 100%;
-            table-layout: fixed;
-            margin-bottom: 30px;
         }
 
-        .signature-col {
-            display: table-cell;
-            width: 33.33%;
-            text-align: center;
+        /* Usamos tablas tradicionales compatibles con cualquier generador de PDF */
+        .signatures-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: none !important; /* Quita bordes externos si los hereda */
+        }
+
+        .signatures-table td {
+            border: none !important; /* Garantiza que las celdas no tengan cuadros negros */
+            padding: 0;
             vertical-align: top;
+            text-align: center;
         }
 
         .signature-line {
+            width: 160px;
             border-top: 1px solid #000;
-            height: 45px;
-            margin-bottom: 4px;
+            margin: 0 auto 12px auto;
         }
 
         .signature-title {
             font-size: 10px;
             font-weight: bold;
             text-transform: uppercase;
-            line-height: 1.2;
-            margin-bottom: 3px;
+            margin-bottom: 4px;
         }
 
         .signature-name {
             font-size: 9px;
-            margin-bottom: 1px;
+            margin-bottom: 2px;
         }
 
         .signature-position {
             font-size: 8px;
-            color: #666;
+            color: #555;
         }
     </style>
 </head>
@@ -305,7 +315,7 @@
             <span class="balance-label">Días pendientes por disfrutar:</span>
             <span class="balance-box">{{ $diasRestantes }}</span>
             <span>días del Período Vacacional</span>
-            <span class="balance-box">{{ $anioActual }}</span>
+            <span class="balance-box">2025</span>
         </div>
         <div class="balance-item">
             <span class="balance-label">Días con derecho:</span>
@@ -347,7 +357,7 @@
         <tbody>
             @if($ultimoPeriodo && $ultimoPeriodo->fecha_inicio && $ultimoPeriodo->fecha_fin)
                 <tr>
-                    <td>{{ $ultimoPeriodo->anio_calendario ?? $anioActual }}</td>
+                    <td>{{ $periodoVisual ?? $periodoAnio }}</td>
                     <td>{{ $ultimoPeriodo->dias ?? 0 }}</td>
                     <td>{{ \Carbon\Carbon::parse($ultimoPeriodo->fecha_inicio)->format('d') }}</td>
                     <td>{{ \Carbon\Carbon::parse($ultimoPeriodo->fecha_inicio)->format('m') }}</td>
@@ -383,9 +393,22 @@
             <span class="balance-label">Días restantes por disfrutar:</span>
             <span class="balance-box">{{ $diasRestantes }}</span>
             <span>días del Período Vacacional</span>
-            <span class="balance-box">{{ $anioActual }}</span>
+            <span class="balance-box">2025</span>
         </div>
     </div>
+
+    @if(isset($ajustesUsados) && $ajustesUsados->count() > 0)
+        @foreach($ajustesUsados as $ajuste)
+            <div class="balance-row">
+                <div class="balance-item">
+                    <span class="balance-label">Días del periodo {{ $ajuste->anio }}:</span>
+                    <span class="balance-box">{{ $ajuste->restante }}</span>
+                    <span>días del Período Vacacional</span>
+                    <span class="balance-box">{{ $ajuste->anio }}</span>
+                </div>
+            </div>
+        @endforeach
+    @endif
 
     <!-- OBSERVATIONS -->
     <div class="observations-title">Observaciones:</div>
@@ -400,29 +423,39 @@
 
     <!-- SIGNATURES -->
     <div class="signatures-section">
-        <div class="signatures-row">
-            <div class="signature-col">
-                <div class="signature-line"></div>
-                <div class="signature-title">ACEPTO DE CONFORMIDAD</div>
-                <div class="signature-name">{{ $empleado->nombre }} {{ $empleado->apellido_paterno }} {{ $empleado->apellido_materno }}</div>
-                <div class="signature-position">{{ $puesto?->nombre ?? 'Puesto' }}</div>
-            </div>
-            <div class="signature-col">
-                <div class="signature-line"></div>
-                <div class="signature-title">RECIBIDO</div>
-                <div class="signature-name">Roberto Carlos Matehuala Vargas</div>
-                <div class="signature-position">Coordinador Administrativo</div>
-            </div>
-            <div class="signature-col">
-                <div class="signature-line"></div>
-                <div class="signature-title">REVISO Y AUTORIZO</div>
-                <div class="signature-name">L.C. Diana Sánchez Espino</div>
-                <div class="signature-position">Contralora Corporativa</div>
-            </div>
-        </div>
-    </div>
+        
+        <table class="signatures-table" style="margin-bottom: 40px;">
+            <tr>
+                <td style="width: 45%;">
+                    <div class="signature-line"></div>
+                    <div class="signature-title">ACEPTO DE CONFORMIDAD</div>
+                    <div class="signature-name">Juan José Fabián Ramos</div>
+                    <div class="signature-position">Intendente</div>
+                </td>
+                <td style="width: 10%;"></td>
+                <td style="width: 45%;">
+                    <div class="signature-line"></div>
+                    <div class="signature-title">RECIBIDO</div>
+                    <div class="signature-name">Roberto Carlos Matehuala Vargas</div>
+                    <div class="signature-position">Coordinador Administrativo</div>
+                </td>
+            </tr>
+        </table>
 
-</div>
+        <table class="signatures-table">
+            <tr>
+                <td style="width: 25%;"></td>
+                <td style="width: 50%;">
+                    <div class="signature-line"></div>
+                    <div class="signature-title">REVISÓ Y AUTORIZÓ</div>
+                    <div class="signature-name">L.C. Diana Sánchez Espino</div>
+                    <div class="signature-position">Contralora Corporativa</div>
+                </td>
+                <td style="width: 25%;"></td>
+            </tr>
+        </table>
+
+    </div>
 
 </body>
 </html>
