@@ -234,7 +234,8 @@ public function storePuesto(Request $request)
                         ->orderBy('anios_antiguedad', 'desc')
                         ->first();
 
-            $diasDerecho = $ley ? $ley->dias_derecho : 0;
+            $diasExtra = \DB::table('ajustes_dias_vacaciones')->where('empleado_id', $emp->id)->where('anio', '<=', $anio)->sum('dias');
+            $diasDerecho = ($ley ? $ley->dias_derecho : 0) + $diasExtra;
 
             $descansos = \DB::table('periodos_vacacionales') 
                         ->where('empleado_id', $emp->id)

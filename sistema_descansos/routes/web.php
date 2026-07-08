@@ -196,7 +196,8 @@ Route::get('/empleados/{empleado}/vacaciones', function (Empleado $empleado) {
     $anioActual = Carbon::now()->year;
     $antiguedadAnios = (int) floor(Carbon::parse($empleado->fecha_ingreso)->diffInYears(Carbon::now()));
     $ley = LeyVacacion::where('anios_antiguedad', '<=', $antiguedadAnios)->orderBy('anios_antiguedad', 'desc')->first();
-    $diasDerecho = $ley?->dias_derecho ?? 0;
+    $diasExtra = DB::table('ajustes_dias_vacaciones')->where('empleado_id', $empleado->id)->where('anio', '<=', $anioActual)->sum('dias');
+    $diasDerecho = ($ley?->dias_derecho ?? 0) + $diasExtra;
 
     $registros = RegistroDescanso::where('empleado_id', $empleado->id)->where('anio_calendario', $anioActual)->orderBy('mes')->get();
     $diasTomados = $registros->sum('dias_tomados');
@@ -224,7 +225,8 @@ Route::post('/empleados/{empleado}/vacaciones', function (Request $request, Empl
     $anioActual = Carbon::now()->year;
     $antiguedadAnios = (int) floor(Carbon::parse($empleado->fecha_ingreso)->diffInYears(Carbon::now()));
     $ley = LeyVacacion::where('anios_antiguedad', '<=', $antiguedadAnios)->orderBy('anios_antiguedad', 'desc')->first();
-    $diasDerecho = $ley?->dias_derecho ?? 0;
+    $diasExtra = DB::table('ajustes_dias_vacaciones')->where('empleado_id', $empleado->id)->where('anio', '<=', $anioActual)->sum('dias');
+    $diasDerecho = ($ley?->dias_derecho ?? 0) + $diasExtra;
 
     $validator = Validator::make($request->all(), [
         'multiple_dates'   => 'required|string',
@@ -308,25 +310,57 @@ Route::get('/empleados/{empleado}/vacaciones/pdf', function (Request $request, E
 
     $antiguedadAnios = (int) floor(Carbon::parse($empleado->fecha_ingreso)->diffInYears(Carbon::now()));
     $ley = LeyVacacion::where('anios_antiguedad', '<=', $antiguedadAnios)->orderBy('anios_antiguedad', 'desc')->first();
-    $diasDerecho = $ley?->dias_derecho ?? 0;
+    $ajustesPorAnio = DB::table('ajustes_dias_vacaciones')
+        ->where('empleado_id', $empleado->id)
+        ->where('anio', '<=', $anioActual)
+        ->orderBy('anio')
+        ->get();
+    $diasExtra = $ajustesPorAnio->sum('dias');
+    $diasDerecho = ($ley?->dias_derecho ?? 0) + $diasExtra;
 
     $registros = RegistroDescanso::where('empleado_id', $empleado->id)->where('anio_calendario', $anioActual)->orderBy('mes')->get();
     $diasTomados = $registros->sum('dias_tomados');
     $diasRestantes = max(0, $diasDerecho - $diasTomados);
 
+    // Allocate taken days to ajustes (oldest-first) so we can display which year provided the days
+    $remainingTaken = $diasTomados;
+    $ajustesUsados = collect();
+    foreach ($ajustesPorAnio as $aj) {
+        $used = min($aj->dias, $remainingTaken);
+        $ajustesUsados->push((object)[
+            'anio' => $aj->anio,
+            'dias' => $aj->dias,
+            'usado' => $used,
+            'motivo' => $aj->motivo ?? null,
+        ]);
+        $remainingTaken -= $used;
+        if ($remainingTaken <= 0) break;
+    }
+    // If still taken days remain, attribute them to the base derecho (current year entitlement)
+    $usadoBase = 0;
+    if ($remainingTaken > 0) {
+        $usadoBase = min(($ley?->dias_derecho ?? 0), $remainingTaken);
+        $remainingTaken -= $usadoBase;
+    }
+
     $periodosVacacionales = PeriodoVacacional::where('empleado_id', $empleado->id)
+        ->where('anio_calendario', $anioActual)
         ->whereNull('deleted_at')
-        ->orderBy('fecha_inicio', 'desc')
+        ->orderBy('anio_calendario', 'asc')
+        ->orderBy('fecha_inicio', 'asc')
         ->get();
 
     $periodoSeleccionado = null;
     if ($request->has('periodo_id')) {
         $periodoSeleccionado = PeriodoVacacional::where('empleado_id', $empleado->id)
+            ->whereNull('deleted_at')
             ->find($request->query('periodo_id'));
     }
-    if (! $periodoSeleccionado) {
+    if (! $periodoSeleccionado && $periodosVacacionales->count() > 0) {
         $periodoSeleccionado = $periodosVacacionales->first();
     }
+
+    $periodoAnio = $periodoSeleccionado?->anio_calendario ?? $anioActual;
 
     $meses = [
         1 => 'Enero', 2 => 'Febrero', 3 => 'Marzo', 4 => 'Abril', 5 => 'Mayo', 6 => 'Junio',
@@ -336,7 +370,7 @@ Route::get('/empleados/{empleado}/vacaciones/pdf', function (Request $request, E
     $puesto = $empleado->puesto_id ? Puesto::find($empleado->puesto_id) : null;
     $fecha = Carbon::now();
 
-    $html = view('empleados.pdf', compact('empleado', 'anioActual', 'antiguedadAnios', 'diasDerecho', 'diasTomados', 'diasRestantes', 'registros', 'periodosVacacionales', 'periodoSeleccionado', 'meses', 'puesto', 'fecha'))->render();
+    $html = view('empleados.pdf', compact('empleado', 'anioActual', 'antiguedadAnios', 'diasDerecho', 'diasTomados', 'diasRestantes', 'registros', 'periodosVacacionales', 'periodoSeleccionado', 'periodoAnio', 'meses', 'puesto', 'fecha', 'ajustesPorAnio', 'ajustesUsados', 'usadoBase'))->render();
 
     $dompdf = new Dompdf;
     $dompdf->loadHtml($html);
@@ -345,7 +379,7 @@ Route::get('/empleados/{empleado}/vacaciones/pdf', function (Request $request, E
 
     return response($dompdf->output(), 200, [
         'Content-Type' => 'application/pdf',
-        'Content-Disposition' => 'inline; filename="vacaciones_'.str_replace(' ', '_', $empleado->nombre.'_'.$empleado->apellido_paterno.'_'.$empleado->apellido_materno).'_'.$anioActual.'.pdf"',
+        'Content-Disposition' => 'inline; filename="vacaciones_'.str_replace(' ', '_', $empleado->nombre.'_'.$empleado->apellido_paterno.'_'.$empleado->apellido_materno).'_'.($periodoAnio ?? $anioActual).'.pdf"',
     ]);
 })->name('empleados.vacaciones.pdf');
 
@@ -355,7 +389,8 @@ Route::get('/empleados/{empleado}/vacaciones/historial/pdf', function (Empleado 
     $anioActual = Carbon::now()->year;
     $antiguedadAnios = (int) floor(Carbon::parse($empleado->fecha_ingreso)->diffInYears(Carbon::now()));
     $ley = LeyVacacion::where('anios_antiguedad', '<=', $antiguedadAnios)->orderBy('anios_antiguedad', 'desc')->first();
-    $diasDerecho = $ley?->dias_derecho ?? 0;
+    $diasExtra = DB::table('ajustes_dias_vacaciones')->where('empleado_id', $empleado->id)->where('anio', '<=', $anioActual)->sum('dias');
+    $diasDerecho = ($ley?->dias_derecho ?? 0) + $diasExtra;
 
     $registros = RegistroDescanso::where('empleado_id', $empleado->id)
         ->where('anio_calendario', $anioActual)
@@ -417,7 +452,8 @@ Route::get('/panel/reporte/pdf', function () {
     foreach ($empleados as $empleado) {
         $antiguedadAnios = (int) floor(Carbon::parse($empleado->fecha_ingreso)->diffInYears(Carbon::now()));
         $ley = LeyVacacion::where('anios_antiguedad', '<=', $antiguedadAnios)->orderBy('anios_antiguedad', 'desc')->first();
-        $diasDerecho = $ley?->dias_derecho ?? 0;
+        $diasExtra = DB::table('ajustes_dias_vacaciones')->where('empleado_id', $empleado->id)->where('anio', '<=', $anioActual)->sum('dias');
+        $diasDerecho = ($ley?->dias_derecho ?? 0) + $diasExtra;
 
         $registros = RegistroDescanso::where('empleado_id', $empleado->id)
             ->where('anio_calendario', $anioActual)
@@ -608,7 +644,8 @@ Route::put('/periodos/{id}', function (Request $request, $id) {
             $empleado = Empleado::find($empleadoId);
             $antiguedadAnios = (int) floor(Carbon::parse($empleado->fecha_ingreso)->diffInYears(Carbon::now()));
             $ley = LeyVacacion::where('anios_antiguedad', '<=', $antiguedadAnios)->orderBy('anios_antiguedad', 'desc')->first();
-            $diasDerecho = $ley ? $ley->dias_derecho : 0;
+            $diasExtra = DB::table('ajustes_dias_vacaciones')->where('empleado_id', $empleadoId)->where('anio', '<=', $anioActual)->sum('dias');
+            $diasDerecho = ($ley ? $ley->dias_derecho : 0) + $diasExtra;
 
             $diasTomadosTotales = RegistroDescanso::where('empleado_id', $empleadoId)
                 ->where('anio_calendario', $anioActual)

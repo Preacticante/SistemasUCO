@@ -29,6 +29,8 @@
         </tr>
     </table>
 
+    
+
     <div class="intro-text">
         De conformidad con el Artículo 76 de la Ley Federal del Trabajo, se extiende la presente Constancia de Periodo Vacacional que usted disfrutará.
     </div>
@@ -50,18 +52,40 @@
 
     <table class="balances-table">
         <tr>
-            <td style="width: 23%; font-weight: bold;">Días pendientes por disfrutar:</td>
+            <td style="width: 22%; font-weight: bold; text-align:left;">Días pendientes por disfrutar:</td>
             <td class="cell-inline-border" style="width: 6%;"><?php echo e($diasRestantes); ?></td>
-            <td style="width: 25%; padding-left: 8px;">días del Período Vacacional</td>
-            <td class="cell-inline-border" style="width: 10%;"><?php echo e($anioActual); ?></td>
-            <td style="width: 10%;"></td>
-            <td style="width: 19%; text-align: right; font-weight: bold; padding-right: 5px;">Días con derecho:</td>
-            <td class="cell-inline-border" style="width: 7%;"><?php echo e($diasDerecho); ?></td>
+            <td style="width: 22%; padding-left: 8px; text-align:left;">días del Período Vacacional</td>
+            <td class="cell-inline-border" style="width: 8%;"><?php echo e($periodoAnio ?? $anioActual); ?></td>
+            <td style="width: 20%; text-align:right; font-weight: bold;">Días con derecho:</td>
+            <td class="cell-inline-border" style="width: 8%;"><?php echo e(($ley?->dias_derecho ?? 0) + (isset($ajustesPorAnio) ? $ajustesPorAnio->sum('dias') : 0)); ?></td>
         </tr>
     </table>
 
-    <div class="vacation-section-title">Último periodo vacacional disfrutado:</div>
     
+
+    
+
+    <table class="balances-table" style="margin-bottom: 20px !important;">
+        <tr>
+            <td style="width: 23%; font-weight: bold;">Días restantes por disfrutar:</td>
+            <td class="cell-inline-border" style="width: 6%"><?php echo e($diasRestantes); ?></td>
+            <td style="width: 25%; padding-left: 8px;">días del Período Vacacional</td>
+            <td class="cell-inline-border" style="width: 10%"><?php echo e($periodoAnio ?? $anioActual); ?></td>
+            <td></td>
+        </tr>
+    </table>
+
+    
+
+    <div class="vacation-section-title">Último periodo vacacional disfrutado:</div>
+    <?php
+        $ultimoPeriodo = $periodoSeleccionado ?? ($periodosVacacionales instanceof \Illuminate\Support\Collection 
+            ? $periodosVacacionales->first() 
+            : (is_array($periodosVacacionales) ? reset($periodosVacacionales) : null));
+        $periodoYear = $ultimoPeriodo?->anio_calendario ?? $periodoAnio ?? $anioActual;
+        $diasPeriodo = $ultimoPeriodo?->dias ?? $diasTomados;
+    ?>
+
     <table class="vacation-table">
         <thead>
             <tr>
@@ -84,16 +108,10 @@
             </tr>
         </thead>
         <tbody>
-            <?php
-                $ultimoPeriodo = $periodoSeleccionado ?? ($periodosVacacionales instanceof \Illuminate\Support\Collection 
-                    ? $periodosVacacionales->first() 
-                    : (is_array($periodosVacacionales) ? reset($periodosVacacionales) : null));
-            ?>
-
             <?php if($ultimoPeriodo && $ultimoPeriodo->fecha_inicio && $ultimoPeriodo->fecha_fin && $ultimoPeriodo->fecha_regreso): ?>
                 <tr>
-                    <td><?php echo e($anioActual); ?></td>
-                    <td style="font-weight: bold;"><?php echo e(\Carbon\Carbon::parse($ultimoPeriodo->fecha_inicio)->diffInDays(\Carbon\Carbon::parse($ultimoPeriodo->fecha_fin)) + 1); ?></td>
+                    <td><?php echo e($periodoYear); ?></td>
+                    <td style="font-weight: bold;"><?php echo e($ultimoPeriodo->dias ?? (\Carbon\Carbon::parse($ultimoPeriodo->fecha_inicio)->diffInDays(\Carbon\Carbon::parse($ultimoPeriodo->fecha_fin)) + 1)); ?></td>
                     <td><?php echo e(\Carbon\Carbon::parse($ultimoPeriodo->fecha_inicio)->format('d')); ?></td>
                     <td><?php echo e(\Carbon\Carbon::parse($ultimoPeriodo->fecha_inicio)->format('m')); ?></td>
                     <td><?php echo e(\Carbon\Carbon::parse($ultimoPeriodo->fecha_inicio)->format('Y')); ?></td>
@@ -103,6 +121,20 @@
                     <td><?php echo e(\Carbon\Carbon::parse($ultimoPeriodo->fecha_regreso)->format('d')); ?></td>
                     <td><?php echo e(\Carbon\Carbon::parse($ultimoPeriodo->fecha_regreso)->format('m')); ?></td>
                     <td><?php echo e(\Carbon\Carbon::parse($ultimoPeriodo->fecha_regreso)->format('Y')); ?></td>
+                </tr>
+            <?php elseif($ultimoPeriodo): ?>
+                <tr>
+                    <td><?php echo e($periodoYear); ?></td>
+                    <td style="font-weight: bold;"><?php echo e($ultimoPeriodo->dias ?? $diasTomados); ?></td>
+                    <td>--</td>
+                    <td>--</td>
+                    <td>--</td>
+                    <td>--</td>
+                    <td>--</td>
+                    <td>--</td>
+                    <td>--</td>
+                    <td>--</td>
+                    <td>--</td>
                 </tr>
             <?php else: ?>
                 <tr>
@@ -120,16 +152,6 @@
                 </tr>
             <?php endif; ?>
         </tbody>
-    </table>
-
-    <table class="balances-table" style="margin-bottom: 20px !important;">
-        <tr>
-            <td style="width: 23%; font-weight: bold;">Días restantes por disfrutar:</td>
-            <td class="cell-inline-border" style="width: 6%;"><?php echo e($diasRestantes); ?></td>
-            <td style="width: 25%; padding-left: 8px;">días del Período Vacacional</td>
-            <td class="cell-inline-border" style="width: 10%;"><?php echo e($anioActual); ?></td>
-            <td></td>
-        </tr>
     </table>
 
     <div class="observations-title">Observaciones:</div>
@@ -188,7 +210,7 @@
     }
 
     .container {
-        width: 92%;
+        width: 100%;
         margin: 0 auto;
         padding-top: 20px;
         text-align: center;
@@ -201,6 +223,7 @@
         margin-bottom: 12px !important;
         margin-left: 0 !important;
         margin-right: 0 !important;
+        table-layout: fixed;
     }
 
     .header-table td {
@@ -291,6 +314,8 @@
         padding: 5px 2px;
         text-align: center;
         font-size: 10px;
+        white-space: normal;
+        word-wrap: break-word;
     }
 
     .vacation-table th {
