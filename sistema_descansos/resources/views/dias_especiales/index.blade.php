@@ -110,6 +110,7 @@
                 </div>
 
                 <input type="hidden" id="multiple_dates" name="multiple_dates" value="{{ old('multiple_dates') }}">
+                <input type="hidden" id="selection_mode" name="selection_mode" value="{{ old('selection_mode', 'personalizado') }}">
                 <input type="hidden" id="fecha_inicio" name="fecha_inicio" value="{{ old('fecha_inicio') }}">
                 <input type="hidden" id="fecha_fin" name="fecha_fin" value="{{ old('fecha_fin') }}">
 
@@ -187,8 +188,8 @@
 @endsection
 
 @push('styles')
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@sweetalert2/theme-bootstrap-4/bootstrap-4.css">
+<link rel="stylesheet" href="{{ asset('vendor/flatpickr/flatpickr.min.css') }}">
+<link rel="stylesheet" href="{{ asset('vendor/sweetalert2/bootstrap-4.css') }}">
 
 <style>
     .dashboard-header-card {
@@ -478,9 +479,9 @@
 @endpush
 
 @push('scripts')
-<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
-<script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/es.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="{{ asset('vendor/flatpickr/flatpickr.min.js') }}"></script>
+<script src="{{ asset('vendor/flatpickr/es.js') }}"></script>
+<script src="{{ asset('vendor/sweetalert2/sweetalert2.min.js') }}"></script>
 
 <script>
     const tipoSelect = document.getElementById('tipo');

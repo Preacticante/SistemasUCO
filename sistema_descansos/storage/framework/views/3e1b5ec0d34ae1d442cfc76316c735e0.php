@@ -110,6 +110,7 @@
                 </div>
 
                 <input type="hidden" id="multiple_dates" name="multiple_dates" value="<?php echo e(old('multiple_dates')); ?>">
+                <input type="hidden" id="selection_mode" name="selection_mode" value="<?php echo e(old('selection_mode', 'personalizado')); ?>">
                 <input type="hidden" id="fecha_inicio" name="fecha_inicio" value="<?php echo e(old('fecha_inicio')); ?>">
                 <input type="hidden" id="fecha_fin" name="fecha_fin" value="<?php echo e(old('fecha_fin')); ?>">
 
@@ -187,8 +188,8 @@
 <?php $__env->stopSection(); ?>
 
 <?php $__env->startPush('styles'); ?>
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@sweetalert2/theme-bootstrap-4/bootstrap-4.css">
+<link rel="stylesheet" href="<?php echo e(asset('vendor/flatpickr/flatpickr.min.css')); ?>">
+<link rel="stylesheet" href="<?php echo e(asset('vendor/sweetalert2/bootstrap-4.css')); ?>">
 
 <style>
     .dashboard-header-card {
@@ -478,9 +479,9 @@
 <?php $__env->stopPush(); ?>
 
 <?php $__env->startPush('scripts'); ?>
-<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
-<script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/es.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="<?php echo e(asset('vendor/flatpickr/flatpickr.min.js')); ?>"></script>
+<script src="<?php echo e(asset('vendor/flatpickr/es.js')); ?>"></script>
+<script src="<?php echo e(asset('vendor/sweetalert2/sweetalert2.min.js')); ?>"></script>
 
 <script>
     const tipoSelect = document.getElementById('tipo');

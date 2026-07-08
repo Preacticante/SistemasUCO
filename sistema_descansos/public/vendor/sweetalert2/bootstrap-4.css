@@ -1,0 +1,154 @@
+body.swal2-shown:not(.swal2-no-backdrop, .swal2-toast-shown) {
+  overflow: hidden;
+}
+
+body.swal2-no-backdrop .swal2-container {
+  background-color: transparent !important;
+  pointer-events: none;
+}
+
+body.swal2-no-backdrop .swal2-container .swal2-popup {
+  pointer-events: auto;
+}
+
+.swal2-container {
+  display: grid;
+  position: fixed;
+  inset: 0;
+  z-index: 1060;
+  place-items: center;
+  padding: 0.625em;
+  background-color: rgba(0, 0, 0, 0.35);
+}
+
+.swal2-popup {
+  display: none;
+  position: relative;
+  width: 32em;
+  max-width: 100%;
+  padding: 1.25rem;
+  border: none;
+  border-radius: 0.3125rem;
+  background: #ffffff;
+  color: #545454;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.16);
+  font-family: inherit;
+  font-size: 1rem;
+}
+
+.swal2-popup.swal2-show {
+  display: grid;
+  animation: fadeInDown 0.3s;
+}
+
+.swal2-popup.swal2-hide {
+  animation: fadeOutUp 0.2s forwards;
+}
+
+@keyframes fadeInDown {
+  from {
+    transform: translate3d(0, -100%, 0);
+    opacity: 0;
+  }
+  to {
+    transform: translate3d(0, 0, 0);
+    opacity: 1;
+  }
+}
+
+@keyframes fadeOutUp {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+    transform: translate3d(0, -100%, 0);
+  }
+}
+
+.swal2-title {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 600;
+  text-align: center;
+}
+
+.swal2-html-container {
+  padding: 1em 1.6em 0.3em;
+  text-align: center;
+  font-size: 1rem;
+  line-height: 1.4;
+}
+
+.swal2-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-top: 1.25rem;
+}
+
+.swal2-styled {
+  min-width: 5rem;
+  padding: 0.625rem 1rem;
+  border: none;
+  border-radius: 0.25rem;
+  color: #ffffff;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.15s ease-in-out;
+}
+
+.swal2-confirm {
+  background-color: #0d6efd;
+}
+
+.swal2-deny {
+  background-color: #dc3545;
+}
+
+.swal2-cancel {
+  background-color: #6c757d;
+}
+
+.swal2-close {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  border: none;
+  background: transparent;
+  color: #6c757d;
+  font-size: 1.5rem;
+  cursor: pointer;
+}
+
+.swal2-icon {
+  margin: 2.5rem auto 0.6rem;
+  width: 5rem;
+  height: 5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  font-size: 3rem;
+}
+
+.swal2-success {
+  border: 0.25rem solid #198754;
+  color: #198754;
+}
+
+.swal2-warning {
+  border: 0.25rem solid #ffc107;
+  color: #856404;
+}
+
+.swal2-info {
+  border: 0.25rem solid #0dcaf0;
+  color: #0b7285;
+}
+
+.swal2-error {
+  border: 0.25rem solid #dc3545;
+  color: #dc3545;
+}
