@@ -48,17 +48,6 @@
         </tr>
     </table>
 
-    <table class="balances-table" style="margin-bottom: 18px;">
-        <tr>
-            <td style="width: 24%; font-weight: bold;">Días pendientes por disfrutar:</td>
-            <td class="cell-inline-border" style="width: 8%;">{{ $diasRestantes }}</td>
-            <td style="width: 20%; padding-left: 8px;">días del Período Vacacional</td>
-            <td class="cell-inline-border" style="width: 10%;">{{ $anioActual }}</td>
-            <td style="width: 13%; text-align: right; font-weight: bold; padding-right: 5px;">Días con derecho:</td>
-            <td class="cell-inline-border" style="width: 7%;">{{ $diasDerecho }}</td>
-        </tr>
-    </table>
-
     <div class="historial-title">Historial de solicitudes</div>
 
     <table class="vacation-table" style="margin-bottom: 16px;">
