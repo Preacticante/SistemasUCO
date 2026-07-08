@@ -110,6 +110,7 @@
                 </div>
 
                 <input type="hidden" id="multiple_dates" name="multiple_dates" value="<?php echo e(old('multiple_dates')); ?>">
+                <input type="hidden" id="selection_mode" name="selection_mode" value="<?php echo e(old('selection_mode', 'personalizado')); ?>">
                 <input type="hidden" id="fecha_inicio" name="fecha_inicio" value="<?php echo e(old('fecha_inicio')); ?>">
                 <input type="hidden" id="fecha_fin" name="fecha_fin" value="<?php echo e(old('fecha_fin')); ?>">
 
@@ -162,13 +163,17 @@
                         <td><i class="fa-regular fa-calendar" style="color: #64748b; margin-right: 6px;"></i><?php echo e($dia->fecha_inicio->format('d/m/Y')); ?></td>
                         <td><i class="fa-regular fa-calendar" style="color: #64748b; margin-right: 6px;"></i><?php echo e($dia->fecha_fin->format('d/m/Y')); ?></td>
                         <td style="text-align: center;">
-                            <form action="<?php echo e(route('dias-especiales.destroy', $dia->id)); ?>" method="POST" class="form-eliminar" style="display:inline;">
-                                <?php echo csrf_field(); ?>
-                                <?php echo method_field('DELETE'); ?>
-                                <button type="submit" class="btn-danger-outline" title="Eliminar registro">
-                                    <i class="fa-solid fa-trash-can"></i> Eliminar
-                                </button>
-                            </form>
+                            <?php if(strtolower(session('email') ?? '') === 'dsancheze@prepauco.edu.mx'): ?>
+                                <form action="<?php echo e(route('dias-especiales.destroy', $dia->id)); ?>" method="POST" class="form-eliminar" style="display:inline;">
+                                    <?php echo csrf_field(); ?>
+                                    <?php echo method_field('DELETE'); ?>
+                                    <button type="submit" class="btn-danger-outline" title="Eliminar registro">
+                                        <i class="fa-solid fa-trash-can"></i> Eliminar
+                                    </button>
+                                </form>
+                            <?php else: ?>
+                                <button class="btn-danger-outline btn-disabled" title="No autorizado"><i class="fa-solid fa-trash-can"></i> Eliminar</button>
+                            <?php endif; ?>
                         </td>
                     </tr>
                     <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
@@ -187,8 +192,8 @@
 <?php $__env->stopSection(); ?>
 
 <?php $__env->startPush('styles'); ?>
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@sweetalert2/theme-bootstrap-4/bootstrap-4.css">
+<link rel="stylesheet" href="<?php echo e(asset('vendor/flatpickr/flatpickr.min.css')); ?>">
+<link rel="stylesheet" href="<?php echo e(asset('vendor/sweetalert2/bootstrap-4.css')); ?>">
 
 <style>
     .dashboard-header-card {
@@ -478,9 +483,9 @@
 <?php $__env->stopPush(); ?>
 
 <?php $__env->startPush('scripts'); ?>
-<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
-<script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/es.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="<?php echo e(asset('vendor/flatpickr/flatpickr.min.js')); ?>"></script>
+<script src="<?php echo e(asset('vendor/flatpickr/es.js')); ?>"></script>
+<script src="<?php echo e(asset('vendor/sweetalert2/sweetalert2.min.js')); ?>"></script>
 
 <script>
     const tipoSelect = document.getElementById('tipo');
@@ -660,12 +665,55 @@
 
     const form = document.querySelector('.special-form');
     form.addEventListener('submit', function(e) {
+        e.preventDefault();
         const count = parseInt(selectedCount.textContent || '0', 10);
         if (count === 0) {
-            e.preventDefault();
             Swal.fire({ icon: 'info', title: 'Faltan fechas', text: 'Debes seleccionar al menos un día en el calendario antes de guardar.' });
             return false;
         }
+
+        // Preparar resumen para la confirmación
+        const tipo = tipoSelect.value || 'descanso';
+        const inicio = inputFechaInicioDisplay.value || '—';
+        const fin = inputFechaFinDisplay.value || '—';
+        const mensaje = `Tipo: ${tipo}\nDías seleccionados: ${count}\nInicio: ${inicio}\nFin: ${fin}`;
+
+        Swal.fire({
+            icon: 'question',
+            title: 'Confirmar registro',
+            text: '¿Deseas guardar este día especial? Revisa los datos antes de continuar.',
+            footer: mensaje,
+            showCancelButton: true,
+            confirmButtonText: 'Sí, guardar',
+            cancelButtonText: 'Cancelar',
+            confirmButtonColor: '#124416'
+        }).then(result => {
+            if (result.isConfirmed) {
+                // Enviar el formulario de forma clásica para respetar comportamiento del servidor
+                form.submit();
+            }
+        });
+        return false;
+    });
+
+    // Confirmación antes de eliminar un día especial (mantener estilo del sistema)
+    document.querySelectorAll('.form-eliminar').forEach(function(delForm) {
+        delForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            Swal.fire({
+                icon: 'warning',
+                title: 'Confirmar eliminación',
+                text: '¿Estás seguro de que deseas eliminar este día especial? Esta acción no se puede deshacer.',
+                showCancelButton: true,
+                confirmButtonText: 'Sí, eliminar',
+                cancelButtonText: 'Cancelar',
+                confirmButtonColor: '#dc2626'
+            }).then(result => {
+                if (result.isConfirmed) {
+                    delForm.submit();
+                }
+            });
+        });
     });
 </script>
 <?php $__env->stopPush(); ?>

@@ -19,6 +19,11 @@ class Empleado extends Model
 
     const DELETED_AT = 'deleted_at';
 
+    protected $casts = [
+        'deleted_at' => 'datetime',
+        'dias_extra' => 'integer',
+    ];
+
     protected $fillable = [
         'nombre', 
         'apellido_paterno', 
@@ -26,6 +31,7 @@ class Empleado extends Model
         'fecha_ingreso', 
         'puesto_id',
         'usuario_id',
+        'dias_extra',
         'deleted_at'
     ];
 

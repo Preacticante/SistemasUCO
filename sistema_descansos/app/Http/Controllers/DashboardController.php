@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 
 // Importamos los modelos necesarios para leer la base de datos
 use App\Models\Empleado;
@@ -39,7 +40,8 @@ class DashboardController extends Controller
                 $antiguedadAnios = Carbon::parse($empleado->fecha_ingreso)->diffInYears(Carbon::now());
                 
                 $ley = $leyes->firstWhere('anios_antiguedad', '<=', $antiguedadAnios);
-                $diasDerecho = $ley ? $ley->dias_derecho : 0;
+                $diasExtra = DB::table('ajustes_dias_vacaciones')->where('empleado_id', $empleado->id)->where('anio', '<=', $anioActual)->sum('dias');
+                $diasDerecho = ($ley ? $ley->dias_derecho : 0) + $diasExtra;
                 
                 $totalDiasDerecho += $diasDerecho;
 

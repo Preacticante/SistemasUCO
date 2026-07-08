@@ -38,9 +38,9 @@
                 <p>Administra registros y consulta el consumo de vacaciones de manera clara.</p>
             </div>
 
-            <a href="<?php echo e(route('panel')); ?>" class="button-link"> 
+            <a href="#" onclick="history.back(); return false;" class="button-link"> 
                 <i class="fa-solid fa-arrow-left button-icon-svg"></i>
-                Volver al inicio
+                Volver
             </a>
         </section>
 
@@ -230,6 +230,9 @@
                 } else if (special.tipo === 'institucional') {
                     dayElement.classList.add('bloqueado-institucional');
                 }
+            } else if (dayElement.classList.contains('selected') || dayElement.classList.contains('startRange') || dayElement.classList.contains('endRange')) {
+                const defaultColor = getComputedStyle(document.documentElement).getPropertyValue('--morado-uco').trim() || '#340C51';
+                dayElement.style.setProperty('--day-color', defaultColor);
             }
         });
     }
@@ -335,31 +338,33 @@
     }
 
     // --- VALIDACIONES AL ENVIAR FORMULARIO ---
-    formVacaciones.addEventListener('submit', function(e) {
-        const seleccionados = parseInt(inputDias.value) || 0;
+    if (formVacaciones) {
+        formVacaciones.addEventListener('submit', function(e) {
+            const seleccionados = parseInt(inputDias.value) || 0;
 
-        if (seleccionados === 0) {
-            e.preventDefault();
-            Swal.fire({
-                icon: 'warning',
-                title: 'Calendario Vacío',
-                text: 'Por favor, selecciona al menos un día en el calendario antes de guardar el registro.',
-                confirmButtonColor: '#AA7F31'
-            });
-            return false;
-        }
+            if (seleccionados === 0) {
+                e.preventDefault();
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Calendario Vacío',
+                    text: 'Por favor, selecciona al menos un día en el calendario antes de guardar el registro.',
+                    confirmButtonColor: '#AA7F31'
+                });
+                return false;
+            }
 
-        if (seleccionados > diasRestantes) {
-            e.preventDefault();
-            Swal.fire({
-                icon: 'error',
-                title: 'Días Insuficientes',
-                text: `Estás intentando solicitar ${seleccionados} días, pero el empleado sólo dispone de ${diasRestantes} días restantes.`,
-                confirmButtonColor: '#340C51'
-            });
-            return false;
-        }
-    });
+            if (seleccionados > diasRestantes) {
+                e.preventDefault();
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Días Insuficientes',
+                    text: `Estás intentando solicitar ${seleccionados} días, pero el empleado sólo dispone de ${diasRestantes} días restantes.`,
+                    confirmButtonColor: '#340C51'
+                });
+                return false;
+            }
+        });
+    }
 </script>
 </body>
 </html>
@@ -695,19 +700,31 @@
         opacity: 1 !important;
     }
 
-    /* 2. DÍAS SELECCIONADOS POR EL USUARIO */
-    .flatpickr-day.selected, 
-    .flatpickr-day.selected:hover, 
-    .flatpickr-day.selected:focus,
-    .flatpickr-day.startRange, 
-    .flatpickr-day.endRange {
-        background: var(--day-color, var(--morado-uco)) !important;
-        background-image: none !important; 
-        border: 1px solid var(--day-color, var(--morado-uco)) !important;
-        border-bottom: 1px solid var(--day-color, var(--morado-uco)) !important;
+    .flatpickr-day.selected:not(.has-special),
+    .flatpickr-day.selected:not(.has-special):hover,
+    .flatpickr-day.selected:not(.has-special):focus,
+    .flatpickr-day.startRange:not(.has-special),
+    .flatpickr-day.endRange:not(.has-special) {
+        background: var(--morado-uco) !important;
+        border: 1px solid var(--morado-uco) !important;
+        border-bottom: 1px solid var(--morado-uco) !important;
         color: #ffffff !important;
         font-weight: 600 !important;
         border-radius: 8px !important;
+        opacity: 1 !important;
+    }
+
+    /* 2. DÍAS SELECCIONADOS POR EL USUARIO */
+    .flatpickr-day.selected.has-special,
+    .flatpickr-day.selected.has-special:hover,
+    .flatpickr-day.selected.has-special:focus,
+    .flatpickr-day.startRange.has-special,
+    .flatpickr-day.endRange.has-special {
+        background: var(--day-color) !important;
+        background-image: linear-gradient(rgba(255,255,255,0.85), rgba(255,255,255,0.85)) !important;
+        border: 1px solid var(--day-color) !important;
+        border-bottom: 3px solid var(--day-color) !important;
+        color: var(--text-main) !important;
         opacity: 1 !important;
     }
 

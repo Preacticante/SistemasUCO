@@ -62,7 +62,7 @@
             @csrf
             <input type="email" name="email" placeholder="Correo electrónico institucional" required>
             <button type="submit" class="btn-enviar">Enviar enlace</button>
-            <a href="{{ route('login') }}" class="btn-regresar">Regresar al Login</a>
+            <a href="{{ route('login') }}" class="btn-regresar">Regresar al inicio de sesión</a>
         </form>
     </div>
 </body>
