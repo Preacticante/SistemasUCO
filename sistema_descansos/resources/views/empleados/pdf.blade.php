@@ -3,38 +3,287 @@
 <head>
     <meta charset="UTF-8">
     <title>Constancia de Periodo Vacacional</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            font-size: 11px;
+            color: #000;
+            line-height: 1.2;
+            background-color: #fff;
+            padding: 0;
+        }
+
+        .container {
+            width: 210mm;
+            height: 297mm;
+            margin: 0 auto;
+            padding: 20px;
+            background: white;
+        }
+
+        /* ========== HEADER ========== */
+        .header {
+            display: table;
+            width: 100%;
+            margin-bottom: 15px;
+        }
+
+        .header-cell {
+            display: table-cell;
+            vertical-align: top;
+        }
+
+        .logo-cell {
+            width: 100px;
+            text-align: left;
+        }
+
+        .logo-cell img {
+            width: 90px;
+            height: auto;
+        }
+
+        .title-cell {
+            width: 60%;
+            text-align: center;
+            padding: 0 20px;
+            vertical-align: middle;
+        }
+
+        .title-cell h1 {
+            font-size: 13px;
+            font-weight: bold;
+            line-height: 1.2;
+            margin: 0;
+        }
+
+        .date-cell {
+            width: 140px;
+            text-align: right;
+        }
+
+        .date-label {
+            font-size: 10px;
+            margin-bottom: 2px;
+        }
+
+        .date-value {
+            border-bottom: 1px solid #000;
+            padding: 2px 4px;
+            font-weight: bold;
+            font-size: 10px;
+            text-align: center;
+        }
+
+        /* ========== INTRO TEXT ========== */
+        .intro-text {
+            font-size: 10px;
+            text-align: justify;
+            margin: 10px 0;
+            line-height: 1.3;
+        }
+
+        /* ========== INFO TABLE ========== */
+        .info-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 10px 0;
+            border: 1px solid #000;
+        }
+
+        .info-table tr {
+            border: 1px solid #000;
+        }
+
+        .info-table td {
+            border: 1px solid #000;
+            padding: 6px 8px;
+            font-size: 10px;
+        }
+
+        .info-table .label {
+            font-weight: bold;
+            width: 12%;
+            background-color: #f0f0f0;
+        }
+
+        .info-table .value {
+            width: 88%;
+        }
+
+        /* ========== BALANCES ROW ========== */
+        .balance-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 8px 0;
+            font-size: 10px;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .balance-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .balance-label {
+            font-weight: bold;
+        }
+
+        .balance-box {
+            border: 1px solid #000;
+            padding: 4px 8px;
+            font-weight: bold;
+            min-width: 30px;
+            text-align: center;
+            font-size: 11px;
+        }
+
+        /* ========== TABLE TITLE ========== */
+        .table-title {
+            font-weight: bold;
+            font-size: 10px;
+            margin: 10px 0 5px 0;
+            text-align: center;
+        }
+
+        /* ========== VACATION TABLE ========== */
+        .vacation-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 5px 0 8px 0;
+            border: 1px solid #000;
+        }
+
+        .vacation-table th {
+            border: 1px solid #000;
+            padding: 5px 2px;
+            font-weight: bold;
+            font-size: 9px;
+            text-align: center;
+            background-color: #fff;
+        }
+
+        .vacation-table td {
+            border: 1px solid #000;
+            padding: 5px 2px;
+            font-size: 9px;
+            text-align: center;
+            height: 20px;
+        }
+
+        /* ========== OBSERVATIONS ========== */
+        .observations-title {
+            font-weight: bold;
+            font-size: 10px;
+            margin: 8px 0 5px 0;
+        }
+
+        .observations-box {
+            border: 1px solid #000;
+            padding: 8px;
+            min-height: 45px;
+            font-size: 10px;
+            text-align: left;
+            line-height: 1.3;
+        }
+
+        /* ========== DISCLAIMER ========== */
+        .disclaimer {
+            font-size: 9px;
+            margin-top: 6px;
+            text-align: justify;
+            line-height: 1.2;
+        }
+
+        /* ========== SIGNATURES ========== */
+        .signatures-section {
+            margin-top: 40px;
+        }
+
+        .signatures-row {
+            display: table;
+            width: 100%;
+            table-layout: fixed;
+            margin-bottom: 30px;
+        }
+
+        .signature-col {
+            display: table-cell;
+            width: 33.33%;
+            text-align: center;
+            vertical-align: top;
+        }
+
+        .signature-line {
+            border-top: 1px solid #000;
+            height: 45px;
+            margin-bottom: 4px;
+        }
+
+        .signature-title {
+            font-size: 10px;
+            font-weight: bold;
+            text-transform: uppercase;
+            line-height: 1.2;
+            margin-bottom: 3px;
+        }
+
+        .signature-name {
+            font-size: 9px;
+            margin-bottom: 1px;
+        }
+
+        .signature-position {
+            font-size: 8px;
+            color: #666;
+        }
+    </style>
 </head>
 <body>
 
 <div class="container">
-
-    <table class="header-table">
-        <tr>
-            <td class="logo-area" style="text-align: left;">
-                @php
-                    $path = public_path('img/logo_uco.png');
+    
+    <!-- HEADER -->
+    <div class="header">
+        <div class="header-cell logo-cell">
+            @php
+                $path = public_path('img/logo_uco.png');
+                if (file_exists($path)) {
                     $type = pathinfo($path, PATHINFO_EXTENSION);
                     $data = file_get_contents($path);
                     $base64 = 'data:image/' . $type . ';base64,' . base64_encode($data);
-                @endphp
-                <img src="{{ $base64 }}" alt="UCO PREPA CONTEMPORÁNEA" style="height: 160px; margin-bottom: 2px;">
-            </td>
-            <td class="title-area">
-                CONSTANCIA DE PERIODO VACACIONAL
-            </td>
-            <td class="date-area">
-                Fecha: <span class="date-box">{{ $fecha->format('d-M-y') }}</span>
-                <div class="date-format">dd/mm/aa</div>
-            </td>
-        </tr>
-    </table>
-
-    {{-- ajustes por año: se muestran más abajo, junto al origen de los días tomados (entre la tabla de períodos y Observaciones) --}}
-
-    <div class="intro-text">
-        De conformidad con el Artículo 76 de la Ley Federal del Trabajo, se extiende la presente Constancia de Periodo Vacacional que usted disfrutará.
+                } else {
+                    $base64 = '';
+                }
+            @endphp
+            @if($base64)
+                <img src="{{ $base64 }}" alt="UCO">
+            @endif
+        </div>
+        <div class="header-cell title-cell">
+            <h1>CONSTANCIA DE PERIODO<br>VACACIONAL</h1>
+        </div>
+        <div class="header-cell date-cell">
+            <div class="date-label">Fecha: _______________</div>
+            <div class="date-value">{{ $fecha->format('d-M-y') }}</div>
+        </div>
     </div>
 
+    <!-- INTRO TEXT -->
+    <div class="intro-text">
+        De conformidad con el Artículo 76 de la Ley Federal del Trabajo, se extiende la presente Constancia de Período Vacacional que usted disfrutará.
+    </div>
+
+    <!-- INFO TABLE -->
     <table class="info-table">
         <tr>
             <td class="label">Nombre:</td>
@@ -42,7 +291,7 @@
         </tr>
         <tr>
             <td class="label">Puesto:</td>
-            <td class="value">{{ $puesto?->nombre ?? 'Ayudante General' }}</td>
+            <td class="value">{{ $puesto?->nombre ?? 'No asignado' }}</td>
         </tr>
         <tr>
             <td class="label">Área:</td>
@@ -50,50 +299,38 @@
         </tr>
     </table>
 
-    <table class="balances-table">
-        <tr>
-            <td style="width: 22%; font-weight: bold; text-align:left;">Días pendientes por disfrutar:</td>
-            <td class="cell-inline-border" style="width: 6%;">{{ $diasRestantes }}</td>
-            <td style="width: 22%; padding-left: 8px; text-align:left;">días del Período Vacacional</td>
-            <td class="cell-inline-border" style="width: 8%;">{{ $periodoAnio ?? $anioActual }}</td>
-            <td style="width: 20%; text-align:right; font-weight: bold;">Días con derecho:</td>
-            <td class="cell-inline-border" style="width: 8%;">{{ ($ley?->dias_derecho ?? 0) + (isset($ajustesPorAnio) ? $ajustesPorAnio->sum('dias') : 0) }}</td>
-        </tr>
-    </table>
+    <!-- BALANCE 1 -->
+    <div class="balance-row">
+        <div class="balance-item">
+            <span class="balance-label">Días pendientes por disfrutar:</span>
+            <span class="balance-box">{{ $diasRestantes }}</span>
+            <span>días del Período Vacacional</span>
+            <span class="balance-box">{{ $anioActual }}</span>
+        </div>
+        <div class="balance-item">
+            <span class="balance-label">Días con derecho:</span>
+            <span class="balance-box">{{ $diasDerecho }}</span>
+        </div>
+    </div>
 
-    {{-- ajustesPorAnio will be shown below the vacation table (moved) --}}
+    <!-- TABLE TITLE -->
+    <div class="table-title">Último período vacacional disfrutado:</div>
 
-    {{-- Vacaciones: moved below the remaining-days block --}}
-
-    <table class="balances-table" style="margin-bottom: 20px !important;">
-        <tr>
-            <td style="width: 23%; font-weight: bold;">Días restantes por disfrutar:</td>
-            <td class="cell-inline-border" style="width: 6%">{{ $diasRestantes }}</td>
-            <td style="width: 25%; padding-left: 8px;">días del Período Vacacional</td>
-            <td class="cell-inline-border" style="width: 10%">{{ $periodoAnio ?? $anioActual }}</td>
-            <td></td>
-        </tr>
-    </table>
-
-    {{-- El bloque "Origen de los días tomados" se mostrará después de la tabla de periodos (ver más abajo) --}}
-
-    <div class="vacation-section-title">Último periodo vacacional disfrutado:</div>
+    <!-- VACATION TABLE -->
     @php
         $ultimoPeriodo = $periodoSeleccionado ?? ($periodosVacacionales instanceof \Illuminate\Support\Collection 
             ? $periodosVacacionales->first() 
             : (is_array($periodosVacacionales) ? reset($periodosVacacionales) : null));
-        $periodoYear = $ultimoPeriodo?->anio_calendario ?? $periodoAnio ?? $anioActual;
-        $diasPeriodo = $ultimoPeriodo?->dias ?? $diasTomados;
     @endphp
 
     <table class="vacation-table">
         <thead>
             <tr>
-                <th rowspan="2" style="width: 20%;">Periodo Vacacional</th>
-                <th rowspan="2" style="width: 10%;">Días</th>
-                <th colspan="3" style="width: 23.33%;">Inicia</th>
-                <th colspan="3" style="width: 23.33%;">Termina</th>
-                <th colspan="3" style="width: 23.33%;">Se presenta</th>
+                <th rowspan="2">Período Vacacional</th>
+                <th rowspan="2">Días</th>
+                <th colspan="3">Inicia</th>
+                <th colspan="3">Termina</th>
+                <th colspan="3">Se presenta</th>
             </tr>
             <tr>
                 <th>Día</th>
@@ -108,38 +345,24 @@
             </tr>
         </thead>
         <tbody>
-            @if($ultimoPeriodo && $ultimoPeriodo->fecha_inicio && $ultimoPeriodo->fecha_fin && $ultimoPeriodo->fecha_regreso)
+            @if($ultimoPeriodo && $ultimoPeriodo->fecha_inicio && $ultimoPeriodo->fecha_fin)
                 <tr>
-                    <td>{{ $periodoYear }}</td>
-                    <td style="font-weight: bold;">{{ $ultimoPeriodo->dias ?? (\Carbon\Carbon::parse($ultimoPeriodo->fecha_inicio)->diffInDays(\Carbon\Carbon::parse($ultimoPeriodo->fecha_fin)) + 1) }}</td>
+                    <td>{{ $ultimoPeriodo->anio_calendario ?? $anioActual }}</td>
+                    <td>{{ $ultimoPeriodo->dias ?? 0 }}</td>
                     <td>{{ \Carbon\Carbon::parse($ultimoPeriodo->fecha_inicio)->format('d') }}</td>
                     <td>{{ \Carbon\Carbon::parse($ultimoPeriodo->fecha_inicio)->format('m') }}</td>
                     <td>{{ \Carbon\Carbon::parse($ultimoPeriodo->fecha_inicio)->format('Y') }}</td>
                     <td>{{ \Carbon\Carbon::parse($ultimoPeriodo->fecha_fin)->format('d') }}</td>
                     <td>{{ \Carbon\Carbon::parse($ultimoPeriodo->fecha_fin)->format('m') }}</td>
                     <td>{{ \Carbon\Carbon::parse($ultimoPeriodo->fecha_fin)->format('Y') }}</td>
-                    <td>{{ \Carbon\Carbon::parse($ultimoPeriodo->fecha_regreso)->format('d') }}</td>
-                    <td>{{ \Carbon\Carbon::parse($ultimoPeriodo->fecha_regreso)->format('m') }}</td>
-                    <td>{{ \Carbon\Carbon::parse($ultimoPeriodo->fecha_regreso)->format('Y') }}</td>
-                </tr>
-            @elseif($ultimoPeriodo)
-                <tr>
-                    <td>{{ $periodoYear }}</td>
-                    <td style="font-weight: bold;">{{ $ultimoPeriodo->dias ?? $diasTomados }}</td>
-                    <td>--</td>
-                    <td>--</td>
-                    <td>--</td>
-                    <td>--</td>
-                    <td>--</td>
-                    <td>--</td>
-                    <td>--</td>
-                    <td>--</td>
-                    <td>--</td>
+                    <td>{{ \Carbon\Carbon::parse($ultimoPeriodo->fecha_regreso ?? $ultimoPeriodo->fecha_fin->addDay())->format('d') }}</td>
+                    <td>{{ \Carbon\Carbon::parse($ultimoPeriodo->fecha_regreso ?? $ultimoPeriodo->fecha_fin->addDay())->format('m') }}</td>
+                    <td>{{ \Carbon\Carbon::parse($ultimoPeriodo->fecha_regreso ?? $ultimoPeriodo->fecha_fin->addDay())->format('Y') }}</td>
                 </tr>
             @else
                 <tr>
                     <td>{{ $anioActual }}</td>
-                    <td style="font-weight: bold;">{{ $diasTomados }}</td>
+                    <td>0</td>
                     <td>--</td>
                     <td>--</td>
                     <td>--</td>
@@ -154,261 +377,52 @@
         </tbody>
     </table>
 
+    <!-- BALANCE 2 -->
+    <div class="balance-row">
+        <div class="balance-item">
+            <span class="balance-label">Días restantes por disfrutar:</span>
+            <span class="balance-box">{{ $diasRestantes }}</span>
+            <span>días del Período Vacacional</span>
+            <span class="balance-box">{{ $anioActual }}</span>
+        </div>
+    </div>
+
+    <!-- OBSERVATIONS -->
     <div class="observations-title">Observaciones:</div>
     <div class="observations-box">
         {{ $ultimoPeriodo && $ultimoPeriodo->observaciones ? $ultimoPeriodo->observaciones : 'Ninguna.' }}
     </div>
 
+    <!-- DISCLAIMER -->
     <div class="disclaimer">
         * Quedando de conformidad que no se me adeuda ningún día de vacaciones adicionales a los indicados.
     </div>
 
-    <div class="spacer-firmas"></div>
-
-    <div class="signatures-container">
+    <!-- SIGNATURES -->
+    <div class="signatures-section">
         <div class="signatures-row">
             <div class="signature-col">
-                <div class="signature-line">Acepto de Conformidad</div>
-                <div class="signature-details">{{ $empleado->nombre }} {{ $empleado->apellido_paterno }} {{ $empleado->apellido_materno }}</div>
-                <div class="signature-details" style="color: #555;">{{ $puesto?->nombre ?? 'Ayudante General' }}</div>
+                <div class="signature-line"></div>
+                <div class="signature-title">ACEPTO DE CONFORMIDAD</div>
+                <div class="signature-name">{{ $empleado->nombre }} {{ $empleado->apellido_paterno }} {{ $empleado->apellido_materno }}</div>
+                <div class="signature-position">{{ $puesto?->nombre ?? 'Puesto' }}</div>
             </div>
-            <div class="signature-space"></div>
             <div class="signature-col">
-                <div class="signature-line">Recibido</div>
-                <div class="signature-details">Roberto Carlos Matehuala Vargas</div>
-                <div class="signature-details" style="color: #555;">Coordinador Administrativo</div>
+                <div class="signature-line"></div>
+                <div class="signature-title">RECIBIDO</div>
+                <div class="signature-name">Roberto Carlos Matehuala Vargas</div>
+                <div class="signature-position">Coordinador Administrativo</div>
             </div>
-        </div>
-        
-        <div class="vobo-row">
-            <div class="signature-space-vobo"></div>
-            <div class="vobo-col">
-                <div class="signature-line">revisó y autorizó</div>
-                <div class="signature-details">L.C. Diana Sánchez Espino</div>
-                <div class="signature-details" style="color: #555;">Contralora Corporativa</div>
+            <div class="signature-col">
+                <div class="signature-line"></div>
+                <div class="signature-title">REVISO Y AUTORIZO</div>
+                <div class="signature-name">L.C. Diana Sánchez Espino</div>
+                <div class="signature-position">Contralora Corporativa</div>
             </div>
-            <div class="signature-space-vobo"></div>
         </div>
     </div>
 
 </div>
-
-<style>
-    * {
-        margin: 0;
-        padding: 0;
-        box-sizing: border-box;
-    }
-
-    body {
-        font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
-        font-size: 11px;
-        color: #000;
-        line-height: 1.3;
-        background-color: #fff;
-    }
-
-    .container {
-        width: 100%;
-        margin: 0 auto;
-        padding-top: 20px;
-        text-align: center;
-    }
-
-    .header-table, .info-table, .balances-table, .vacation-table {
-        width: 100% !important;
-        border-collapse: collapse;
-        margin-top: 12px !important;
-        margin-bottom: 12px !important;
-        margin-left: 0 !important;
-        margin-right: 0 !important;
-        table-layout: fixed;
-    }
-
-    .header-table td {
-        border: none;
-        padding: 0;
-        vertical-align: bottom;
-    }
-
-    .logo-area { width: 30%; }
-    .title-area {
-        width: 40%;
-        text-align: center;
-        font-size: 14px;
-        font-weight: bold;
-        letter-spacing: 0.5px;
-        padding-bottom: 5px;
-    }
-
-    .date-area {
-        width: 30%;
-        text-align: right;
-        font-size: 10px;
-    }
-
-    .date-box {
-        display: inline-block;
-        border-bottom: 1px solid #000;
-        width: 100px;
-        text-align: center;
-        font-weight: bold;
-    }
-
-    .date-format {
-        font-size: 8px;
-        color: #9e9e9e;
-        padding-right: 25px;
-        margin-top: 2px;
-    }
-
-    .intro-text {
-        width: 100%;
-        margin: 15px 0;
-        font-size: 10.5px;
-        text-align: justify;
-    }
-
-    .info-table td {
-        border: 1px solid #000;
-        padding: 6px 8px;
-        font-size: 10.5px;
-        text-align: left;
-    }
-
-    .info-table td.label {
-        width: 15%;
-        font-weight: bold;
-    }
-
-    .info-table td.value {
-        width: 85%;
-    }
-
-    .balances-table td {
-        border: none;
-        padding: 5px 0;
-        vertical-align: middle;
-        font-size: 10.5px;
-        text-align: left;
-    }
-
-    .cell-inline-border {
-        border: 1px solid #000 !important;
-        text-align: center !important;
-        font-weight: bold;
-        padding: 4px 8px !important;
-    }
-
-    .vacation-section-title {
-        font-weight: bold;
-        margin: 15px auto 5px auto;
-        font-size: 10.5px;
-        text-align: center;
-    }
-
-    .vacation-table th, 
-    .vacation-table td {
-        border: 1px solid #000;
-        padding: 5px 2px;
-        text-align: center;
-        font-size: 10px;
-        white-space: normal;
-        word-wrap: break-word;
-    }
-
-    .vacation-table th {
-        font-weight: bold;
-        background-color: #fff;
-    }
-
-    .observations-title {
-        font-weight: bold;
-        margin-top: 15px;
-        font-size: 10.5px;
-        text-align: center;
-    }
-
-    .observations-box {
-        width: 100%;
-        border: 1px solid #000;
-        min-height: 55px;
-        margin: 6px 0 12px 0;
-        padding: 6px 10px;
-        text-align: left;
-        font-size: 10px;
-        white-space: pre-wrap;
-        word-wrap: break-word;
-    }
-
-    .disclaimer {
-        width: 100%;
-        margin: 0;
-        font-size: 9px;
-        text-align: justify;
-    }
-
-    /* CAMBIO RELEVANTE: Añadimos un bloque vacío con altura específica para obligar el empuje */
-    .spacer-firmas {
-        width: 100%;
-        height: 140px; /* <--- Controla la distancia de la flecha roja. Súbelo si quieres más abajo o bájalo si se crea otra página */
-    }
-
-    .signatures-container {
-        width: 100%;
-        margin-top: 10px; 
-    }
-
-    .signatures-row {
-        display: table;
-        width: 100%;
-        table-layout: fixed;
-        margin: 0 auto 55px auto; 
-    }
-
-    .signature-col {
-        display: table-cell;
-        width: 40%;
-        text-align: center;
-        vertical-align: top;
-    }
-
-    .signature-space {
-        width: 20%;
-        display: table-cell;
-    }
-
-    .signature-line {
-        border-top: 1px solid #000;
-        padding-top: 4px;
-        font-weight: bold;
-        font-size: 10px;
-        text-transform: uppercase;
-    }
-
-    .signature-details {
-        font-size: 9.5px;
-        margin-top: 2px;
-    }
-
-    .vobo-row {
-        display: table;
-        width: 100%;
-        table-layout: fixed;
-        margin: 0 auto;
-    }
-
-    .vobo-col {
-        display: table-cell;
-        width: 40%;
-        text-align: center;
-    }
-
-    .signature-space-vobo {
-        width: 30%;
-        display: table-cell;
-    }
-</style>
 
 </body>
 </html>
