@@ -594,6 +594,7 @@ Route::get('/api/eventos-vacaciones', function () {
 Route::put('/periodos/{id}', function (Request $request, $id) {
     if (! session('logeado')) return response()->json(['error' => 'No autorizado'], 401);
 
+
     \Log::info('PUT /periodos payload', ['id' => $id, 'payload' => $request->all()]);
 
     $validator = Validator::make($request->all(), [
@@ -727,6 +728,7 @@ Route::put('/periodos/{id}', function (Request $request, $id) {
 
 Route::delete('/periodos/{id}', function ($id) {
     if (! session('logeado')) return response()->json(['error' => 'No autorizado'], 401);
+    
     
     try {
         DB::transaction(function () use ($id) {

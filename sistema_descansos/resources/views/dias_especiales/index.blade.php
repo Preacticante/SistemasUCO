@@ -163,13 +163,17 @@
                         <td><i class="fa-regular fa-calendar" style="color: #64748b; margin-right: 6px;"></i>{{ $dia->fecha_inicio->format('d/m/Y') }}</td>
                         <td><i class="fa-regular fa-calendar" style="color: #64748b; margin-right: 6px;"></i>{{ $dia->fecha_fin->format('d/m/Y') }}</td>
                         <td style="text-align: center;">
-                            <form action="{{ route('dias-especiales.destroy', $dia->id) }}" method="POST" class="form-eliminar" style="display:inline;">
-                                @csrf
-                                @method('DELETE')
-                                <button type="submit" class="btn-danger-outline" title="Eliminar registro">
-                                    <i class="fa-solid fa-trash-can"></i> Eliminar
-                                </button>
-                            </form>
+                            @if (strtolower(session('email') ?? '') === 'dsancheze@prepauco.edu.mx')
+                                <form action="{{ route('dias-especiales.destroy', $dia->id) }}" method="POST" class="form-eliminar" style="display:inline;">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="btn-danger-outline" title="Eliminar registro">
+                                        <i class="fa-solid fa-trash-can"></i> Eliminar
+                                    </button>
+                                </form>
+                            @else
+                                <button class="btn-danger-outline btn-disabled" title="No autorizado"><i class="fa-solid fa-trash-can"></i> Eliminar</button>
+                            @endif
                         </td>
                     </tr>
                     @empty
@@ -661,12 +665,55 @@
 
     const form = document.querySelector('.special-form');
     form.addEventListener('submit', function(e) {
+        e.preventDefault();
         const count = parseInt(selectedCount.textContent || '0', 10);
         if (count === 0) {
-            e.preventDefault();
             Swal.fire({ icon: 'info', title: 'Faltan fechas', text: 'Debes seleccionar al menos un día en el calendario antes de guardar.' });
             return false;
         }
+
+        // Preparar resumen para la confirmación
+        const tipo = tipoSelect.value || 'descanso';
+        const inicio = inputFechaInicioDisplay.value || '—';
+        const fin = inputFechaFinDisplay.value || '—';
+        const mensaje = `Tipo: ${tipo}\nDías seleccionados: ${count}\nInicio: ${inicio}\nFin: ${fin}`;
+
+        Swal.fire({
+            icon: 'question',
+            title: 'Confirmar registro',
+            text: '¿Deseas guardar este día especial? Revisa los datos antes de continuar.',
+            footer: mensaje,
+            showCancelButton: true,
+            confirmButtonText: 'Sí, guardar',
+            cancelButtonText: 'Cancelar',
+            confirmButtonColor: '#124416'
+        }).then(result => {
+            if (result.isConfirmed) {
+                // Enviar el formulario de forma clásica para respetar comportamiento del servidor
+                form.submit();
+            }
+        });
+        return false;
+    });
+
+    // Confirmación antes de eliminar un día especial (mantener estilo del sistema)
+    document.querySelectorAll('.form-eliminar').forEach(function(delForm) {
+        delForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            Swal.fire({
+                icon: 'warning',
+                title: 'Confirmar eliminación',
+                text: '¿Estás seguro de que deseas eliminar este día especial? Esta acción no se puede deshacer.',
+                showCancelButton: true,
+                confirmButtonText: 'Sí, eliminar',
+                cancelButtonText: 'Cancelar',
+                confirmButtonColor: '#dc2626'
+            }).then(result => {
+                if (result.isConfirmed) {
+                    delForm.submit();
+                }
+            });
+        });
     });
 </script>
 @endpush

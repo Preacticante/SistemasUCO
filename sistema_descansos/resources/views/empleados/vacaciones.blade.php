@@ -338,31 +338,33 @@
     }
 
     // --- VALIDACIONES AL ENVIAR FORMULARIO ---
-    formVacaciones.addEventListener('submit', function(e) {
-        const seleccionados = parseInt(inputDias.value) || 0;
+    if (formVacaciones) {
+        formVacaciones.addEventListener('submit', function(e) {
+            const seleccionados = parseInt(inputDias.value) || 0;
 
-        if (seleccionados === 0) {
-            e.preventDefault();
-            Swal.fire({
-                icon: 'warning',
-                title: 'Calendario Vacío',
-                text: 'Por favor, selecciona al menos un día en el calendario antes de guardar el registro.',
-                confirmButtonColor: '#AA7F31'
-            });
-            return false;
-        }
+            if (seleccionados === 0) {
+                e.preventDefault();
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Calendario Vacío',
+                    text: 'Por favor, selecciona al menos un día en el calendario antes de guardar el registro.',
+                    confirmButtonColor: '#AA7F31'
+                });
+                return false;
+            }
 
-        if (seleccionados > diasRestantes) {
-            e.preventDefault();
-            Swal.fire({
-                icon: 'error',
-                title: 'Días Insuficientes',
-                text: `Estás intentando solicitar ${seleccionados} días, pero el empleado sólo dispone de ${diasRestantes} días restantes.`,
-                confirmButtonColor: '#340C51'
-            });
-            return false;
-        }
-    });
+            if (seleccionados > diasRestantes) {
+                e.preventDefault();
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Días Insuficientes',
+                    text: `Estás intentando solicitar ${seleccionados} días, pero el empleado sólo dispone de ${diasRestantes} días restantes.`,
+                    confirmButtonColor: '#340C51'
+                });
+                return false;
+            }
+        });
+    }
 </script>
 </body>
 </html>
