@@ -216,7 +216,7 @@ Route::get('/empleados/{empleado}/vacaciones', function (Empleado $empleado) {
 
     $puestoNombre = $empleado->puesto_id ? Puesto::find($empleado->puesto_id)?->nombre : 'No asignado';
 
-    return view('empleados.vacaciones', compact('empleado', 'anioActual', 'antiguedadAnios', 'diasDerecho', 'diasTomados', 'diasRestantes', 'meses', 'registroPorMes', 'puestoNombre'));
+    return view('empleados.vacaciones', compact('empleado', 'anioActual', 'antiguedadAnios', 'diasDerecho', 'diasTomados', 'diasRestantes', 'meses', 'registroPorMes', 'puestoNombre', 'diasExtra'));
 })->name('empleados.vacaciones');
 
 Route::post('/empleados/{empleado}/vacaciones', function (Request $request, Empleado $empleado) {

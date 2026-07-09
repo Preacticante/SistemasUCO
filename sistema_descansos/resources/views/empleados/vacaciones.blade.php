@@ -63,6 +63,7 @@
                     <span class="meta-pill">Puesto: <strong>{{ $puestoNombre }}</strong></span>
                     <span class="meta-pill">Ingreso: <strong>{{ \Carbon\Carbon::parse($empleado->fecha_ingreso)->format('d/m/Y') }}</strong></span>
                     <span class="meta-pill">Antigüedad: <strong>{{ $antiguedadAnios }} años</strong></span>
+                    <span class="meta-pill">Periodo 2024: <strong>{{ $diasExtra }} días</strong></span>
                     <span class="meta-pill status-derecho">Derecho anual: <strong>{{ $diasDerecho }} días</strong></span>
                 </div>
             </article>

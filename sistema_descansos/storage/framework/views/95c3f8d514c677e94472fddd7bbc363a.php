@@ -63,6 +63,7 @@
                     <span class="meta-pill">Puesto: <strong><?php echo e($puestoNombre); ?></strong></span>
                     <span class="meta-pill">Ingreso: <strong><?php echo e(\Carbon\Carbon::parse($empleado->fecha_ingreso)->format('d/m/Y')); ?></strong></span>
                     <span class="meta-pill">Antigüedad: <strong><?php echo e($antiguedadAnios); ?> años</strong></span>
+                    <span class="meta-pill">Periodo 2024: <strong><?php echo e($diasExtra); ?> días</strong></span>
                     <span class="meta-pill status-derecho">Derecho anual: <strong><?php echo e($diasDerecho); ?> días</strong></span>
                 </div>
             </article>
