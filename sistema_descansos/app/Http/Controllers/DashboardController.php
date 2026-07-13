@@ -40,8 +40,11 @@ class DashboardController extends Controller
                 $antiguedadAnios = Carbon::parse($empleado->fecha_ingreso)->diffInYears(Carbon::now());
                 
                 $ley = $leyes->firstWhere('anios_antiguedad', '<=', $antiguedadAnios);
-                $diasExtra = DB::table('ajustes_dias_vacaciones')->where('empleado_id', $empleado->id)->where('anio', '<=', $anioActual)->sum('dias');
-                $diasDerecho = ($ley ? $ley->dias_derecho : 0) + $diasExtra;
+               $diasTotales = DB::table('periodos')
+                    ->where('empleado_id', $empleado->id) // o la variable que uses para el ID
+                    ->where('anio', '<=', 2026)          // o Carbon::now()->year
+                    ->sum('dias_asignados');
+                $diasDerecho = ($ley ? $ley->dias_derecho : 0) + $diasTotales;
                 
                 $totalDiasDerecho += $diasDerecho;
 

@@ -48,6 +48,12 @@
         .vacation-table th, .vacation-table td { border:1px solid #000; padding:8px 4px; font-size:10px; text-align:center; }
         .vacation-table th { font-weight:700; }
 
+        /* PERIOD SUMMARY TABLE */
+        .period-summary-title { font-weight:700; font-size:11px; margin: 8px 0 6px 0; }
+        .period-summary-table { width:100%; border-collapse: collapse; margin-bottom: 8px; }
+        .period-summary-table th, .period-summary-table td { border:1px solid #000; padding:6px 4px; font-size:10px; text-align:center; }
+        .period-summary-table th { font-weight:700; }
+
         /* OBSERVATIONS */
         .observations-title { font-weight:700; font-size:11px; margin-top:8px; margin-bottom: 6px; }
         .observations-box { border:1px solid #000; padding:12px; min-height:80px; font-size:11px; text-align:left; line-height:1.4; }
@@ -108,6 +114,10 @@
                 $regreso = $fin->copy()->addDay();
             }
         }
+
+        $resumenPeriodos = collect($ajustesPorAnio ?? []);
+        $consumoSolicitud = collect($consumoSolicitud ?? []);
+        $totalRestantePorPeriodos = (int) $resumenPeriodos->sum('restante');
     @endphp
     
     <!-- HEADER -->
@@ -131,7 +141,7 @@
             <h1>CONSTANCIA DE PERIODO<br>VACACIONAL</h1>
         </div>
         <div class="header-cell date-cell">
-            <div class="date-label">Fecha: _______________</div>
+            <div class="date-label">Fecha:</div>
                 <div class="date-value">{{ isset($fechaObj) ? $fechaObj->format('d-M-Y') : (isset($fecha) ? (is_string($fecha) ? \Carbon\Carbon::parse($fecha)->format('d-M-Y') : $fecha->format('d-M-Y')) : \Carbon\Carbon::now()->format('d-M-Y')) }}</div>
         </div>
     </div>
@@ -226,33 +236,27 @@
             </tr>
         </thead>
         <tbody>
-            @if($inicio && $fin)
-                <tr>
-                    <td>{{ $ultimoPeriodo->anio_calendario ?? $anioActual }}</td>
-                    <td>{{ $ultimoPeriodo->dias ?? 0 }}</td>
-                    <td>{{ $inicio->format('d') }}</td>
-                    <td>{{ $inicio->format('m') }}</td>
-                    <td>{{ $inicio->format('Y') }}</td>
-                    <td>{{ $fin->format('d') }}</td>
-                    <td>{{ $fin->format('m') }}</td>
-                    <td>{{ $fin->format('Y') }}</td>
-                    <td>{{ $regreso ? $regreso->format('d') : '--' }}</td>
-                    <td>{{ $regreso ? $regreso->format('m') : '--' }}</td>
-                    <td>{{ $regreso ? $regreso->format('Y') : '--' }}</td>
-                </tr>
+            @if(isset($consumoSolicitud) && $consumoSolicitud->isNotEmpty())
+                @foreach($consumoSolicitud as $consumo)
+                    <tr>
+                        <td>{{ $consumo->anio }}</td>
+                        <td>{{ $consumo->dias }}</td>
+                        <td>{{ $inicio->format('d') }}</td>
+                        <td>{{ $inicio->format('m') }}</td>
+                        <td>{{ $inicio->format('Y') }}</td>
+                        <td>{{ $fin->format('d') }}</td>
+                        <td>{{ $fin->format('m') }}</td>
+                        <td>{{ $fin->format('Y') }}</td>
+                        <td>{{ $regreso ? $regreso->format('d') : '--' }}</td>
+                        <td>{{ $regreso ? $regreso->format('m') : '--' }}</td>
+                        <td>{{ $regreso ? $regreso->format('Y') : '--' }}</td>
+                    </tr>
+                @endforeach
             @else
                 <tr>
-                    <td>{{ $anioActual }}</td>
-                    <td>0</td>
-                    <td>--</td>
-                    <td>--</td>
-                    <td>--</td>
-                    <td>--</td>
-                    <td>--</td>
-                    <td>--</td>
-                    <td>--</td>
-                    <td>--</td>
-                    <td>--</td>
+                    <td>{{ $periodoSeleccionado->anio_calendario ?? '---' }}</td>
+                    <td>{{ $periodoSeleccionado->dias ?? 0 }}</td>
+                    <td colspan="9">No se pudo calcular el desglose de periodos.</td>
                 </tr>
             @endif
         </tbody>
@@ -262,11 +266,34 @@
     <div class="balance-row">
         <div class="balance-item">
             <span class="balance-label">Días restantes por disfrutar:</span>
-            <span class="balance-box">{{ $diasRestantes }}</span>
-            <span>días del Período Vacacional</span>
-            <span class="balance-box">{{ $anioActual }}</span>
+            <span class="balance-box">{{ $totalRestantePorPeriodos }}</span>
+            <span>días (total de todos los periodos)</span>
         </div>
     </div>
+
+    @if($resumenPeriodos->isNotEmpty())
+        <div class="period-summary-title">Desglose por periodos</div>
+        <table class="period-summary-table">
+            <thead>
+                <tr>
+                    <th>Periodo</th>
+                    <th>Días asignados</th>
+                    <th>Días usados</th>
+                    <th>Días restantes</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach($resumenPeriodos as $periodoResumen)
+                    <tr>
+                        <td>{{ $periodoResumen->anio }}</td>
+                        <td>{{ (int) ($periodoResumen->dias ?? 0) }}</td>
+                        <td>{{ (int) ($periodoResumen->usado ?? 0) }}</td>
+                        <td>{{ (int) ($periodoResumen->restante ?? 0) }}</td>
+                    </tr>
+                @endforeach
+            </tbody>
+        </table>
+    @endif
 
     <!-- OBSERVATIONS -->
     <div class="observations-title">Observaciones:</div>

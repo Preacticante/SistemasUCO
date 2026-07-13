@@ -29,6 +29,299 @@ use App\Http\Controllers\PuestoController;
 // Librerías
 use Dompdf\Dompdf;
 
+if (! function_exists('sumarDiasAsignadosPeriodos')) {
+    function sumarDiasAsignadosPeriodos(int $empleadoId): int
+    {
+        return (int) DB::table('periodos')
+            ->where('empleado_id', $empleadoId)
+            ->whereNull('deleted_at')
+            ->sum('dias_asignados');
+    }
+}
+
+if (! function_exists('sumarDiasDisponiblesPeriodos')) {
+    function sumarDiasDisponiblesPeriodos(int $empleadoId): int
+    {
+        return (int) DB::table('periodos')
+            ->where('empleado_id', $empleadoId)
+            ->whereNull('deleted_at')
+            ->sum('dias_disponibles');
+    }
+}
+
+if (! function_exists('obtenerResumenPeriodos')) {
+    function obtenerResumenPeriodos(int $empleadoId)
+    {
+        return DB::table('periodos')
+            ->where('empleado_id', $empleadoId)
+            ->whereNull('deleted_at')
+            ->orderBy('anio', 'asc')
+            ->orderBy('id', 'asc')
+            ->get()
+            ->map(function ($periodo) {
+                return (object) [
+                    'id' => $periodo->id,
+                    'anio' => (int) $periodo->anio,
+                    'dias' => (int) $periodo->dias_asignados,
+                    'usado' => max(0, (int) $periodo->dias_asignados - (int) $periodo->dias_disponibles),
+                    'restante' => (int) $periodo->dias_disponibles,
+                    'motivo' => null,
+                ];
+            });
+    }
+}
+
+if (! function_exists('consumirDiasDePeriodos')) {
+    function consumirDiasDePeriodos(int $empleadoId, int $diasSolicitados): void
+    {
+        if ($diasSolicitados <= 0) {
+            return;
+        }
+
+        $restante = $diasSolicitados;
+        $periodos = DB::table('periodos')
+            ->where('empleado_id', $empleadoId)
+            ->whereNull('deleted_at')
+            ->where('dias_disponibles', '>', 0)
+            ->orderBy('anio', 'asc')
+            ->orderBy('id', 'asc')
+            ->lockForUpdate()
+            ->get();
+
+        foreach ($periodos as $periodo) {
+            if ($restante <= 0) {
+                break;
+            }
+
+            $tomar = min($restante, (int) $periodo->dias_disponibles);
+            if ($tomar <= 0) {
+                continue;
+            }
+
+            DB::table('periodos')
+                ->where('id', $periodo->id)
+                ->update([
+                    'dias_disponibles' => ((int) $periodo->dias_disponibles) - $tomar,
+                    'updated_at' => now(),
+                ]);
+
+            $restante -= $tomar;
+        }
+
+        if ($restante > 0) {
+            throw new \RuntimeException('No hay días disponibles suficientes en la tabla periodos.');
+        }
+    }
+}
+
+if (! function_exists('reintegrarDiasAPeriodos')) {
+    function reintegrarDiasAPeriodos(int $empleadoId, int $diasAReintegrar): void
+    {
+        if ($diasAReintegrar <= 0) {
+            return;
+        }
+
+        $restante = $diasAReintegrar;
+        $periodos = DB::table('periodos')
+            ->where('empleado_id', $empleadoId)
+            ->whereNull('deleted_at')
+            ->orderBy('anio', 'desc')
+            ->orderBy('id', 'desc')
+            ->lockForUpdate()
+            ->get();
+
+        foreach ($periodos as $periodo) {
+            if ($restante <= 0) {
+                break;
+            }
+
+            $usados = max(0, (int) $periodo->dias_asignados - (int) $periodo->dias_disponibles);
+            if ($usados <= 0) {
+                continue;
+            }
+
+            $devolver = min($restante, $usados);
+            DB::table('periodos')
+                ->where('id', $periodo->id)
+                ->update([
+                    'dias_disponibles' => ((int) $periodo->dias_disponibles) + $devolver,
+                    'updated_at' => now(),
+                ]);
+
+            $restante -= $devolver;
+        }
+
+        if ($restante > 0) {
+            throw new \RuntimeException('No fue posible reintegrar todos los días a los periodos.');
+        }
+    }
+}
+
+if (! function_exists('asignarDiasAFifoPorPeriodos')) {
+    function asignarDiasAFifoPorPeriodos($periodosBase, int $diasObjetivo): array
+    {
+        if ($diasObjetivo <= 0) {
+            return [];
+        }
+
+        $restante = $diasObjetivo;
+        $asignacionPorAnio = [];
+
+        foreach ($periodosBase as $periodo) {
+            if ($restante <= 0) {
+                break;
+            }
+
+            $capacidad = max(0, (int) ($periodo->dias_asignados ?? 0));
+            if ($capacidad <= 0) {
+                continue;
+            }
+
+            $tomar = min($restante, $capacidad);
+            $anio = (int) ($periodo->anio ?? 0);
+
+            if (! isset($asignacionPorAnio[$anio])) {
+                $asignacionPorAnio[$anio] = 0;
+            }
+
+            $asignacionPorAnio[$anio] += $tomar;
+            $restante -= $tomar;
+        }
+
+        ksort($asignacionPorAnio);
+
+        return $asignacionPorAnio;
+    }
+}
+
+if (! function_exists('obtenerConsumoPorPeriodoDeSolicitud')) {
+    function obtenerConsumoPorPeriodoDeSolicitud(int $empleadoId, ?int $periodoVacacionalId)
+    {
+        if (! $periodoVacacionalId) {
+            return collect();
+        }
+
+        $periodosBase = DB::table('periodos')
+            ->where('empleado_id', $empleadoId)
+            ->whereNull('deleted_at')
+            ->orderBy('anio', 'asc')
+            ->orderBy('id', 'asc')
+            ->get(['id', 'anio', 'dias_asignados', 'dias_disponibles']);
+
+        if ($periodosBase->isEmpty()) {
+            return collect();
+        }
+
+        // Importante: el consumo real sucede en el orden en que se guardan/actualizan los registros.
+        // Para que el PDF del último registro refleje correctamente el periodo usado,
+        // el cálculo debe seguir el orden de captura (id asc), no por fecha de disfrute.
+        $solicitudes = PeriodoVacacional::query()
+            ->where('empleado_id', $empleadoId)
+            ->whereNull('deleted_at')
+            ->orderBy('id', 'asc')
+            ->get(['id', 'dias']);
+
+        // Desfase histórico: días usados que existen en "periodos" pero que no están
+        // representados por registros activos en periodos_vacacionales.
+        // Esto permite que, si 2024 ya está agotado, el desglose salte a 2025.
+        $usadoTotalActual = (int) $periodosBase->sum(function ($p) {
+            return max(0, (int) ($p->dias_asignados ?? 0) - (int) ($p->dias_disponibles ?? 0));
+        });
+        $solicitadoTotalActivo = (int) $solicitudes->sum(function ($s) {
+            return max(0, (int) ($s->dias ?? 0));
+        });
+        $desfaseInicial = max(0, $usadoTotalActual - $solicitadoTotalActivo);
+
+        $acumuladoAntes = 0;
+        $diasSolicitud = null;
+
+        foreach ($solicitudes as $solicitud) {
+            if ((int) $solicitud->id === (int) $periodoVacacionalId) {
+                $diasSolicitud = max(0, (int) $solicitud->dias);
+                break;
+            }
+
+            $acumuladoAntes += max(0, (int) $solicitud->dias);
+        }
+
+        if ($diasSolicitud === null) {
+            return collect();
+        }
+
+        $asignacionAntes = asignarDiasAFifoPorPeriodos($periodosBase, $desfaseInicial + $acumuladoAntes);
+        $asignacionHasta = asignarDiasAFifoPorPeriodos($periodosBase, $desfaseInicial + $acumuladoAntes + $diasSolicitud);
+
+        $anios = array_unique(array_merge(array_keys($asignacionAntes), array_keys($asignacionHasta)));
+        sort($anios);
+
+        $detalle = [];
+        foreach ($anios as $anio) {
+            $consumo = max(0, ((int) ($asignacionHasta[$anio] ?? 0)) - ((int) ($asignacionAntes[$anio] ?? 0)));
+            if ($consumo > 0) {
+                $detalle[] = (object) [
+                    'anio' => (int) $anio,
+                    'dias' => $consumo,
+                ];
+            }
+        }
+
+        return collect($detalle);
+    }
+}
+
+if (! function_exists('reintegrarDiasPorConsumoDetallado')) {
+    function reintegrarDiasPorConsumoDetallado(int $empleadoId, $consumoDetallado): void
+    {
+        $detalle = collect($consumoDetallado ?? []);
+        if ($detalle->isEmpty()) {
+            return;
+        }
+
+        foreach ($detalle as $item) {
+            $anio = (int) ($item->anio ?? 0);
+            $diasPendientes = max(0, (int) ($item->dias ?? 0));
+
+            if ($anio <= 0 || $diasPendientes <= 0) {
+                continue;
+            }
+
+            $periodosAnio = DB::table('periodos')
+                ->where('empleado_id', $empleadoId)
+                ->where('anio', $anio)
+                ->whereNull('deleted_at')
+                ->orderBy('id', 'asc')
+                ->lockForUpdate()
+                ->get(['id', 'dias_asignados', 'dias_disponibles']);
+
+            foreach ($periodosAnio as $periodo) {
+                if ($diasPendientes <= 0) {
+                    break;
+                }
+
+                $espacio = max(0, (int) $periodo->dias_asignados - (int) $periodo->dias_disponibles);
+                if ($espacio <= 0) {
+                    continue;
+                }
+
+                $devolver = min($diasPendientes, $espacio);
+
+                DB::table('periodos')
+                    ->where('id', $periodo->id)
+                    ->update([
+                        'dias_disponibles' => ((int) $periodo->dias_disponibles) + $devolver,
+                        'updated_at' => now(),
+                    ]);
+
+                $diasPendientes -= $devolver;
+            }
+
+            if ($diasPendientes > 0) {
+                throw new \RuntimeException("No fue posible reintegrar {$diasPendientes} día(s) al periodo {$anio}.");
+            }
+        }
+    }
+}
+
 
 // | RUTAS DE AUTENTICACIÓN
 
@@ -195,13 +488,43 @@ Route::get('/empleados/{empleado}/vacaciones', function (Empleado $empleado) {
 
     $anioActual = Carbon::now()->year;
     $antiguedadAnios = (int) floor(Carbon::parse($empleado->fecha_ingreso)->diffInYears(Carbon::now()));
-    $ley = LeyVacacion::where('anios_antiguedad', '<=', $antiguedadAnios)->orderBy('anios_antiguedad', 'desc')->first();
-    $diasExtra = DB::table('ajustes_dias_vacaciones')->where('empleado_id', $empleado->id)->where('anio', '<=', $anioActual)->sum('dias');
-    $diasDerecho = ($ley?->dias_derecho ?? 0) + $diasExtra;
+    $diasDerecho = (int) DB::table('periodos')
+        ->where('empleado_id', $empleado->id)
+        ->whereNull('deleted_at')
+        ->sum('dias_asignados');
+    $diasRestantes = (int) DB::table('periodos')
+        ->where('empleado_id', $empleado->id)
+        ->whereNull('deleted_at')
+        ->sum('dias_disponibles');
+
+    $periodoMasAntiguoConSaldo = DB::table('periodos')
+        ->where('empleado_id', $empleado->id)
+        ->whereNull('deleted_at')
+        ->where('dias_disponibles', '>', 0)
+        ->orderBy('anio', 'asc')
+        ->orderBy('id', 'asc')
+        ->first();
+    $diasExtra = $periodoMasAntiguoConSaldo ? (int) $periodoMasAntiguoConSaldo->dias_disponibles : 0;
+    $anioPeriodoExtra = $periodoMasAntiguoConSaldo ? (int) $periodoMasAntiguoConSaldo->anio : null;
+    $periodosDisponibles = DB::table('periodos')
+        ->where('empleado_id', $empleado->id)
+        ->whereNull('deleted_at')
+        ->where('dias_disponibles', '>', 0)
+        ->orderBy('anio', 'asc')
+        ->orderBy('id', 'asc')
+        ->get(['id', 'anio', 'dias_asignados', 'dias_disponibles'])
+        ->map(function ($periodo) {
+            return [
+                'id' => (int) $periodo->id,
+                'anio' => (int) $periodo->anio,
+                'dias_asignados' => (int) $periodo->dias_asignados,
+                'dias_disponibles' => (int) $periodo->dias_disponibles,
+            ];
+        })
+        ->values();
 
     $registros = RegistroDescanso::where('empleado_id', $empleado->id)->where('anio_calendario', $anioActual)->orderBy('mes')->get();
     $diasTomados = $registros->sum('dias_tomados');
-    $diasRestantes = max(0, $diasDerecho - $diasTomados);
 
     $meses = [
         1 => 'Enero', 2 => 'Febrero', 3 => 'Marzo', 4 => 'Abril',
@@ -216,17 +539,14 @@ Route::get('/empleados/{empleado}/vacaciones', function (Empleado $empleado) {
 
     $puestoNombre = $empleado->puesto_id ? Puesto::find($empleado->puesto_id)?->nombre : 'No asignado';
 
-    return view('empleados.vacaciones', compact('empleado', 'anioActual', 'antiguedadAnios', 'diasDerecho', 'diasTomados', 'diasRestantes', 'meses', 'registroPorMes', 'puestoNombre', 'diasExtra'));
+    return view('empleados.vacaciones', compact('empleado', 'anioActual', 'antiguedadAnios', 'diasDerecho', 'diasTomados', 'diasRestantes', 'meses', 'registroPorMes', 'puestoNombre', 'diasExtra', 'anioPeriodoExtra', 'periodosDisponibles'));
 })->name('empleados.vacaciones');
 
 Route::post('/empleados/{empleado}/vacaciones', function (Request $request, Empleado $empleado) {
     if (! session('logeado')) return redirect()->route('login');
 
     $anioActual = Carbon::now()->year;
-    $antiguedadAnios = (int) floor(Carbon::parse($empleado->fecha_ingreso)->diffInYears(Carbon::now()));
-    $ley = LeyVacacion::where('anios_antiguedad', '<=', $antiguedadAnios)->orderBy('anios_antiguedad', 'desc')->first();
-    $diasExtra = DB::table('ajustes_dias_vacaciones')->where('empleado_id', $empleado->id)->where('anio', '<=', $anioActual)->sum('dias');
-    $diasDerecho = ($ley?->dias_derecho ?? 0) + $diasExtra;
+    $diasDisponibles = sumarDiasDisponiblesPeriodos($empleado->id);
 
     $validator = Validator::make($request->all(), [
         'multiple_dates'   => 'required|string',
@@ -249,12 +569,9 @@ Route::post('/empleados/{empleado}/vacaciones', function (Request $request, Empl
 
     if ($inicio->year !== $anioActual || $fin->year !== $anioActual) return back()->withErrors(['fecha_inicio' => "Las fechas deben estar dentro del año {$anioActual}."])->withInput();
 
-    $registroPorMes = RegistroDescanso::where('empleado_id', $empleado->id)->where('anio_calendario', $anioActual)->get();
-    $diasTomadosActuales = $registroPorMes->sum('dias_tomados');
-    
     $diasNuevos = count($selectedDates);
 
-    if ($diasTomadosActuales + $diasNuevos > $diasDerecho) {
+    if ($diasNuevos > $diasDisponibles) {
         return back()->withErrors(['fecha_inicio' => "El empleado no cuenta con suficientes días. Has solicitado {$diasNuevos} días."])->withInput();
     }
 
@@ -270,16 +587,19 @@ Route::post('/empleados/{empleado}/vacaciones', function (Request $request, Empl
     }
 
     $diasPeriodo = $diasNuevos;
+    $tieneMultipleDates = \Illuminate\Support\Facades\Schema::hasColumn('periodos_vacacionales', 'multiple_dates');
 
     try {
-        DB::transaction(function () use ($diasPorMes, $empleado, $anioActual, $inicio, $fin, $request, $diasPeriodo, $selectedDates) {
+        DB::transaction(function () use ($diasPorMes, $empleado, $anioActual, $inicio, $fin, $request, $diasPeriodo, $selectedDates, $tieneMultipleDates) {
             foreach ($diasPorMes as $mes => $cantidad) {
                 $registro = RegistroDescanso::firstOrNew(['empleado_id' => $empleado->id, 'anio_calendario' => $anioActual, 'mes' => $mes]);
                 $registro->dias_tomados = ($registro->dias_tomados ?? 0) + $cantidad;
                 $registro->save();
             }
 
-            PeriodoVacacional::create([
+            consumirDiasDePeriodos($empleado->id, $diasPeriodo);
+
+            $dataPeriodo = [
                 'empleado_id' => $empleado->id,
                 'anio_calendario' => $anioActual,
                 'fecha_inicio' => $inicio->toDateString(),
@@ -287,10 +607,21 @@ Route::post('/empleados/{empleado}/vacaciones', function (Request $request, Empl
                 'fecha_regreso' => $fin->copy()->addDay()->toDateString(),
                 'dias' => $diasPeriodo,
                 'observaciones' => $request->input('observaciones'),
-                'multiple_dates' => $selectedDates,
-            ]);
+            ];
+
+            if ($tieneMultipleDates) {
+                $dataPeriodo['multiple_dates'] = $selectedDates;
+            }
+
+            PeriodoVacacional::create($dataPeriodo);
         });
     } catch (\Exception $e) {
+        \Log::error('Error al guardar vacaciones', [
+            'empleado_id' => $empleado->id,
+            'mensaje' => $e->getMessage(),
+            'linea' => $e->getLine(),
+            'archivo' => $e->getFile(),
+        ]);
         return back()->withErrors(['error' => 'Ocurrió un error al guardar el registro.'])->withInput();
     }
     return back()->with('success', 'Registro de días de vacaciones actualizado correctamente.');
@@ -299,68 +630,45 @@ Route::post('/empleados/{empleado}/vacaciones', function (Request $request, Empl
 Route::get('/empleados/{empleado}/vacaciones/pdf', function (Request $request, Empleado $empleado) {
     if (! session('logeado')) return redirect()->route('login');
 
-    $anioActual = Carbon::now()->year;
-    $periodoId = $request->query('periodo_id');
-    if ($periodoId) {
-        $p = PeriodoVacacional::find($periodoId);
-        if ($p && $p->fecha_inicio) {
-            $anioActual = Carbon::parse($p->fecha_inicio)->year;
-        }
-    }
-
-    $antiguedadAnios = (int) floor(Carbon::parse($empleado->fecha_ingreso)->diffInYears(Carbon::now()));
-    $ley = LeyVacacion::where('anios_antiguedad', '<=', $antiguedadAnios)->orderBy('anios_antiguedad', 'desc')->first();
-    $ajustesPorAnio = DB::table('ajustes_dias_vacaciones')
-        ->where('empleado_id', $empleado->id)
-        ->where('anio', '<=', $anioActual)
-        ->orderBy('anio')
-        ->get();
-    $diasExtra = $ajustesPorAnio->sum('dias');
-    $diasDerecho = ($ley?->dias_derecho ?? 0) + $diasExtra;
-
-    $registros = RegistroDescanso::where('empleado_id', $empleado->id)->where('anio_calendario', $anioActual)->orderBy('mes')->get();
-    $diasTomados = $registros->sum('dias_tomados');
-    $diasRestantes = max(0, $diasDerecho - $diasTomados);
-
-    // Allocate taken days to ajustes (oldest-first) so we can display which year provided the days
-    $remainingTaken = $diasTomados;
-    $ajustesUsados = collect();
-    foreach ($ajustesPorAnio as $aj) {
-        $used = min($aj->dias, $remainingTaken);
-        $ajustesUsados->push((object)[
-            'anio' => $aj->anio,
-            'dias' => $aj->dias,
-            'usado' => $used,
-            'restante' => max(0, $aj->dias - $used),
-            'motivo' => $aj->motivo ?? null,
-        ]);
-        $remainingTaken -= $used;
-        if ($remainingTaken <= 0) {
-            $remainingTaken = 0;
-        }
-    }
-    // If still taken days remain, attribute them to the base derecho (current year entitlement)
-    $usadoBase = 0;
-    if ($remainingTaken > 0) {
-        $usadoBase = min(($ley?->dias_derecho ?? 0), $remainingTaken);
-        $remainingTaken -= $usadoBase;
-    }
-
-    $periodosVacacionales = PeriodoVacacional::where('empleado_id', $empleado->id)
-        ->where('anio_calendario', $anioActual)
+    // 1. Obtener la última solicitud realizada por el empleado
+    $periodoSeleccionado = PeriodoVacacional::where('empleado_id', $empleado->id)
         ->whereNull('deleted_at')
-        ->orderBy('anio_calendario', 'asc')
-        ->orderBy('fecha_inicio', 'asc')
+        ->orderBy('id', 'desc')
+        ->first();
+
+    // Definir el año actual base de la solicitud
+    $anioActual = Carbon::now()->year;
+    if ($periodoSeleccionado) {
+        if (! empty($periodoSeleccionado->fecha_inicio)) {
+            $anioActual = Carbon::parse($periodoSeleccionado->fecha_inicio)->year;
+        } elseif (! empty($periodoSeleccionado->anio_calendario)) {
+            $anioActual = (int) $periodoSeleccionado->anio_calendario;
+        }
+    }
+
+    // 2. Cálculos globales de antigüedad y derechos
+    $antiguedadAnios = (int) floor(Carbon::parse($empleado->fecha_ingreso)->diffInYears(Carbon::now()));
+    $ajustesPorAnio = obtenerResumenPeriodos($empleado->id);
+    $ajustesUsados = $ajustesPorAnio;
+    $diasDerecho = $ajustesPorAnio->sum('dias');
+    $diasRestantes = $ajustesPorAnio->sum('restante');
+
+    // 3. Registros de descanso tomados en el año de la solicitud
+    $registros = RegistroDescanso::where('empleado_id', $empleado->id)
+        ->where('anio_calendario', $anioActual)
+        ->orderBy('mes')
+        ->get();
+    $diasTomados = $registros->sum('dias_tomados');
+    $usadoBase = 0;
+
+    // 4. CORRECCIÓN FIFO: Quitar filtro estricto de año para evaluar la cadena completa
+    $periodosVacacionales = PeriodoVacacional::where('empleado_id', $empleado->id)
+        ->whereNull('deleted_at')
+        ->orderBy('id', 'asc')
         ->get();
 
-    $periodoSeleccionado = null;
-    if ($request->has('periodo_id')) {
-        $periodoSeleccionado = PeriodoVacacional::where('empleado_id', $empleado->id)
-            ->whereNull('deleted_at')
-            ->find($request->query('periodo_id'));
-    }
     if (! $periodoSeleccionado && $periodosVacacionales->count() > 0) {
-        $periodoSeleccionado = $periodosVacacionales->first();
+        $periodoSeleccionado = $periodosVacacionales->sortByDesc('id')->first();
     }
 
     $periodoAnio = $periodoSeleccionado?->anio_calendario ?? $anioActual;
@@ -368,6 +676,12 @@ Route::get('/empleados/{empleado}/vacaciones/pdf', function (Request $request, E
     $periodoResidual = $ajustesUsados->firstWhere('restante', '>', 0);
     if ($periodoResidual) {
         $periodoVisual = $periodoResidual->anio;
+    }
+
+    // 5. CÁLCULO CLAVE: Obtener consumo real desglosado por año (FIFO)
+    $consumoSolicitud = collect();
+    if ($periodoSeleccionado) {
+        $consumoSolicitud = obtenerConsumoPorPeriodoDeSolicitud($empleado->id, (int) $periodoSeleccionado->id);
     }
 
     $meses = [
@@ -378,7 +692,7 @@ Route::get('/empleados/{empleado}/vacaciones/pdf', function (Request $request, E
     $puesto = $empleado->puesto_id ? Puesto::find($empleado->puesto_id) : null;
     $fecha = Carbon::now();
 
-    $html = view('empleados.pdf', compact('empleado', 'anioActual', 'antiguedadAnios', 'diasDerecho', 'diasTomados', 'diasRestantes', 'registros', 'periodosVacacionales', 'periodoSeleccionado', 'periodoAnio', 'periodoVisual', 'meses', 'puesto', 'fecha', 'ajustesPorAnio', 'ajustesUsados', 'usadoBase'))->render();
+    $html = view('empleados.pdf', compact('empleado', 'anioActual', 'antiguedadAnios', 'diasDerecho', 'diasTomados', 'diasRestantes', 'registros', 'periodosVacacionales', 'periodoSeleccionado', 'periodoAnio', 'periodoVisual', 'meses', 'puesto', 'fecha', 'ajustesPorAnio', 'ajustesUsados', 'usadoBase', 'consumoSolicitud'))->render();
 
     $dompdf = new Dompdf;
     $dompdf->loadHtml($html);
@@ -387,7 +701,7 @@ Route::get('/empleados/{empleado}/vacaciones/pdf', function (Request $request, E
 
     return response($dompdf->output(), 200, [
         'Content-Type' => 'application/pdf',
-        'Content-Disposition' => 'inline; filename="vacaciones_'.str_replace(' ', '_', $empleado->nombre.'_'.$empleado->apellido_paterno.'_'.$empleado->apellido_materno).'_'.($periodoAnio ?? $anioActual).'.pdf"',
+        'Content-Disposition' => 'inline; filename="vacaciones_'.str_replace(' ', '_', $empleado->nombre.'_'.$empleado->apellido_paterno.'_'.$empleado->apellido_materno).'_'.($periodoAnio ?? $consumoPeriodoSeleccionado->first()->anio ?? $anioActual).'.pdf"',
     ]);
 })->name('empleados.vacaciones.pdf');
 
@@ -396,16 +710,14 @@ Route::get('/empleados/{empleado}/vacaciones/historial/pdf', function (Empleado 
 
     $anioActual = Carbon::now()->year;
     $antiguedadAnios = (int) floor(Carbon::parse($empleado->fecha_ingreso)->diffInYears(Carbon::now()));
-    $ley = LeyVacacion::where('anios_antiguedad', '<=', $antiguedadAnios)->orderBy('anios_antiguedad', 'desc')->first();
-    $diasExtra = DB::table('ajustes_dias_vacaciones')->where('empleado_id', $empleado->id)->where('anio', '<=', $anioActual)->sum('dias');
-    $diasDerecho = ($ley?->dias_derecho ?? 0) + $diasExtra;
+    $diasDerecho = sumarDiasAsignadosPeriodos($empleado->id);
 
     $registros = RegistroDescanso::where('empleado_id', $empleado->id)
         ->where('anio_calendario', $anioActual)
         ->orderBy('mes')
         ->get();
     $diasTomados = $registros->sum('dias_tomados');
-    $diasRestantes = max(0, $diasDerecho - $diasTomados);
+    $diasRestantes = sumarDiasDisponiblesPeriodos($empleado->id);
 
     $periodosVacacionales = PeriodoVacacional::where('empleado_id', $empleado->id)
         ->where('anio_calendario', $anioActual)
@@ -459,16 +771,14 @@ Route::get('/panel/reporte/pdf', function () {
 
     foreach ($empleados as $empleado) {
         $antiguedadAnios = (int) floor(Carbon::parse($empleado->fecha_ingreso)->diffInYears(Carbon::now()));
-        $ley = LeyVacacion::where('anios_antiguedad', '<=', $antiguedadAnios)->orderBy('anios_antiguedad', 'desc')->first();
-        $diasExtra = DB::table('ajustes_dias_vacaciones')->where('empleado_id', $empleado->id)->where('anio', '<=', $anioActual)->sum('dias');
-        $diasDerecho = ($ley?->dias_derecho ?? 0) + $diasExtra;
+        $diasDerecho = sumarDiasAsignadosPeriodos($empleado->id);
 
         $registros = RegistroDescanso::where('empleado_id', $empleado->id)
             ->where('anio_calendario', $anioActual)
             ->whereNull('deleted_at')
             ->get();
         $diasTomados = $registros->sum('dias_tomados');
-        $diasAdeuda = max(0, $diasDerecho - $diasTomados);
+        $diasAdeuda = sumarDiasDisponiblesPeriodos($empleado->id);
 
         $puesto = $empleado->puesto_id ? Puesto::find($empleado->puesto_id) : null;
 
@@ -650,19 +960,10 @@ Route::put('/periodos/{id}', function (Request $request, $id) {
                 return response()->json(['error' => 'Debe seleccionar al menos un día válido.'], 422);
             }
 
-            $empleado = Empleado::find($empleadoId);
-            $antiguedadAnios = (int) floor(Carbon::parse($empleado->fecha_ingreso)->diffInYears(Carbon::now()));
-            $ley = LeyVacacion::where('anios_antiguedad', '<=', $antiguedadAnios)->orderBy('anios_antiguedad', 'desc')->first();
-            $diasExtra = DB::table('ajustes_dias_vacaciones')->where('empleado_id', $empleadoId)->where('anio', '<=', $anioActual)->sum('dias');
-            $diasDerecho = ($ley ? $ley->dias_derecho : 0) + $diasExtra;
+            $diasDisponiblesActuales = sumarDiasDisponiblesPeriodos($empleadoId);
+            $disponibles = $diasDisponiblesActuales + (int) $periodo->dias;
 
-            $diasTomadosTotales = RegistroDescanso::where('empleado_id', $empleadoId)
-                ->where('anio_calendario', $anioActual)
-                ->sum('dias_tomados');
-            $diasTomadosSinEstePeriodo = $diasTomadosTotales - $periodo->dias;
-
-            if (($diasTomadosSinEstePeriodo + $diasNuevos) > $diasDerecho) {
-                $disponibles = $diasDerecho - $diasTomadosSinEstePeriodo;
+            if ($diasNuevos > $disponibles) {
                 return response()->json(['error' => "El empleado solo tiene {$disponibles} día(s) disponible(s). No puedes asignarle {$diasNuevos} días."], 422);
             }
 
@@ -694,6 +995,18 @@ Route::put('/periodos/{id}', function (Request $request, $id) {
                 }
             }
 
+            $consumoViejo = obtenerConsumoPorPeriodoDeSolicitud($empleadoId, (int) $periodo->id);
+            if ($consumoViejo->isEmpty()) {
+                $consumoViejo = collect([
+                    (object) [
+                        'anio' => (int) ($periodo->anio_calendario ?? $anioActual),
+                        'dias' => (int) $periodo->dias,
+                    ],
+                ]);
+            }
+
+            reintegrarDiasPorConsumoDetallado($empleadoId, $consumoViejo);
+
             // Asignar los días nuevos al RegistroDescanso mensual
             $diasPorMesNuevos = [];
             foreach ($selectedDates as $selectedDate) {
@@ -708,10 +1021,16 @@ Route::put('/periodos/{id}', function (Request $request, $id) {
                 $registro->save();
             }
 
+            consumirDiasDePeriodos($empleadoId, $diasNuevos);
+
+            $tieneMultipleDates = \Illuminate\Support\Facades\Schema::hasColumn('periodos_vacacionales', 'multiple_dates');
+
             $periodo->fecha_inicio = $inicioNuevo->toDateString();
             $periodo->fecha_fin = $finNuevo->toDateString();
             $periodo->dias = $diasNuevos;
-            $periodo->multiple_dates = $selectedDates;
+            if ($tieneMultipleDates) {
+                $periodo->multiple_dates = $selectedDates;
+            }
             $periodo->observaciones = $request->has('observaciones') ? $request->input('observaciones') : $periodo->observaciones;
             $periodo->fecha_regreso = $finNuevo->copy()->addDay()->toDateString();
             $periodo->save();
@@ -735,21 +1054,32 @@ Route::delete('/periodos/{id}', function ($id) {
             $periodo = PeriodoVacacional::findOrFail($id);
             $empleadoId = $periodo->empleado_id;
             $anioActual = $periodo->anio_calendario;
-            
-            $inicio = Carbon::parse($periodo->fecha_inicio);
-            $fin = Carbon::parse($periodo->fecha_fin);
-            
-            $diasPorMes = [];
-            $mesInicio = $inicio->month;
-            $mesFin = $fin->month;
 
-            if ($mesInicio === $mesFin) {
-                $diasPorMes[$mesInicio] = $periodo->dias;
-            } else {
-                $asignarPrimerMes = min($periodo->dias, clone $inicio->endOfMonth()->diffInDays($inicio) + 1);
-                $diasPorMes[$mesInicio] = $asignarPrimerMes;
-                $sobrante = $periodo->dias - $asignarPrimerMes;
-                if ($sobrante > 0) { $diasPorMes[$mesFin] = $sobrante; }
+            $consumoEliminado = obtenerConsumoPorPeriodoDeSolicitud($empleadoId, (int) $periodo->id);
+            if ($consumoEliminado->isEmpty()) {
+                $consumoEliminado = collect([
+                    (object) [
+                        'anio' => (int) ($periodo->anio_calendario ?? $anioActual),
+                        'dias' => (int) $periodo->dias,
+                    ],
+                ]);
+            }
+
+            $diasTomados = [];
+            if (!empty($periodo->multiple_dates)) {
+                $diasTomados = $periodo->multiple_dates;
+            } elseif (!empty($periodo->fecha_inicio) && !empty($periodo->fecha_fin)) {
+                $inicio = Carbon::parse($periodo->fecha_inicio);
+                $fin = Carbon::parse($periodo->fecha_fin);
+                for ($fecha = $inicio->copy(); $fecha->lte($fin); $fecha->addDay()) {
+                    $diasTomados[] = $fecha->toDateString();
+                }
+            }
+
+            $diasPorMes = [];
+            foreach ($diasTomados as $fechaTomada) {
+                $mes = Carbon::parse($fechaTomada)->month;
+                $diasPorMes[$mes] = ($diasPorMes[$mes] ?? 0) + 1;
             }
 
             foreach ($diasPorMes as $mes => $cantidad) {
@@ -760,6 +1090,9 @@ Route::delete('/periodos/{id}', function ($id) {
                     $registro->save();
                 }
             }
+
+            reintegrarDiasPorConsumoDetallado($empleadoId, $consumoEliminado);
+
             $periodo->delete();
         });
 

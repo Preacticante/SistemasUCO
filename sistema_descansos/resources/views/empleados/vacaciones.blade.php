@@ -38,7 +38,7 @@
                 <p>Administra registros y consulta el consumo de vacaciones de manera clara.</p>
             </div>
 
-            <a href="#" onclick="history.back(); return false;" class="button-link"> 
+            <a href="{{ route('empleados.index') }}" class="button-link"> 
                 <i class="fa-solid fa-arrow-left button-icon-svg"></i>
                 Volver
             </a>
@@ -63,8 +63,9 @@
                     <span class="meta-pill">Puesto: <strong>{{ $puestoNombre }}</strong></span>
                     <span class="meta-pill">Ingreso: <strong>{{ \Carbon\Carbon::parse($empleado->fecha_ingreso)->format('d/m/Y') }}</strong></span>
                     <span class="meta-pill">Antigüedad: <strong>{{ $antiguedadAnios }} años</strong></span>
-                    <span class="meta-pill">Periodo 2024: <strong>{{ $diasExtra }} días</strong></span>
-                    <span class="meta-pill status-derecho">Derecho anual: <strong>{{ $diasDerecho }} días</strong></span>
+                    <span class="meta-pill">Primer periodo con saldo: <strong>{{ $anioPeriodoExtra ?? 'N/A' }}</strong></span>
+                    <span class="meta-pill">Saldo del periodo {{ $anioPeriodoExtra ?? 'N/A' }}: <strong>{{ $diasExtra }} días</strong></span>
+                    <span class="meta-pill status-derecho">Total asignado: <strong>{{ $diasDerecho }} días</strong></span>
                 </div>
             </article>
 
@@ -109,6 +110,21 @@
 
                     <div class="meta-row" style="margin-bottom: 1.5rem;">
                         <span class="meta-pill">Restantes estimados: <strong id="preview-restantes" style="color: #124416;">{{ max(0, $diasRestantes) }}</strong></span>
+                    </div>
+
+                    <div class="form-group" style="margin-bottom: 1.5rem;">
+                        <label>Consumo por periodos</label>
+                        <div id="periodos-preview" class="periodos-preview-list">
+                            @foreach(($periodosDisponibles ?? []) as $periodoDisponible)
+                                <div class="periodo-preview-item" data-periodo-anio="{{ $periodoDisponible['anio'] }}">
+                                    <span>Periodo {{ $periodoDisponible['anio'] }}</span>
+                                    <strong>{{ $periodoDisponible['dias_disponibles'] }} días disponibles</strong>
+                                </div>
+                            @endforeach
+                        </div>
+                        <div class="form-instruction" style="margin-top: 5px;">
+                            * El sistema descuenta primero del periodo más viejo con saldo disponible.
+                        </div>
                     </div>
 
                     <button type="submit" class="button-primary">
@@ -156,12 +172,14 @@
 
 <script>
     const diasRestantes = {{ $diasRestantes }};
+    const periodosDisponibles = @json($periodosDisponibles ?? []);
     const inputHiddenDates = document.getElementById('multiple_dates');
     const inputFechaInicio = document.getElementById('fecha_inicio');
     const inputFechaFin = document.getElementById('fecha_fin');
     const inputDias = document.getElementById('dias_solicitados');
     const previewRestantes = document.getElementById('preview-restantes');
     const formVacaciones = document.getElementById('form-vacaciones');
+    const periodosPreview = document.getElementById('periodos-preview');
 
     // Mapeos para procesar los eventos de la API externa
     const specialDateMap = {}; 
@@ -209,6 +227,34 @@
             cur.setDate(cur.getDate() + 1);
         }
         return dates;
+    }
+
+    function updatePeriodosPreview(selectedCount) {
+        if (!periodosPreview) return;
+
+        let restantePorDescontar = selectedCount;
+        const items = periodosDisponibles.map(periodo => ({ ...periodo }));
+
+        periodosPreview.innerHTML = '';
+
+        items.forEach(periodo => {
+            const consumo = Math.min(restantePorDescontar, periodo.dias_disponibles);
+            const restante = periodo.dias_disponibles - consumo;
+            restantePorDescontar -= consumo;
+
+            const item = document.createElement('div');
+            item.className = 'periodo-preview-item';
+            item.innerHTML = `
+                <span>Periodo ${periodo.anio}</span>
+                <strong>${restante} días restantes${consumo > 0 ? ` · consume ${consumo}` : ''}</strong>
+            `;
+
+            if (consumo > 0) {
+                item.classList.add('periodo-preview-item--active');
+            }
+
+            periodosPreview.appendChild(item);
+        });
     }
 
     function updateSelectedDayColors(instance) {
@@ -333,6 +379,8 @@
                     previewRestantes.style.color = "#124416";
                 }
 
+                updatePeriodosPreview(dateStrings.length);
+
                 updateSelectedDayColors(instance);
             }
         });
@@ -344,6 +392,8 @@
             const seleccionados = parseInt(inputDias.value) || 0;
 
             if (seleccionados === 0) {
+
+    updatePeriodosPreview(parseInt(inputDias.value || '0', 10));
                 e.preventDefault();
                 Swal.fire({
                     icon: 'warning',
@@ -740,6 +790,29 @@
 
     .flatpickr-current-month .flatpickr-monthDropdown-months {
         font-weight: 700 !important;
+    }
+
+    .periodos-preview-list {
+        display: grid;
+        gap: 0.75rem;
+    }
+
+    .periodo-preview-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.85rem 1rem;
+        border: 1px solid #dbe4ee;
+        border-radius: 12px;
+        background: #f8fafc;
+        color: var(--text-main);
+        font-size: 0.92rem;
+    }
+
+    .periodo-preview-item--active {
+        border-color: var(--morado-uco);
+        background: rgba(52, 12, 81, 0.08);
+        box-shadow: inset 0 0 0 1px rgba(52, 12, 81, 0.08);
     }
 
     .flatpickr-weekdays {
