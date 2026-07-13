@@ -259,7 +259,7 @@
                     <td colspan="9">No se pudo calcular el desglose de periodos.</td>
                 </tr>
             @endif
-        </tbody>
+        </tbody> 
     </table>
 
     <!-- BALANCE 2 -->
