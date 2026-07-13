@@ -255,7 +255,7 @@
                     <td>--</td>
                 </tr>
             @endif
-        </tbody>
+        </tbody> 
     </table>
 
     <!-- BALANCE 2 -->
