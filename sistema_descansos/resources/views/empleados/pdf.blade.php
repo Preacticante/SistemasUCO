@@ -20,9 +20,27 @@
         .title-cell { text-align: center; vertical-align: middle; padding-top:6px; }
         .title-cell h1 { font-size: 15px; font-weight: 700; letter-spacing: 0.6px; line-height: 1.05; }
 
-        .date-cell { width: 100px; text-align: right; vertical-align: top; }
-        .date-label { font-size: 9px; color: #000; margin-bottom: 4px; display:block; }
-        .date-value { display:inline-block; border-bottom:1px solid #000; padding:4px 8px; font-weight:700; font-size:11px; min-width:72px; text-align:center; }
+        .date-cell { 
+    width: 140px; 
+    text-align: center; /* Esto centra horizontalmente tanto el label como el value */
+}
+
+.date-label { 
+    font-size: 9px; 
+    color: #000; 
+    margin-bottom: 2px; 
+    display: block; 
+    text-align: center; /* Asegura el centrado del texto */
+}
+
+.date-value { 
+    border-bottom: 1px solid #000; 
+    padding: 2px 4px; 
+    font-weight: bold; 
+    font-size: 10px; 
+    text-align: center; /* Centra el texto dentro del recuadro inferior */
+    display: block;
+}
 
         .intro-text { font-size:11px; text-align:justify; margin: 12px 0; line-height:1.45; }
 
@@ -54,7 +72,11 @@
 
         .signatures-section { margin-top: 72px; }
         .signatures-row { display:table; width:100%; table-layout:fixed; }
-        .signature-col { display:table-cell; width:50%; text-align:center; vertical-align:top; padding: 0 4px; }
+        .signature-col { display: table-cell; 
+    width: 50%; 
+    text-align: center; 
+    vertical-align: top; 
+    padding:  33px 4px 0 4px }
         .signature-line { border-top:1px solid #000; height:0; margin: 0 auto 8px auto; width:85%; }
         .signature-title { font-weight:700; font-size:11px; text-transform:uppercase; margin-bottom: 4px; }
         .signature-name { font-size:10px; margin-bottom: 2px; }
