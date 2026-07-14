@@ -59,8 +59,16 @@
         .signature-title { font-weight:700; font-size:11px; text-transform:uppercase; margin-bottom: 4px; }
         .signature-name { font-size:10px; margin-bottom: 2px; }
         .signature-position { font-size:9px; color:#333; }
-        .signature-center { width: 52%; margin: 18px auto 0; text-align:center; }
-        .signature-center .signature-line { width: 82%; }
+        .signature-center { 
+    width: 52%; 
+    /* Cambiado de 18px a 60px para mayor separación superior */
+    margin: 90px auto 34px; 
+    text-align: center; 
+}
+
+.signature-center .signature-line { 
+    width: 82%; 
+    border-top: 1px solid #000; /* Asegúrate de tener el borde definido */
     </style>
 </head>
 <body>
