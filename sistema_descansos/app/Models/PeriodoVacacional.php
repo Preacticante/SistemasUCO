@@ -24,6 +24,7 @@ class PeriodoVacacional extends Model
         'dias', 
         'observaciones',
         'multiple_dates',
+        'desglose_consumo',
     ];
 
     /**
@@ -37,6 +38,7 @@ class PeriodoVacacional extends Model
         'dias'          => 'integer',
         'empleado_id'   => 'integer',
         'multiple_dates' => 'array',
+        'desglose_consumo' => 'array',
         'deleted_at'    => 'datetime',
     ];
 

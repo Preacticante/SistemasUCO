@@ -72,13 +72,18 @@ if (! function_exists('obtenerResumenPeriodos')) {
 }
 
 if (! function_exists('consumirDiasDePeriodos')) {
-    function consumirDiasDePeriodos(int $empleadoId, int $diasSolicitados): void
+    function consumirDiasDePeriodos(int $empleadoId, array $selectedDates): array
     {
-        if ($diasSolicitados <= 0) {
-            return;
+        if (empty($selectedDates)) {
+            return [];
         }
 
-        $restante = $diasSolicitados;
+        // Ordenamos las fechas cronológicamente
+        sort($selectedDates);
+        
+        $desglose = [];
+        $fechasRestantes = $selectedDates;
+
         $periodos = DB::table('periodos')
             ->where('empleado_id', $empleadoId)
             ->whereNull('deleted_at')
@@ -89,33 +94,57 @@ if (! function_exists('consumirDiasDePeriodos')) {
             ->get();
 
         foreach ($periodos as $periodo) {
-            if ($restante <= 0) {
+            if (empty($fechasRestantes)) {
                 break;
             }
 
-            $tomar = min($restante, (int) $periodo->dias_disponibles);
-            if ($tomar <= 0) {
+            $disponibles = (int) $periodo->dias_disponibles;
+            if ($disponibles <= 0) {
                 continue;
             }
 
-            DB::table('periodos')
-                ->where('id', $periodo->id)
-                ->update([
-                    'dias_disponibles' => ((int) $periodo->dias_disponibles) - $tomar,
-                    'updated_at' => now(),
-                ]);
+            // Extraemos el tramo de fechas que este período puede cubrir (FIFO)
+            $fechasParaEstePeriodo = array_splice($fechasRestantes, 0, $disponibles);
+            $tomar = count($fechasParaEstePeriodo);
 
-            $restante -= $tomar;
+            if ($tomar > 0) {
+                // Actualizamos la base de datos
+                DB::table('periodos')
+                    ->where('id', $periodo->id)
+                    ->update([
+                        'dias_disponibles' => $disponibles - $tomar,
+                        'updated_at' => now(),
+                    ]);
+
+                // Calculamos los límites cronológicos del tramo
+                $inicioTramo = \Illuminate\Support\Carbon::parse($fechasParaEstePeriodo[0]);
+                $finTramo = \Illuminate\Support\Carbon::parse(end($fechasParaEstePeriodo));
+                $regresoTramo = $finTramo->copy()->addDay();
+
+                // Añadimos al desglose con las fechas específicas
+                $desglose[] = [
+                    'periodo_id'   => (int) $periodo->id,
+                    'anio'         => (int) $periodo->anio,
+                    'dias_tomados' => $tomar,
+                    'fecha_inicio' => $inicioTramo->toDateString(),
+                    'fecha_fin'    => $finTramo->toDateString(),
+                    'fecha_regreso' => $regresoTramo->toDateString(),
+                ];
+            }
         }
 
-        if ($restante > 0) {
-            throw new \RuntimeException('No hay días disponibles suficientes en la tabla periodos.');
+        // Si quedaron fechas sin cubrir, lanzamos excepción
+        if (! empty($fechasRestantes)) {
+            throw new \RuntimeException('No hay días disponibles suficientes en los periodos para cubrir todas las fechas seleccionadas.');
         }
+
+        return $desglose;
     }
 }
 
+
 if (! function_exists('reintegrarDiasAPeriodos')) {
-    function reintegrarDiasAPeriodos(int $empleadoId, int $diasAReintegrar): void
+    function reintegrarDiasAPeriodos(int $empleadoId, int $diasAReintegrar, bool $estricto = true): void
     {
         if ($diasAReintegrar <= 0) {
             return;
@@ -151,8 +180,16 @@ if (! function_exists('reintegrarDiasAPeriodos')) {
             $restante -= $devolver;
         }
 
-        if ($restante > 0) {
+        if ($restante > 0 && $estricto) {
             throw new \RuntimeException('No fue posible reintegrar todos los días a los periodos.');
+        }
+
+        if ($restante > 0 && ! $estricto) {
+            \Log::warning('Reintegro parcial en periodos', [
+                'empleado_id' => $empleadoId,
+                'dias_solicitados_reintegrar' => $diasAReintegrar,
+                'dias_no_reintegrados' => $restante,
+            ]);
         }
     }
 }
@@ -195,7 +232,7 @@ if (! function_exists('asignarDiasAFifoPorPeriodos')) {
 }
 
 if (! function_exists('obtenerConsumoPorPeriodoDeSolicitud')) {
-    function obtenerConsumoPorPeriodoDeSolicitud(int $empleadoId, ?int $periodoVacacionalId)
+    function obtenerConsumoPorPeriodoDeSolicitud(int $empleadoId, ?int $periodoVacacionalId, bool $incluirDesfaseHistorico = true)
     {
         if (! $periodoVacacionalId) {
             return collect();
@@ -230,7 +267,9 @@ if (! function_exists('obtenerConsumoPorPeriodoDeSolicitud')) {
         $solicitadoTotalActivo = (int) $solicitudes->sum(function ($s) {
             return max(0, (int) ($s->dias ?? 0));
         });
-        $desfaseInicial = max(0, $usadoTotalActual - $solicitadoTotalActivo);
+        $desfaseInicial = $incluirDesfaseHistorico
+            ? max(0, $usadoTotalActual - $solicitadoTotalActivo)
+            : 0;
 
         $acumuladoAntes = 0;
         $diasSolicitud = null;
@@ -590,14 +629,15 @@ Route::post('/empleados/{empleado}/vacaciones', function (Request $request, Empl
     $tieneMultipleDates = \Illuminate\Support\Facades\Schema::hasColumn('periodos_vacacionales', 'multiple_dates');
 
     try {
-        DB::transaction(function () use ($diasPorMes, $empleado, $anioActual, $inicio, $fin, $request, $diasPeriodo, $selectedDates, $tieneMultipleDates) {
+        DB::transaction(function () use ($diasPorMes, $empleado, $anioActual, $inicio, $fin, $request, $selectedDates, $tieneMultipleDates) {
             foreach ($diasPorMes as $mes => $cantidad) {
                 $registro = RegistroDescanso::firstOrNew(['empleado_id' => $empleado->id, 'anio_calendario' => $anioActual, 'mes' => $mes]);
                 $registro->dias_tomados = ($registro->dias_tomados ?? 0) + $cantidad;
                 $registro->save();
             }
 
-            consumirDiasDePeriodos($empleado->id, $diasPeriodo);
+            // Calculamos el desglose consumo pasando las fechas específicas
+            $desgloseConsumo = consumirDiasDePeriodos($empleado->id, $selectedDates);
 
             $dataPeriodo = [
                 'empleado_id' => $empleado->id,
@@ -605,8 +645,9 @@ Route::post('/empleados/{empleado}/vacaciones', function (Request $request, Empl
                 'fecha_inicio' => $inicio->toDateString(),
                 'fecha_fin' => $fin->toDateString(),
                 'fecha_regreso' => $fin->copy()->addDay()->toDateString(),
-                'dias' => $diasPeriodo,
+                'dias' => count($selectedDates),
                 'observaciones' => $request->input('observaciones'),
+                'desglose_consumo' => $desgloseConsumo, // Se guarda el JSON estructurado con las fechas segmentadas
             ];
 
             if ($tieneMultipleDates) {
@@ -626,7 +667,6 @@ Route::post('/empleados/{empleado}/vacaciones', function (Request $request, Empl
     }
     return back()->with('success', 'Registro de días de vacaciones actualizado correctamente.');
 })->name('empleados.vacaciones.guardar');
-
 Route::get('/empleados/{empleado}/vacaciones/pdf', function (Request $request, Empleado $empleado) {
     if (! session('logeado')) return redirect()->route('login');
 
@@ -678,10 +718,25 @@ Route::get('/empleados/{empleado}/vacaciones/pdf', function (Request $request, E
         $periodoVisual = $periodoResidual->anio;
     }
 
-    // 5. CÁLCULO CLAVE: Obtener consumo real desglosado por año (FIFO)
-    $consumoSolicitud = collect();
-    if ($periodoSeleccionado) {
-        $consumoSolicitud = obtenerConsumoPorPeriodoDeSolicitud($empleado->id, (int) $periodoSeleccionado->id);
+    // 5. CÁLCULO CLAVE: Obtener consumo real desglosado desde el JSON guardado
+    $consumoSolicitud = [];
+    if ($periodoSeleccionado && !empty($periodoSeleccionado->desglose_consumo)) {
+        // Pasar el JSON completo con todas las fechas
+        $consumoSolicitud = is_array($periodoSeleccionado->desglose_consumo) 
+            ? $periodoSeleccionado->desglose_consumo 
+            : (json_decode($periodoSeleccionado->desglose_consumo, true) ?: []);
+    } elseif ($periodoSeleccionado) {
+        // Fallback para registros antiguos sin desglose
+        $consumoConsultado = obtenerConsumoPorPeriodoDeSolicitud($empleado->id, (int) $periodoSeleccionado->id, false);
+        $consumoSolicitud = $consumoConsultado->map(function ($item) {
+            return [
+                'anio' => (int) ($item->anio ?? 0),
+                'dias_tomados' => (int) ($item->dias ?? 0),
+                'fecha_inicio' => null,
+                'fecha_fin' => null,
+                'fecha_regreso' => null,
+            ];
+        })->toArray();
     }
 
     $meses = [
@@ -981,7 +1036,8 @@ Route::put('/periodos/{id}', function (Request $request, $id) {
             }
 
             foreach ($diasViejos as $fechaVieja) {
-                $fecha = Carbon::parse($fechaVieja);
+                 
+
                 $mes = $fecha->month;
                 $diasPorMesViejos[$mes] = ($diasPorMesViejos[$mes] ?? 0) + 1;
             }
@@ -1005,7 +1061,17 @@ Route::put('/periodos/{id}', function (Request $request, $id) {
                 ]);
             }
 
-            reintegrarDiasPorConsumoDetallado($empleadoId, $consumoViejo);
+            try {
+                reintegrarDiasPorConsumoDetallado($empleadoId, $consumoViejo);
+            } catch (\Throwable $e) {
+                $diasFallback = max(0, (int) collect($consumoViejo)->sum(function ($item) {
+                    return (int) ($item->dias ?? 0);
+                }));
+
+                if ($diasFallback > 0) {
+                    reintegrarDiasAPeriodos($empleadoId, $diasFallback, false);
+                }
+            }
 
             // Asignar los días nuevos al RegistroDescanso mensual
             $diasPorMesNuevos = [];
@@ -1078,7 +1144,12 @@ Route::delete('/periodos/{id}', function ($id) {
 
             $diasPorMes = [];
             foreach ($diasTomados as $fechaTomada) {
-                $mes = Carbon::parse($fechaTomada)->month;
+                try {
+                    $mes = Carbon::parse($fechaTomada)->month;
+                } catch (\Throwable $e) {
+                    continue;
+                }
+
                 $diasPorMes[$mes] = ($diasPorMes[$mes] ?? 0) + 1;
             }
 
@@ -1091,7 +1162,17 @@ Route::delete('/periodos/{id}', function ($id) {
                 }
             }
 
-            reintegrarDiasPorConsumoDetallado($empleadoId, $consumoEliminado);
+            try {
+                reintegrarDiasPorConsumoDetallado($empleadoId, $consumoEliminado);
+            } catch (\Throwable $e) {
+                $diasFallback = max(0, (int) collect($consumoEliminado)->sum(function ($item) {
+                    return (int) ($item->dias ?? 0);
+                }));
+
+                if ($diasFallback > 0) {
+                    reintegrarDiasAPeriodos($empleadoId, $diasFallback, false);
+                }
+            }
 
             $periodo->delete();
         });

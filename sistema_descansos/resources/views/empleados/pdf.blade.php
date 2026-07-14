@@ -116,7 +116,9 @@
         }
 
         $resumenPeriodos = collect($ajustesPorAnio ?? []);
-        $consumoSolicitud = collect($consumoSolicitud ?? []);
+        $consumoSolicitud = collect($consumoSolicitud ?? [])->filter(function ($item) {
+            return !empty($item);
+        })->values();
         $totalRestantePorPeriodos = (int) $resumenPeriodos->sum('restante');
     @endphp
     
@@ -237,19 +239,24 @@
         </thead>
         <tbody>
             @if(isset($consumoSolicitud) && $consumoSolicitud->isNotEmpty())
-                @foreach($consumoSolicitud as $consumo)
+                @foreach($consumoSolicitud as $item)
+                    @php
+                        $inicioTramo = !empty($item['fecha_inicio']) ? \Carbon\Carbon::parse($item['fecha_inicio']) : null;
+                        $finTramo = !empty($item['fecha_fin']) ? \Carbon\Carbon::parse($item['fecha_fin']) : null;
+                        $regresoTramo = !empty($item['fecha_regreso']) ? \Carbon\Carbon::parse($item['fecha_regreso']) : null;
+                    @endphp
                     <tr>
-                        <td>{{ $consumo->anio }}</td>
-                        <td>{{ $consumo->dias }}</td>
-                        <td>{{ $inicio->format('d') }}</td>
-                        <td>{{ $inicio->format('m') }}</td>
-                        <td>{{ $inicio->format('Y') }}</td>
-                        <td>{{ $fin->format('d') }}</td>
-                        <td>{{ $fin->format('m') }}</td>
-                        <td>{{ $fin->format('Y') }}</td>
-                        <td>{{ $regreso ? $regreso->format('d') : '--' }}</td>
-                        <td>{{ $regreso ? $regreso->format('m') : '--' }}</td>
-                        <td>{{ $regreso ? $regreso->format('Y') : '--' }}</td>
+                        <td>{{ $item['anio'] }}</td>
+                        <td>{{ $item['dias_tomados'] }}</td>
+                        <td>{{ $inicioTramo ? $inicioTramo->format('d') : '--' }}</td>
+                        <td>{{ $inicioTramo ? $inicioTramo->format('m') : '--' }}</td>
+                        <td>{{ $inicioTramo ? $inicioTramo->format('Y') : '--' }}</td>
+                        <td>{{ $finTramo ? $finTramo->format('d') : '--' }}</td>
+                        <td>{{ $finTramo ? $finTramo->format('m') : '--' }}</td>
+                        <td>{{ $finTramo ? $finTramo->format('Y') : '--' }}</td>
+                        <td>{{ $regresoTramo ? $regresoTramo->format('d') : '--' }}</td>
+                        <td>{{ $regresoTramo ? $regresoTramo->format('m') : '--' }}</td>
+                        <td>{{ $regresoTramo ? $regresoTramo->format('Y') : '--' }}</td>
                     </tr>
                 @endforeach
             @else
