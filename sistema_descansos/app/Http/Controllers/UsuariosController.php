@@ -20,7 +20,7 @@ class UsuariosController extends Controller
             // Transformación de compatibilidad para el JavaScript de tu vista
             $sessionEmail = strtolower(session('email') ?? '');
             // Solo el administrador global (dsancheze@prepauco.edu.mx) puede gestionar (editar/eliminar) desde la lista de perfiles
-            $isAdminSession = ($sessionEmail === 'dsancheze@prepauco.edu.mx');
+            $isAdminSession = ($sessionEmail === 'ntorres@prepauco.edu.mx');
             $usuarios = $usuariosRaw->map(function($u) use ($isAdminSession) {
                 $correo = $u->correo ?? '';
                 return [
